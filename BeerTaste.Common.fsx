@@ -15,10 +15,8 @@ type Beer =
       Volume: float
       Price: float
       Packaging: string }
-    member this.PricePerLiter =
-        this.Price / this.Volume
-    member this.PricePerAbv =
-        this.PricePerLiter / (this.ABV / 100.0)
+    member this.PricePerLiter = this.Price / this.Volume
+    member this.PricePerAbv = this.PricePerLiter / (this.ABV / 100.0)
 
 type Taster =
     { Name: string

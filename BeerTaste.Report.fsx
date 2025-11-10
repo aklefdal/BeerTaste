@@ -34,7 +34,12 @@ let writeBeerStdDevResults (resultsFile: StreamWriter) (beers: Beer list) (score
 
     resultsFile.WriteLine()
 
-let writeTasterCorrelToAverageResults (resultsFile: StreamWriter) (beers: Beer list) (tasters: Taster list) (scores: Scores) =
+let writeTasterCorrelToAverageResults
+    (resultsFile: StreamWriter)
+    (beers: Beer list)
+    (tasters: Taster list)
+    (scores: Scores)
+    =
 
     let tasterCorrelToAverage = correlationToAverages beers tasters scores
 
