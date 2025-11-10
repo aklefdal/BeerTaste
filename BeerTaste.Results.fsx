@@ -1,27 +1,14 @@
-#r "nuget: EPPlus, 8.2.1"
+#load "BeerTaste.Common.fsx"
+
+#r "nuget: FSharp.Stats, 0.4.0"
 
 open System
+open System.Collections.Generic
 open System.IO
 open OfficeOpenXml
-
-// Open Excel file
-ExcelPackage.License.SetNonCommercialPersonal("Alf Kåre Lefdal")
-
-type Beer =
-    { Id: int
-      Name: string
-      BeerType: string
-      Origin: string
-      Producer: string
-      ABV: float
-      Volume: float
-      Price: float
-      Packaging: string }
-
-type Taster =
-    { Name: string
-      Email: string
-      BirthYear: int }
+open BeerTaste.Common
+open FSharp.Stats
+open FSharp.Stats.Correlation
 
 type Scoring =
     { BeerId: int
@@ -47,40 +34,6 @@ type Scores(scorings: Scoring list) =
         |> List.filter (fun s -> s.BeerId = beerId)
         |> List.map (fun s -> s.Score)
         |> List.toArray
-
-let norwegianToFloat (s: string) : float = s.Replace(",", ".") |> float
-
-let rowToBeer (worksheet: ExcelWorksheet) (row: int) : Beer =
-    { Id = worksheet.Cells.[row, 1].Text |> int
-      Name = worksheet.Cells.[row, 2].Text
-      BeerType = worksheet.Cells.[row, 3].Text
-      Origin = worksheet.Cells.[row, 4].Text
-      Producer = worksheet.Cells.[row, 5].Text
-      ABV = worksheet.Cells.[row, 6].Text |> norwegianToFloat
-      Volume = worksheet.Cells.[row, 7].Text |> norwegianToFloat
-      Price = worksheet.Cells.[row, 8].Text |> norwegianToFloat
-      Packaging = worksheet.Cells.[row, 9].Text }
-
-let readBeers (fileName: string) =
-    use package = new ExcelPackage(fileName)
-    let worksheet = package.Workbook.Worksheets.["Beers"]
-
-    seq { 2 .. worksheet.Dimension.End.Row }
-    |> Seq.map (rowToBeer worksheet)
-    |> Seq.toList
-
-let rowToTaster (worksheet: ExcelWorksheet) (row: int) : Taster =
-    { Name = worksheet.Cells.[row, 1].Text
-      Email = worksheet.Cells.[row, 2].Text
-      BirthYear = worksheet.Cells.[row, 3].Text |> int }
-
-let readTasters (fileName: string) =
-    use package = new ExcelPackage(fileName)
-    let worksheet = package.Workbook.Worksheets.["Tasters"]
-
-    seq { 2 .. worksheet.Dimension.End.Row }
-    |> Seq.map (rowToTaster worksheet)
-    |> Seq.toList
 
 let readScores (fileName: string) (beers: Beer list) (tasters: Taster list) =
     seq {
@@ -115,13 +68,7 @@ let fileName = tastingName + ".xlsx"
 let beers = fileName |> readBeers
 let tasters = fileName |> readTasters
 
-createTastersSchema fileName beers
-createScoreSchema fileName beers tasters
-
 let scores = readScores fileName beers tasters
-scores.GetScoresForTaster "Alf Kåre"
-
-scores.GetScoresForBeer 1
 
 beers
 |> List.map (fun b ->
@@ -144,6 +91,92 @@ let beerAverages (beers: Beer list) =
     |> List.map (fun b -> $"{b.Producer} - {b.Name}", scores.GetScoresForBeer b.Id |> Array.average)
     |> List.sortByDescending snd
 
+let beerStandardDeviations (beers: Beer list) =
+    beers
+    |> List.map (fun b ->
+        $"{b.Producer} - {b.Name}",
+        scores.GetScoresForBeer b.Id
+        |> Seq.stDevPopulation)
+    |> List.sortByDescending snd
+
+let correlationToAverages (beers: Beer list) (tasters: Taster list) =
+    let beerAverages =
+        beers
+        |> List.map (fun b -> b.Id, scores.GetScoresForBeer b.Id |> Array.average)
+        |> List.sortBy fst
+        |> List.map snd
+
+    tasters
+    |> List.map (fun t ->
+        let correl =
+            t.Name
+            |> scores.GetScoresForTaster
+            |> Seq.pearson beerAverages
+
+        t.Name, correl)
+    |> List.sortBy snd
+
+let combineAllTaster (tasters: Taster list) =
+    seq {
+        for taster in tasters do
+            for taster2 in tasters do
+                if taster.Name < taster2.Name then
+                    yield taster.Name, taster2.Name
+                elif taster.Name > taster2.Name then
+                    yield taster2.Name, taster.Name
+                else
+                    ()
+    }
+    |> Seq.distinct
+    |> Seq.toList
+
+let correlationBetweenTasters (tasters: Taster list) =
+    let tasterPairs = combineAllTaster tasters
+
+    tasterPairs
+    |> List.map (fun (tasterName1, tasterName2) ->
+        let scores1 = tasterName1 |> scores.GetScoresForTaster
+        let scores2 = tasterName2 |> scores.GetScoresForTaster
+
+        let correl = Seq.pearson scores1 scores2
+
+        (tasterName1, tasterName2), correl)
+    |> List.sortBy snd
+
+let correlationToAbv (beers: Beer list) (tasters: Taster list) =
+    let beerAbv =
+        beers
+        |> List.map (fun b -> b.Id, b.ABV)
+        |> List.sortBy fst
+        |> List.map snd
+
+    tasters
+    |> List.map (fun t ->
+        let correl =
+            t.Name
+            |> scores.GetScoresForTaster
+            |> Seq.pearson beerAbv
+
+        t.Name, correl)
+    |> List.sortByDescending snd
+
+let correlationToAbvPrice (beers: Beer list) (tasters: Taster list) =
+    let beerAbvPrice =
+        beers
+        |> List.map (fun b -> b.Id, b.PricePerAbv)
+        |> List.sortBy fst
+        |> List.map snd
+
+    tasters
+    |> List.map (fun t ->
+        let correl =
+            t.Name
+            |> scores.GetScoresForTaster
+            |> Seq.pearson beerAbvPrice
+
+        t.Name, correl)
+    |> List.sortByDescending snd
+
 let writeBeerAveragesResults (file: StreamWriter) (beers: Beer list) =
 
     let beerAverages = beers |> beerAverages
@@ -157,6 +190,88 @@ let writeBeerAveragesResults (file: StreamWriter) (beers: Beer list) =
     beerAverages
     |> List.iteri (fun i (name, avg) -> resultsFile.WriteLine($"| {i + 1} | {name} | {avg:F2} |"))
 
+    resultsFile.WriteLine()
+
+let writeBeerStdDevResults (file: StreamWriter) (beers: Beer list) =
+
+    let beerStandardDeviations = beers |> beerStandardDeviations
+
+    resultsFile.WriteLine("## Most controversial beers")
+    resultsFile.WriteLine()
+    resultsFile.WriteLine("| Rank | Beer | Standard Deviation |")
+    resultsFile.WriteLine("|------|------|-------------------:|")
+
+    beerStandardDeviations
+    |> List.iteri (fun i (name, correl) -> resultsFile.WriteLine($"| {i + 1} | {name} | {correl:F2} |"))
+
+    resultsFile.WriteLine()
+
+let writeTasterCorrelToAverageResults (file: StreamWriter) (beers: Beer list) (tasters: Taster list) =
+
+    let tasterCorrelToAverage = correlationToAverages beers tasters
+
+    resultsFile.WriteLine("## Most deviant tasters")
+    resultsFile.WriteLine()
+    resultsFile.WriteLine("| Rank | Taster | Correlation to Average |")
+    resultsFile.WriteLine("|------|--------|-----------------------:|")
+
+
+    tasterCorrelToAverage
+    |> List.iteri (fun i (name, stddev) -> resultsFile.WriteLine($"| {i + 1} | {name} | {stddev:F2} |"))
+
+    resultsFile.WriteLine()
+
+let writeCorrelBetweenTasters (file: StreamWriter) (tasters: Taster list) =
+
+    let correlationBetweenTasters = correlationBetweenTasters tasters
+
+    resultsFile.WriteLine("## Most similar tasters")
+    resultsFile.WriteLine()
+    resultsFile.WriteLine("| Rank | Taster 1 | Taster 2 | Correlation |")
+    resultsFile.WriteLine("|------|----------|----------|------------:|")
+
+
+    correlationBetweenTasters
+    |> List.iteri (fun i ((name1, name2), correl) ->
+        resultsFile.WriteLine($"| {i + 1} | {name1} | {name2} | {correl:F2} |"))
+
+    resultsFile.WriteLine()
+
+let writeCorrelToAbv (file: StreamWriter) (beers: Beer list) (tasters: Taster list) =
+
+    let tasterCorrelToAbv = correlationToAbv beers tasters
+
+    resultsFile.WriteLine("## Most fond of strong beers")
+    resultsFile.WriteLine()
+    resultsFile.WriteLine("| Rank | Taster | Correlation to ABV |")
+    resultsFile.WriteLine("|------|--------|-----------------------:|")
+
+
+    tasterCorrelToAbv
+    |> List.iteri (fun i (name, stddev) -> resultsFile.WriteLine($"| {i + 1} | {name} | {stddev:F2} |"))
+
+    resultsFile.WriteLine()
+
+let writeCorrelToAbvPrice (file: StreamWriter) (beers: Beer list) (tasters: Taster list) =
+
+    let tasterCorrelToAbvPrice = correlationToAbvPrice beers tasters
+
+    resultsFile.WriteLine("## Most fond of cheap alcohol")
+    resultsFile.WriteLine()
+    resultsFile.WriteLine("| Rank | Taster | Correlation to ABV |")
+    resultsFile.WriteLine("|------|--------|-----------------------:|")
+
+
+    tasterCorrelToAbvPrice
+    |> List.iteri (fun i (name, stddev) -> resultsFile.WriteLine($"| {i + 1} | {name} | {stddev:F2} |"))
+
+    resultsFile.WriteLine()
+
 writeBeerAveragesResults resultsFile beers
+writeBeerStdDevResults resultsFile beers
+writeTasterCorrelToAverageResults resultsFile beers tasters
+writeCorrelBetweenTasters resultsFile tasters
+writeCorrelToAbv resultsFile beers tasters
+writeCorrelToAbvPrice resultsFile beers tasters
 
 resultsFile.Close()

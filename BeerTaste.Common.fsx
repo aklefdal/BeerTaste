@@ -15,16 +15,15 @@ type Beer =
       Volume: float
       Price: float
       Packaging: string }
+    member this.PricePerLiter =
+        this.Price / this.Volume
+    member this.PricePerAbv =
+        this.PricePerLiter / (this.ABV / 100.0)
 
 type Taster =
     { Name: string
       Email: string
       BirthYear: int }
-
-type Scoring =
-    { BeerId: int
-      TasterName: string
-      Score: float }
 
 let norwegianToFloat (s: string) : float = s.Replace(",", ".") |> float
 
