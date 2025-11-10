@@ -8,10 +8,11 @@ open BeerTaste.Common
 open FSharp.Stats
 open FSharp.Stats.Correlation
 
-type Scoring =
-    { BeerId: int
-      TasterName: string
-      Score: float }
+type Scoring = {
+    BeerId: int
+    TasterName: string
+    Score: float
+}
 
 type Scores(scorings: Scoring list) =
     let numberOfBeers =
@@ -44,10 +45,11 @@ let readScores (fileName: string) (beers: Beer list) (tasters: Taster list) =
                 let beerId = worksheet.Cells.[i, 1].Text |> int
                 let score = worksheet.Cells.[i, j].Text |> norwegianToFloat
 
-                yield
-                    { BeerId = beerId
-                      TasterName = tasterName
-                      Score = score }
+                yield {
+                    BeerId = beerId
+                    TasterName = tasterName
+                    Score = score
+                }
     }
     |> List.ofSeq
     |> Scores

@@ -59,7 +59,7 @@ let createScoreSchema (fileName: string) (beers: Beer list) (tasters: Taster lis
 
     package.Save()
 
-let tastingName = "ØJ Ølsmaking 2024"
+let tastingName = "BeerTaste"
 let fileName = tastingName + ".xlsx"
 let beers = fileName |> readBeers
 let tasters = fileName |> readTasters
