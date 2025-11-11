@@ -23,13 +23,19 @@ beertaste/
 │   ├── Program.fs               # Main program for Azure Table Storage
 │   ├── beertaste.fsproj         # .NET project file
 │   └── BeerTaste.xlsx           # Beer catalog
-├── scripts/                      # F# scripts for analysis
+├── scripts/                      # F# scripts, data files, and outputs
 │   ├── BeerTaste.Common.fsx     # Core data models and Excel I/O
 │   ├── BeerTaste.Preparations.fsx # Excel template generation
 │   ├── BeerTaste.Results.fsx    # Statistical analysis
-│   └── BeerTaste.Report.fsx     # Report generation
-├── slides/                       # Generated presentation slides
-├── *.xlsx                        # Tasting event Excel files (root level)
+│   ├── BeerTaste.Report.fsx     # Report generation
+│   ├── *.xlsx                   # Tasting event Excel files
+│   ├── Present-Slides.ps1       # Slide presentation tool
+│   ├── presentation.html        # HTML results viewer
+│   ├── slides/                  # Generated presentation slides
+│   ├── *Results.md              # Generated Markdown reports
+│   └── *Results.pdf             # Generated PDF reports
+├── Format.ps1                    # Format all F# code
+├── Check-Format.ps1              # Check code formatting
 └── CLAUDE.md                     # This file
 ```
 
@@ -46,12 +52,14 @@ dotnet build src/beertaste.fsproj
 dotnet run --project src/beertaste.fsproj -- <short-name>
 # Or: cd src && dotnet run -- <short-name>
 
-# Execute F# scripts directly (run from root directory)
+# Execute F# scripts directly (run from scripts directory)
+cd scripts
+
 # Generate Tasters Schema and Score Schema in Excel
-dotnet fsi scripts/BeerTaste.Preparations.fsx
+dotnet fsi BeerTaste.Preparations.fsx
 
 # Generate result report from tasting data
-dotnet fsi scripts/BeerTaste.Report.fsx
+dotnet fsi BeerTaste.Report.fsx
 ```
 
 ### Code Formatting
@@ -71,6 +79,16 @@ dotnet fsi scripts/BeerTaste.Report.fsx
 # Set Azure Table Storage connection string in user secrets (from src directory)
 cd src
 dotnet user-secrets set "TableStorage:ConnectionString" "<your-connection-string>"
+```
+
+### Presentation
+
+```powershell
+# Launch interactive slide navigator for tasting results (from root)
+.\scripts\Present-Slides.ps1
+
+# Open HTML presentation viewer
+# Open scripts/presentation.html in browser
 ```
 
 ## Architecture
@@ -106,7 +124,7 @@ The project uses a **layered F# script architecture** where each layer is a self
 
 **Data Flow:**
 
-Excel Files (root) → Common (parsing) → Results (analysis) → Report (output) → Markdown/Slides
+Excel Files (scripts/) → Common (parsing) → Results (analysis) → Report (output) → Markdown/Slides (scripts/)
 
 ## Code Conventions
 
@@ -160,7 +178,7 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 - No formal unit tests - validation is done through script execution and report inspection
 - Scripts are designed for REPL-style interactive development in FSI
-- **Scripts must be run from the repository root** as they expect Excel files to be in the current directory
-- Multiple Excel files represent different tasting events (catalog, annual events)
-- Tasting event Excel files (.xlsx) are kept in the root directory for easy access
+- **Important:** Scripts reference Excel files by name only (e.g., `"ØJ Ølsmaking 2024.xlsx"`), so they should be run from the `scripts/` directory: `cd scripts && dotnet fsi BeerTaste.Report.fsx`
+- Multiple Excel files in `scripts/` represent different tasting events (catalog, annual events)
+- All analysis workflow files (Excel, scripts, generated reports, presentations) are organized in `scripts/`
 - Norwegian language context throughout (field names, output text)
