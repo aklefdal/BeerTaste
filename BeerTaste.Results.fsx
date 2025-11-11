@@ -118,7 +118,7 @@ let correlationBetweenTasters (tasters: Taster list) (scores: Scores) =
         let correl = Seq.pearson scores1 scores2
 
         (tasterName1, tasterName2), correl)
-    |> List.sortBy snd
+    |> List.sortByDescending snd
 
 let correlationToAbv (beers: Beer list) (tasters: Taster list) (scores: Scores) =
     let beerAbv =
