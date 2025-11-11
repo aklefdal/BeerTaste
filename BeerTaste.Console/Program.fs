@@ -84,14 +84,30 @@ let main args =
                 .AddEnvironmentVariables()
                 .Build()
 
-        let connStr = config.["TableStorage:ConnectionString"]
+        let connStr = config.["BeerTaste:TableStorageConnectionString"]
+        // Get the folder path for Excel files, default to "../scripts" relative to executable
+        let filesFolder =
+            let configPath = config.["BeerTaste:FilesFolder"]
+            if String.IsNullOrWhiteSpace configPath then
+                // Default to scripts directory relative to the project
+                "./BeerTastes" |> System.IO.Path.GetFullPath
+            else
+                configPath |> System.IO.Path.GetFullPath
 
         if String.IsNullOrWhiteSpace connStr then
-            AnsiConsole.MarkupLine("[red]Missing connection string 'TableStorage:ConnectionString' in user secrets or environment.[/]")
-            AnsiConsole.MarkupLine("Use: [yellow]dotnet user-secrets set \"TableStorage:ConnectionString\" \"<your-connection-string>\"[/]")
+            AnsiConsole.MarkupLine("[red]Missing connection string 'BeerTaste:TableStorageConnectionString' in user secrets or environment.[/]")
+            AnsiConsole.MarkupLine("Use: [yellow]dotnet user-secrets set \"BeerTaste:TableStorageConnectionString\" \"<your-connection-string>\"[/]")
             1
         else
             try
+                // Display configured files folder
+                AnsiConsole.MarkupLine($"[grey]Files folder: {filesFolder}[/]")
+
+                // Ensure the folder exists
+                if not (System.IO.Directory.Exists(filesFolder)) then
+                    AnsiConsole.MarkupLine($"[yellow]Warning: Files folder does not exist. Creating: {filesFolder}[/]")
+                    System.IO.Directory.CreateDirectory(filesFolder) |> ignore
+
                 AnsiConsole.MarkupLine("[grey]Connecting to Azure Table Storage...[/]")
                 let service = TableServiceClient(connStr)
                 let tableName = "beertaste"

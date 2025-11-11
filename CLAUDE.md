@@ -78,7 +78,15 @@ dotnet fsi BeerTaste.Report.fsx
 ```powershell
 # Set Azure Table Storage connection string in user secrets (from BeerTaste.Console directory)
 cd BeerTaste.Console
-dotnet user-secrets set "TableStorage:ConnectionString" "<your-connection-string>"
+dotnet user-secrets set "BeerTaste:TableStorageConnectionString" "<your-connection-string>"
+
+# Set custom folder path for Excel files and other data files (optional)
+# If not set, defaults to ./BeerTastes relative to current directory
+dotnet user-secrets set "BeerTaste:FilesFolder" "C:\path\to\your\folder"
+
+# Or use environment variables
+$env:BeerTaste__TableStorageConnectionString = "<your-connection-string>"
+$env:BeerTaste__FilesFolder = "C:\path\to\your\folder"
 ```
 
 ### Presentation
