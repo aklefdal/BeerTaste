@@ -15,23 +15,43 @@ BeerTaste is an F# data analysis system for organizing and analyzing beer tastin
 - Azure.Data.Tables 12.9.1 for Azure Table Storage integration
 - Fantomas 7.0.3 for code formatting
 
+## Repository Structure
+
+```
+beertaste/
+├── src/                          # Compiled F# program
+│   ├── Program.fs               # Main program for Azure Table Storage
+│   ├── beertaste.fsproj         # .NET project file
+│   └── BeerTaste.xlsx           # Beer catalog
+├── scripts/                      # F# scripts for analysis
+│   ├── BeerTaste.Common.fsx     # Core data models and Excel I/O
+│   ├── BeerTaste.Preparations.fsx # Excel template generation
+│   ├── BeerTaste.Results.fsx    # Statistical analysis
+│   └── BeerTaste.Report.fsx     # Report generation
+├── slides/                       # Generated presentation slides
+├── *.xlsx                        # Tasting event Excel files (root level)
+└── CLAUDE.md                     # This file
+```
+
 ## Essential Commands
 
 ### Build and Run
 
 ```powershell
-# Build the compiled program
-dotnet build
+# Build the compiled program (from root or src directory)
+dotnet build src/beertaste.fsproj
+# Or: cd src && dotnet build
 
-# Run the compiled program (Azure connectivity test)
-dotnet run
+# Run the compiled program with a short name parameter
+dotnet run --project src/beertaste.fsproj -- <short-name>
+# Or: cd src && dotnet run -- <short-name>
 
-# Execute F# scripts directly
-# This script to generate Tasters Schema and Score Schema, both in Excel
-dotnet fsi BeerTaste.Prepations.fsx
+# Execute F# scripts directly (run from root directory)
+# Generate Tasters Schema and Score Schema in Excel
+dotnet fsi scripts/BeerTaste.Preparations.fsx
 
-# This script to generate result report from the given
-dotnet fsi BeerTaste.Report.fsx
+# Generate result report from tasting data
+dotnet fsi scripts/BeerTaste.Report.fsx
 ```
 
 ### Code Formatting
@@ -48,7 +68,8 @@ dotnet fsi BeerTaste.Report.fsx
 ### Azure Configuration
 
 ```powershell
-# Set Azure Table Storage connection string in user secrets
+# Set Azure Table Storage connection string in user secrets (from src directory)
+cd src
 dotnet user-secrets set "TableStorage:ConnectionString" "<your-connection-string>"
 ```
 
@@ -56,35 +77,36 @@ dotnet user-secrets set "TableStorage:ConnectionString" "<your-connection-string
 
 The project uses a **layered F# script architecture** where each layer is a self-contained .fsx file with inline NuGet references:
 
-1. **Common functions** (`BeerTaste.Common.fsx`)
+1. **Common functions** (`scripts/BeerTaste.Common.fsx`)
    - Domain models: `Beer`, `Taster`, scoring types
    - Excel I/O using EPPlus
    - Norwegian locale handling (`norwegianToFloat` converts comma decimals)
    - Expected Excel schema: "Beers" and "Tasters" worksheets
 
-2. **Preparation functions** (`BeerTaste.Preparations.fsx`)
+2. **Preparation functions** (`scripts/BeerTaste.Preparations.fsx`)
    - Generates Excel templates for new tasting events
    - Creates proper schema for data entry
 
-3. **Result functions** (`BeerTaste.Results.fsx`)
+3. **Result functions** (`scripts/BeerTaste.Results.fsx`)
    - Loads Common layer with `#load "BeerTaste.Common.fsx"`
    - Statistical analysis: Pearson correlations, standard deviation, rankings
    - Uses FSharp.Stats for computations
 
-4. **Reporting function** (`BeerTaste.Report.fsx`)
+4. **Reporting function** (`scripts/BeerTaste.Report.fsx`)
    - Loads Results layer
    - Generates Markdown reports with 6 analysis sections
    - Creates individual slide files for presentation
 
-5. **Next version** (`Program.fs` + `beertaste.fsproj`)
-   - Compiled F# program for doing what is currently in the F# script
-   - Will upload data to Azure Table Storage
+5. **Compiled program** (`src/Program.fs` + `src/beertaste.fsproj`)
+   - Manages BeerTaste events in Azure Table Storage
+   - Takes a short name as parameter and checks if it exists
+   - Prompts for description and date if creating new entry
    - Configuration management with user secrets
    - User secrets ID: `beertaste-5f8f1d6d-b9a5-4e4a-b0d0-3c3c52e6c6c2`
 
 **Data Flow:**
 
-Excel Files → Common (parsing) → Results (analysis) → Report (output) → Markdown/Slides
+Excel Files (root) → Common (parsing) → Results (analysis) → Report (output) → Markdown/Slides
 
 ## Code Conventions
 
@@ -96,12 +118,12 @@ Excel Files → Common (parsing) → Results (analysis) → Report (output) → 
 
 ## Key Files
 
-- `BeerTaste.Common.fsx` - Core data models and Excel parsing
-- `BeerTaste.Results.fsx` - Statistical analysis functions
-- `BeerTaste.Report.fsx` - Report generation
-- `BeerTaste.Preparations.fsx` - Excel template generation
-- `Program.fs` - Beginning of next version
-- `beertaste.fsproj` - .NET project configuration
+- `scripts/BeerTaste.Common.fsx` - Core data models and Excel parsing
+- `scripts/BeerTaste.Results.fsx` - Statistical analysis functions
+- `scripts/BeerTaste.Report.fsx` - Report generation
+- `scripts/BeerTaste.Preparations.fsx` - Excel template generation
+- `src/Program.fs` - Azure Table Storage program
+- `src/beertaste.fsproj` - .NET project configuration
 - `.editorconfig` - F# formatting rules (crucial for consistency)
 
 ## Excel Data Schema
@@ -138,5 +160,7 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 - No formal unit tests - validation is done through script execution and report inspection
 - Scripts are designed for REPL-style interactive development in FSI
+- **Scripts must be run from the repository root** as they expect Excel files to be in the current directory
 - Multiple Excel files represent different tasting events (catalog, annual events)
+- Tasting event Excel files (.xlsx) are kept in the root directory for easy access
 - Norwegian language context throughout (field names, output text)
