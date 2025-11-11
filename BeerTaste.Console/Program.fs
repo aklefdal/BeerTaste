@@ -50,6 +50,37 @@ type BeerTasteEntity() =
             this.Description <- description
             this.Date <- date
 
+// Beer entity type for Azure Table Storage
+type BeerEntity() =
+    interface ITableEntity with
+        member val PartitionKey = "" with get, set
+        member val RowKey = "" with get, set
+        member val Timestamp = Nullable<DateTimeOffset>() with get, set
+        member val ETag = ETag() with get, set
+
+    member val Name = "" with get, set
+    member val BeerType = "" with get, set
+    member val Origin = "" with get, set
+    member val Producer = "" with get, set
+    member val ABV = 0.0 with get, set
+    member val Volume = 0.0 with get, set
+    member val Price = 0.0 with get, set
+    member val Packaging = "" with get, set
+
+    new(partitionKey: string, rowKey: string, beer: Beer) as this =
+        BeerEntity()
+        then
+            (this :> ITableEntity).PartitionKey <- partitionKey
+            (this :> ITableEntity).RowKey <- rowKey
+            this.Name <- beer.Name
+            this.BeerType <- beer.BeerType
+            this.Origin <- beer.Origin
+            this.Producer <- beer.Producer
+            this.ABV <- beer.ABV
+            this.Volume <- beer.Volume
+            this.Price <- beer.Price
+            this.Packaging <- beer.Packaging
+
 // Check if a BeerTaste with the given short name exists
 let beerTasteExists (table: TableClient) (shortName: string) : bool =
     try
@@ -66,6 +97,32 @@ let addBeerTaste (table: TableClient) (shortName: string) (description: string) 
     let utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc)
     let entity = BeerTasteEntity(partitionKey, shortName, description, utcDate)
     table.AddEntity(entity) |> ignore
+
+// Get the PartitionKey for a BeerTaste by short name
+let getBeerTastePartitionKey (table: TableClient) (shortName: string) : string option =
+    try
+        let query = table.Query<BeerTasteEntity>(filter = $"RowKey eq '{shortName}'")
+        let entity = query |> Seq.tryHead
+        entity |> Option.map (fun e -> (e :> ITableEntity).PartitionKey)
+    with
+    | _ -> None
+
+// Delete all beers for a given partition key
+let deleteBeersForPartitionKey (beersTable: TableClient) (partitionKey: string) : unit =
+    try
+        let query = beersTable.Query<BeerEntity>(filter = $"PartitionKey eq '{partitionKey}'")
+        for entity in query do
+            beersTable.DeleteEntity(entity) |> ignore
+    with
+    | _ -> ()
+
+// Add beers to the beers table
+let addBeers (beersTable: TableClient) (partitionKey: string) (beers: Beer list) : unit =
+    beers
+    |> List.iter (fun beer ->
+        let rowKey = beer.Id.ToString()
+        let entity = BeerEntity(partitionKey, rowKey, beer)
+        beersTable.AddEntity(entity) |> ignore)
 
 // Helper function for Norwegian decimal format (comma to dot)
 let norwegianToFloat (s: string) : float = s.Replace(",", ".") |> float
@@ -268,7 +325,12 @@ let main args =
                 let tableName = "beertaste"
                 let table = service.GetTableClient(tableName)
                 table.CreateIfNotExists() |> ignore
-                AnsiConsole.MarkupLine($"[green]Connected to Table Storage.[/] Table [bold]{tableName}[/] ready.")
+
+                let beersTableName = "beers"
+                let beersTable = service.GetTableClient(beersTableName)
+                beersTable.CreateIfNotExists() |> ignore
+
+                AnsiConsole.MarkupLine($"[green]Connected to Table Storage.[/] Tables [bold]{tableName}[/] and [bold]{beersTableName}[/] ready.")
 
                 // Check if BeerTaste exists
                 let exists = beerTasteExists table shortName
@@ -293,6 +355,15 @@ let main args =
                 // Setup folder and template file (for both new and existing entries)
                 setupBeerTasteFolder filesFolder shortName
 
+                // Get the partition key for this BeerTaste
+                let partitionKeyOpt = getBeerTastePartitionKey table shortName
+                let partitionKey =
+                    match partitionKeyOpt with
+                    | Some pk -> pk
+                    | None ->
+                        AnsiConsole.MarkupLine("[red]Error: Could not retrieve BeerTaste partition key.[/]")
+                        ""
+
                 // Get the Excel file path
                 let excelFilePath = System.IO.Path.Combine(filesFolder, shortName, $"{shortName}.xlsx")
 
@@ -308,6 +379,16 @@ let main args =
                             AnsiConsole.MarkupLine("[cyan]Creating TastersSchema worksheet...[/]")
                             createTastersSchema excelFilePath beers
                             AnsiConsole.MarkupLine("[green]TastersSchema worksheet created successfully![/]")
+
+                            // Save beers to Azure Table Storage
+                            if not (String.IsNullOrWhiteSpace(partitionKey)) then
+                                try
+                                    AnsiConsole.MarkupLine("[cyan]Saving beers to Azure Table Storage...[/]")
+                                    deleteBeersForPartitionKey beersTable partitionKey
+                                    addBeers beersTable partitionKey beers
+                                    AnsiConsole.MarkupLine($"[green]Successfully saved {beers.Length} beer(s) to Azure Table Storage.[/]")
+                                with ex ->
+                                    AnsiConsole.MarkupLine($"[red]Warning: Could not save beers to Azure Table Storage: {ex.Message}[/]")
 
                             // Now read tasters from the Excel file
                             try
