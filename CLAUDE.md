@@ -12,17 +12,23 @@ BeerTaste is an F# data analysis system for organizing and analyzing beer tastin
 - F# Script files (.fsx) for analysis logic with inline NuGet references
 - EPPlus 8.2.1 for Excel I/O (licensed for non-commercial personal use)
 - FSharp.Stats 0.4.0 for statistical analysis
-- Azure.Data.Tables 12.9.1 for Azure Table Storage integration
+- Azure.Data.Tables 12.11.0 for Azure Table Storage integration
+- Oxpecker 1.5.0 for web presentation (F# web framework)
+- Spectre.Console 0.53.0 for CLI interactions
 - Fantomas 7.0.3 for code formatting
 
 ## Repository Structure
 
 ```
 beertaste/
-├── BeerTaste.Console/            # Compiled F# program
-│   ├── Program.fs               # Main program for Azure Table Storage
+├── BeerTaste.Console/            # Compiled F# console program
+│   ├── Program.fs               # Main program for Azure Table Storage and Excel management
 │   ├── BeerTaste.Console.fsproj # .NET project file
-│   └── BeerTaste.xlsx           # Beer catalog
+│   └── BeerTaste.xlsx           # Beer catalog template
+├── BeerTaste.Web/                # F# web application (future results presentation)
+│   ├── Program.fs               # ASP.NET Core web server with Oxpecker
+│   ├── BeerTaste.Web.fsproj     # .NET web project file
+│   └── README.md                # Web project documentation
 ├── scripts/                      # F# scripts, data files, and outputs
 │   ├── BeerTaste.Common.fsx     # Core data models and Excel I/O
 │   ├── BeerTaste.Preparations.fsx # Excel template generation
@@ -44,13 +50,22 @@ beertaste/
 ### Build and Run
 
 ```powershell
-# Build the compiled program (from root or BeerTaste.Console directory)
+# Build the console program (from root or BeerTaste.Console directory)
 dotnet build BeerTaste.Console/BeerTaste.Console.fsproj
 # Or: cd BeerTaste.Console && dotnet build
 
-# Run the compiled program with a short name parameter
+# Run the console program with a short name parameter
 dotnet run --project BeerTaste.Console/BeerTaste.Console.fsproj -- <short-name>
 # Or: cd BeerTaste.Console && dotnet run -- <short-name>
+
+# Build the web application (from root or BeerTaste.Web directory)
+dotnet build BeerTaste.Web/BeerTaste.Web.fsproj
+# Or: cd BeerTaste.Web && dotnet build
+
+# Run the web application (from root or BeerTaste.Web directory)
+dotnet run --project BeerTaste.Web/BeerTaste.Web.fsproj
+# Or: cd BeerTaste.Web && dotnet run
+# Web server will start at http://localhost:5000 (or https://localhost:5001)
 
 # Execute F# scripts directly (run from scripts directory)
 cd scripts
@@ -123,16 +138,27 @@ The project uses a **layered F# script architecture** where each layer is a self
    - Generates Markdown reports with 6 analysis sections
    - Creates individual slide files for presentation
 
-5. **Compiled program** (`BeerTaste.Console/Program.fs` + `BeerTaste.Console/BeerTaste.Console.fsproj`)
+5. **Console program** (`BeerTaste.Console/Program.fs` + `BeerTaste.Console/BeerTaste.Console.fsproj`)
    - Manages BeerTaste events in Azure Table Storage
-   - Takes a short name as parameter and checks if it exists
-   - Prompts for description and date if creating new entry
+   - Takes a short name as parameter and checks if it exists in Azure
+   - If new: prompts for description and date, creates Azure entry
+   - Creates event folder structure: `{FilesFolder}/{shortName}/`
+   - Copies BeerTaste.xlsx template to event folder
+   - Reads beers from Excel, creates TastersSchema worksheet (if 2+ beers)
+   - Reads tasters from Excel, creates ScoreSchema worksheet (if 2+ tasters)
    - Configuration management with user secrets
    - User secrets ID: `beertaste-5f8f1d6d-b9a5-4e4a-b0d0-3c3c52e6c6c2`
+   - Configurable settings: `BeerTaste:TableStorageConnectionString`, `BeerTaste:FilesFolder`
+
+6. **Web application** (`BeerTaste.Web/Program.fs` + `BeerTaste.Web/BeerTaste.Web.fsproj`)
+   - ASP.NET Core web server using Oxpecker framework
+   - Currently a basic "Hello World" endpoint
+   - Future: Will present tasting results and analysis via web interface
+   - Runs on http://localhost:5000 (or https://localhost:5001)
 
 **Data Flow:**
 
-Excel Files (scripts/) → Common (parsing) → Results (analysis) → Report (output) → Markdown/Slides (scripts/)
+Console Program → Excel Files ({FilesFolder}/{shortName}/) → Scripts (Common → Results → Report) → Markdown/Slides (scripts/) → Web Application (future)
 
 ## Code Conventions
 
@@ -148,8 +174,10 @@ Excel Files (scripts/) → Common (parsing) → Results (analysis) → Report (o
 - `scripts/BeerTaste.Results.fsx` - Statistical analysis functions
 - `scripts/BeerTaste.Report.fsx` - Report generation
 - `scripts/BeerTaste.Preparations.fsx` - Excel template generation
-- `BeerTaste.Console/Program.fs` - Azure Table Storage program
-- `BeerTaste.Console/BeerTaste.Console.fsproj` - .NET project configuration
+- `BeerTaste.Console/Program.fs` - Console program for event management and Excel operations
+- `BeerTaste.Console/BeerTaste.Console.fsproj` - Console project configuration
+- `BeerTaste.Web/Program.fs` - Web application for results presentation
+- `BeerTaste.Web/BeerTaste.Web.fsproj` - Web project configuration
 - `.editorconfig` - F# formatting rules (crucial for consistency)
 
 ## Excel Data Schema
@@ -189,4 +217,6 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 - **Important:** Scripts reference Excel files by name only (e.g., `"ØJ Ølsmaking 2024.xlsx"`), so they should be run from the `scripts/` directory: `cd scripts && dotnet fsi BeerTaste.Report.fsx`
 - Multiple Excel files in `scripts/` represent different tasting events (catalog, annual events)
 - All analysis workflow files (Excel, scripts, generated reports, presentations) are organized in `scripts/`
+- Console program manages event lifecycle: Azure registration, folder setup, Excel template creation, schema generation
+- Web application is currently a placeholder and will be developed for results presentation
 - Norwegian language context throughout (field names, output text)
