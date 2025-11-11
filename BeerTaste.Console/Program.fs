@@ -251,7 +251,12 @@ let createTastersSchema (fileName: string) (beers: Beer list) : unit =
 let createScoreSchema (fileName: string) (beers: Beer list) (tasters: Taster list) : unit =
     use package = new ExcelPackage(fileName)
 
-    let sheetName = "ScoreSchema " + DateTime.Now.ToString("yyyy-MM-dd HHmmss")
+    let sheetName = "ScoreSchema"
+
+    // Delete existing ScoreSchema worksheet if it exists
+    let existingWorksheet = package.Workbook.Worksheets[sheetName]
+    if existingWorksheet <> null then
+        package.Workbook.Worksheets.Delete(existingWorksheet)
 
     let worksheet = package.Workbook.Worksheets.Add(sheetName)
     worksheet.Cells[1, 1].Value <- "Id"
