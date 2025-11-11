@@ -1,6 +1,6 @@
-﻿open System
-open Spectre.Console
+﻿open Spectre.Console
 open Microsoft.Extensions.Configuration
+open System
 open Azure.Data.Tables
 open Azure
 open OfficeOpenXml
@@ -81,6 +81,27 @@ type BeerEntity() =
             this.Price <- beer.Price
             this.Packaging <- beer.Packaging
 
+// Taster entity type for Azure Table Storage
+type TasterEntity() =
+    interface ITableEntity with
+        member val PartitionKey = "" with get, set
+        member val RowKey = "" with get, set
+        member val Timestamp = Nullable<DateTimeOffset>() with get, set
+        member val ETag = ETag() with get, set
+
+    member val Name = "" with get, set
+    member val Email = "" with get, set
+    member val BirthYear = 0 with get, set
+
+    new(partitionKey: string, rowKey: string, taster: Taster) as this =
+        TasterEntity()
+        then
+            (this :> ITableEntity).PartitionKey <- partitionKey
+            (this :> ITableEntity).RowKey <- rowKey
+            this.Name <- taster.Name
+            this.Email <- taster.Email
+            this.BirthYear <- taster.BirthYear
+
 // Check if a BeerTaste with the given short name exists
 let beerTasteExists (table: TableClient) (shortName: string) : bool =
     try
@@ -116,7 +137,7 @@ let deleteBeersForPartitionKey (beersTable: TableClient) (partitionKey: string) 
     with
     | _ -> ()
 
-// Add beers to the beers table
+// Add beers to the 'beers' table
 let addBeers (beersTable: TableClient) (partitionKey: string) (beers: Beer list) : unit =
     beers
     |> List.iter (fun beer ->
@@ -124,26 +145,43 @@ let addBeers (beersTable: TableClient) (partitionKey: string) (beers: Beer list)
         let entity = BeerEntity(partitionKey, rowKey, beer)
         beersTable.AddEntity(entity) |> ignore)
 
+// Delete all tasters for a given partition key
+let deleteTastersForPartitionKey (tastersTable: TableClient) (partitionKey: string) : unit =
+    try
+        let query = tastersTable.Query<TasterEntity>(filter = $"PartitionKey eq '{partitionKey}'")
+        for entity in query do
+            tastersTable.DeleteEntity(entity) |> ignore
+    with
+    | _ -> ()
+
+// Add tasters to the 'tasters' table
+let addTasters (tastersTable: TableClient) (partitionKey: string) (tasters: Taster list) : unit =
+    tasters
+    |> List.iter (fun taster ->
+        let rowKey = taster.Name
+        let entity = TasterEntity(partitionKey, rowKey, taster)
+        tastersTable.AddEntity(entity) |> ignore)
+
 // Helper function for Norwegian decimal format (comma to dot)
 let norwegianToFloat (s: string) : float = s.Replace(",", ".") |> float
 
 // Read a single beer from a worksheet row
 let rowToBeer (worksheet: ExcelWorksheet) (row: int) : Beer = {
-    Id = worksheet.Cells.[row, 1].Text |> int
-    Name = worksheet.Cells.[row, 2].Text
-    BeerType = worksheet.Cells.[row, 3].Text
-    Origin = worksheet.Cells.[row, 4].Text
-    Producer = worksheet.Cells.[row, 5].Text
-    ABV = worksheet.Cells.[row, 6].Text |> norwegianToFloat
-    Volume = worksheet.Cells.[row, 7].Text |> norwegianToFloat
-    Price = worksheet.Cells.[row, 8].Text |> norwegianToFloat
-    Packaging = worksheet.Cells.[row, 9].Text
+    Id = worksheet.Cells[row, 1].Text |> int
+    Name = worksheet.Cells[row, 2].Text
+    BeerType = worksheet.Cells[row, 3].Text
+    Origin = worksheet.Cells[row, 4].Text
+    Producer = worksheet.Cells[row, 5].Text
+    ABV = worksheet.Cells[row, 6].Text |> norwegianToFloat
+    Volume = worksheet.Cells[row, 7].Text |> norwegianToFloat
+    Price = worksheet.Cells[row, 8].Text |> norwegianToFloat
+    Packaging = worksheet.Cells[row, 9].Text
 }
 
-// Read beers from Excel file
+// Read beers from the Excel file
 let readBeers (fileName: string) : Beer list =
     use package = new ExcelPackage(fileName)
-    let worksheet = package.Workbook.Worksheets.["Beers"]
+    let worksheet = package.Workbook.Worksheets["Beers"]
 
     if worksheet.Dimension = null then
         []
@@ -154,15 +192,15 @@ let readBeers (fileName: string) : Beer list =
 
 // Read a single taster from a worksheet row
 let rowToTaster (worksheet: ExcelWorksheet) (row: int) : Taster = {
-    Name = worksheet.Cells.[row, 1].Text
-    Email = worksheet.Cells.[row, 2].Text
-    BirthYear = worksheet.Cells.[row, 3].Text |> int
+    Name = worksheet.Cells[row, 1].Text
+    Email = worksheet.Cells[row, 2].Text
+    BirthYear = worksheet.Cells[row, 3].Text |> int
 }
 
-// Read tasters from Excel file
+// Read tasters from the Excel file
 let readTasters (fileName: string) : Taster list =
     use package = new ExcelPackage(fileName)
-    let worksheet = package.Workbook.Worksheets.["Tasters"]
+    let worksheet = package.Workbook.Worksheets["Tasters"]
 
     if worksheet.Dimension = null then
         []
@@ -180,19 +218,19 @@ let createTastersSchema (fileName: string) (beers: Beer list) : unit =
     let worksheet = package.Workbook.Worksheets.Copy("TastersSchema", schemaName)
     let height = worksheet.Row(3).Height
 
-    worksheet.InsertRow(3, beers.Length - 1, 3) |> ignore
+    worksheet.InsertRow(3, beers.Length - 1, 3)
 
     for i in 3 .. (beers.Length + 1) do
         worksheet.Row(i).Height <- height
 
     beers
     |> List.iteri (fun i beer ->
-        worksheet.Cells.[i + 3, 1].Value <- beer.Id
-        worksheet.Cells.[i + 3, 2].Value <- beer.Producer
-        worksheet.Cells.[i + 3, 3].Value <- beer.Name
-        worksheet.Cells.[i + 3, 4].Value <- beer.BeerType
-        worksheet.Cells.[i + 3, 5].Value <- beer.Origin
-        worksheet.Cells.[i + 3, 6].Value <- beer.ABV)
+        worksheet.Cells[i + 3, 1].Value <- beer.Id
+        worksheet.Cells[i + 3, 2].Value <- beer.Producer
+        worksheet.Cells[i + 3, 3].Value <- beer.Name
+        worksheet.Cells[i + 3, 4].Value <- beer.BeerType
+        worksheet.Cells[i + 3, 5].Value <- beer.Origin
+        worksheet.Cells[i + 3, 6].Value <- beer.ABV)
 
     package.Save()
 
@@ -203,18 +241,18 @@ let createScoreSchema (fileName: string) (beers: Beer list) (tasters: Taster lis
     let sheetName = "ScoreSchema " + DateTime.Now.ToString("yyyy-MM-dd HHmmss")
 
     let worksheet = package.Workbook.Worksheets.Add(sheetName)
-    worksheet.Cells.[1, 1].Value <- "Id"
-    worksheet.Cells.[1, 2].Value <- "Producer"
-    worksheet.Cells.[1, 3].Value <- "Name"
+    worksheet.Cells[1, 1].Value <- "Id"
+    worksheet.Cells[1, 2].Value <- "Producer"
+    worksheet.Cells[1, 3].Value <- "Name"
 
     beers
     |> List.iteri (fun i beer ->
-        worksheet.Cells.[i + 2, 1].Value <- beer.Id
-        worksheet.Cells.[i + 2, 2].Value <- beer.Producer
-        worksheet.Cells.[i + 2, 3].Value <- beer.Name)
+        worksheet.Cells[i + 2, 1].Value <- beer.Id
+        worksheet.Cells[i + 2, 2].Value <- beer.Producer
+        worksheet.Cells[i + 2, 3].Value <- beer.Name)
 
     tasters
-    |> List.iteri (fun i taster -> worksheet.Cells.[1, i + 4].Value <- taster.Name)
+    |> List.iteri (fun i taster -> worksheet.Cells[1, i + 4].Value <- taster.Name)
 
     worksheet.Row(1).Style.Font.Bold <- true
     worksheet.Column(1).Style.Font.Bold <- true
@@ -257,7 +295,7 @@ let promptDoneEditingTasters () : bool =
 
 // Setup folder and copy template file for a BeerTaste event
 let setupBeerTasteFolder (filesFolder: string) (shortName: string) : unit =
-    // Create subfolder for this BeerTaste
+    // Create a subfolder for this BeerTaste
     let eventFolder = System.IO.Path.Combine(filesFolder, shortName)
     if not (System.IO.Directory.Exists(eventFolder)) then
         AnsiConsole.MarkupLine($"[cyan]Creating folder: {eventFolder}[/]")
@@ -265,7 +303,7 @@ let setupBeerTasteFolder (filesFolder: string) (shortName: string) : unit =
     else
         AnsiConsole.MarkupLine($"[grey]Folder already exists: {eventFolder}[/]")
 
-    // Copy BeerTaste.xlsx template if it doesn't exist
+    // Copy the BeerTaste.xlsx template if it doesn't exist
     let targetFile = System.IO.Path.Combine(eventFolder, $"{shortName}.xlsx")
     if not (System.IO.File.Exists(targetFile)) then
         // Template file is in the same directory as the executable
@@ -281,13 +319,13 @@ let setupBeerTasteFolder (filesFolder: string) (shortName: string) : unit =
 
 [<EntryPoint>]
 let main args =
-    // Check if short name argument was provided
+    // Check if a short name argument was provided
     if args.Length = 0 then
         AnsiConsole.MarkupLine("[red]Error: Short name parameter is required.[/]")
         AnsiConsole.MarkupLine("Usage: [yellow]dotnet run -- <short-name>[/]")
         1
     else
-        let shortName = args.[0]
+        let shortName = args[0]
 
         // Load configuration
         let config =
@@ -296,10 +334,10 @@ let main args =
                 .AddEnvironmentVariables()
                 .Build()
 
-        let connStr = config.["BeerTaste:TableStorageConnectionString"]
+        let connStr = config["BeerTaste:TableStorageConnectionString"]
         // Get the folder path for Excel files, default to "../scripts" relative to executable
         let filesFolder =
-            let configPath = config.["BeerTaste:FilesFolder"]
+            let configPath = config["BeerTaste:FilesFolder"]
             if String.IsNullOrWhiteSpace configPath then
                 // Default to scripts directory relative to the project
                 "./BeerTastes" |> System.IO.Path.GetFullPath
@@ -330,7 +368,11 @@ let main args =
                 let beersTable = service.GetTableClient(beersTableName)
                 beersTable.CreateIfNotExists() |> ignore
 
-                AnsiConsole.MarkupLine($"[green]Connected to Table Storage.[/] Tables [bold]{tableName}[/] and [bold]{beersTableName}[/] ready.")
+                let tastersTableName = "tasters"
+                let tastersTable = service.GetTableClient(tastersTableName)
+                tastersTable.CreateIfNotExists() |> ignore
+
+                AnsiConsole.MarkupLine($"[green]Connected to Table Storage.[/] Tables [bold]{tableName}[/], [bold]{beersTableName}[/], and [bold]{tastersTableName}[/] ready.")
 
                 // Check if BeerTaste exists
                 let exists = beerTasteExists table shortName
@@ -372,7 +414,7 @@ let main args =
                     let beers = readBeers excelFilePath
                     AnsiConsole.MarkupLine($"[green]Found {beers.Length} beer(s) in the Excel file.[/]")
 
-                    // Only ask if user is done editing when there are 2 or more beers
+                    // Only ask if the user is done editing when there are 2 or more beers
                     if beers.Length > 1 then
                         let doneEditing = promptDoneEditingBeers ()
                         if doneEditing then
@@ -395,13 +437,23 @@ let main args =
                                 let tasters = readTasters excelFilePath
                                 AnsiConsole.MarkupLine($"[green]Found {tasters.Length} taster(s) in the Excel file.[/]")
 
-                                // Only ask if user is done editing when there are 2 or more tasters
+                                // Only ask if the user is done editing when there are 2 or more tasters
                                 if tasters.Length > 1 then
                                     let doneTasters = promptDoneEditingTasters ()
                                     if doneTasters then
                                         AnsiConsole.MarkupLine("[cyan]Creating ScoreSchema worksheet...[/]")
                                         createScoreSchema excelFilePath beers tasters
                                         AnsiConsole.MarkupLine("[green]ScoreSchema worksheet created successfully![/]")
+
+                                        // Save tasters to Azure Table Storage
+                                        if not (String.IsNullOrWhiteSpace(partitionKey)) then
+                                            try
+                                                AnsiConsole.MarkupLine("[cyan]Saving tasters to Azure Table Storage...[/]")
+                                                deleteTastersForPartitionKey tastersTable partitionKey
+                                                addTasters tastersTable partitionKey tasters
+                                                AnsiConsole.MarkupLine($"[green]Successfully saved {tasters.Length} taster(s) to Azure Table Storage.[/]")
+                                            with ex ->
+                                                AnsiConsole.MarkupLine($"[red]Warning: Could not save tasters to Azure Table Storage: {ex.Message}[/]")
                                     else
                                         AnsiConsole.MarkupLine("[yellow]Please continue editing the tasters in the Excel file.[/]")
                                 elif tasters.Length = 1 then
