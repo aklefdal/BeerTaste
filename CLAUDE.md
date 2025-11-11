@@ -19,9 +19,9 @@ BeerTaste is an F# data analysis system for organizing and analyzing beer tastin
 
 ```
 beertaste/
-├── src/                          # Compiled F# program
+├── BeerTaste.Console/            # Compiled F# program
 │   ├── Program.fs               # Main program for Azure Table Storage
-│   ├── beertaste.fsproj         # .NET project file
+│   ├── BeerTaste.Console.fsproj # .NET project file
 │   └── BeerTaste.xlsx           # Beer catalog
 ├── scripts/                      # F# scripts, data files, and outputs
 │   ├── BeerTaste.Common.fsx     # Core data models and Excel I/O
@@ -44,13 +44,13 @@ beertaste/
 ### Build and Run
 
 ```powershell
-# Build the compiled program (from root or src directory)
-dotnet build src/beertaste.fsproj
-# Or: cd src && dotnet build
+# Build the compiled program (from root or BeerTaste.Console directory)
+dotnet build BeerTaste.Console/BeerTaste.Console.fsproj
+# Or: cd BeerTaste.Console && dotnet build
 
 # Run the compiled program with a short name parameter
-dotnet run --project src/beertaste.fsproj -- <short-name>
-# Or: cd src && dotnet run -- <short-name>
+dotnet run --project BeerTaste.Console/BeerTaste.Console.fsproj -- <short-name>
+# Or: cd BeerTaste.Console && dotnet run -- <short-name>
 
 # Execute F# scripts directly (run from scripts directory)
 cd scripts
@@ -76,8 +76,8 @@ dotnet fsi BeerTaste.Report.fsx
 ### Azure Configuration
 
 ```powershell
-# Set Azure Table Storage connection string in user secrets (from src directory)
-cd src
+# Set Azure Table Storage connection string in user secrets (from BeerTaste.Console directory)
+cd BeerTaste.Console
 dotnet user-secrets set "TableStorage:ConnectionString" "<your-connection-string>"
 ```
 
@@ -115,7 +115,7 @@ The project uses a **layered F# script architecture** where each layer is a self
    - Generates Markdown reports with 6 analysis sections
    - Creates individual slide files for presentation
 
-5. **Compiled program** (`src/Program.fs` + `src/beertaste.fsproj`)
+5. **Compiled program** (`BeerTaste.Console/Program.fs` + `BeerTaste.Console/BeerTaste.Console.fsproj`)
    - Manages BeerTaste events in Azure Table Storage
    - Takes a short name as parameter and checks if it exists
    - Prompts for description and date if creating new entry
@@ -140,8 +140,8 @@ Excel Files (scripts/) → Common (parsing) → Results (analysis) → Report (o
 - `scripts/BeerTaste.Results.fsx` - Statistical analysis functions
 - `scripts/BeerTaste.Report.fsx` - Report generation
 - `scripts/BeerTaste.Preparations.fsx` - Excel template generation
-- `src/Program.fs` - Azure Table Storage program
-- `src/beertaste.fsproj` - .NET project configuration
+- `BeerTaste.Console/Program.fs` - Azure Table Storage program
+- `BeerTaste.Console/BeerTaste.Console.fsproj` - .NET project configuration
 - `.editorconfig` - F# formatting rules (crucial for consistency)
 
 ## Excel Data Schema
