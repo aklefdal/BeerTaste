@@ -211,11 +211,24 @@ let readTasters (fileName: string) : Taster list =
 
 // Create TastersSchema worksheet
 let createTastersSchema (fileName: string) (beers: Beer list) : unit =
-    use package = new ExcelPackage(fileName)
+    // Get the template file path
+    let templateFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BeerTaste.xlsx")
 
-    let schemaName = "TastersSchema " + DateTime.Now.ToString("yyyy-MM-dd HHmmss")
+    use templatePackage = new ExcelPackage(templateFile)
+    use targetPackage = new ExcelPackage(fileName)
 
-    let worksheet = package.Workbook.Worksheets.Copy("TastersSchema", schemaName)
+    let schemaName = "TastersSchema"
+
+    // Delete existing TastersSchema worksheet if it exists
+    let existingWorksheet = targetPackage.Workbook.Worksheets[schemaName]
+    if existingWorksheet <> null then
+        targetPackage.Workbook.Worksheets.Delete(existingWorksheet)
+
+    // Copy the template from BeerTaste.xlsx
+    let templateWorksheet = templatePackage.Workbook.Worksheets["TastersSchema"]
+    targetPackage.Workbook.Worksheets.Add(schemaName, templateWorksheet) |> ignore
+
+    let worksheet = targetPackage.Workbook.Worksheets[schemaName]
     let height = worksheet.Row(3).Height
 
     worksheet.InsertRow(3, beers.Length - 1, 3)
@@ -232,7 +245,7 @@ let createTastersSchema (fileName: string) (beers: Beer list) : unit =
         worksheet.Cells[i + 3, 5].Value <- beer.Origin
         worksheet.Cells[i + 3, 6].Value <- beer.ABV)
 
-    package.Save()
+    targetPackage.Save()
 
 // Create ScoreSchema worksheet
 let createScoreSchema (fileName: string) (beers: Beer list) (tasters: Taster list) : unit =
