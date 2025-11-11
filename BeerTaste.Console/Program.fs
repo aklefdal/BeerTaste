@@ -253,31 +253,66 @@ let createScoreSchema (fileName: string) (beers: Beer list) (tasters: Taster lis
 
     let sheetName = "ScoreSchema"
 
-    // Delete existing ScoreSchema worksheet if it exists
+    // Check if existing ScoreSchema worksheet has scores
     let existingWorksheet = package.Workbook.Worksheets[sheetName]
-    if existingWorksheet <> null then
-        package.Workbook.Worksheets.Delete(existingWorksheet)
+    let shouldDelete =
+        if existingWorksheet <> null then
+            // Check if there are any scores (values in columns 4 and beyond, rows 2 and beyond)
+            let hasScores =
+                if existingWorksheet.Dimension <> null then
+                    let maxRow = existingWorksheet.Dimension.End.Row
+                    let maxCol = existingWorksheet.Dimension.End.Column
+                    if maxRow >= 2 && maxCol >= 4 then
+                        // Check if any cells in the score area have values
+                        seq {
+                            for row in 2 .. maxRow do
+                                for col in 4 .. maxCol do
+                                    yield existingWorksheet.Cells[row, col].Value
+                        }
+                        |> Seq.exists (fun v -> v <> null && not (String.IsNullOrWhiteSpace(v.ToString())))
+                    else
+                        false
+                else
+                    false
 
-    let worksheet = package.Workbook.Worksheets.Add(sheetName)
-    worksheet.Cells[1, 1].Value <- "Id"
-    worksheet.Cells[1, 2].Value <- "Producer"
-    worksheet.Cells[1, 3].Value <- "Name"
+            if hasScores then
+                AnsiConsole.MarkupLine("[yellow]Warning: The existing ScoreSchema worksheet contains scores![/]")
+                let confirm = AnsiConsole.Confirm("[red]Are you sure you want to delete it and create a new one?[/]", false)
+                if not confirm then
+                    AnsiConsole.MarkupLine("[yellow]ScoreSchema creation cancelled. Keeping existing worksheet.[/]")
+                confirm
+            else
+                true
+        else
+            true
 
-    beers
-    |> List.iteri (fun i beer ->
-        worksheet.Cells[i + 2, 1].Value <- beer.Id
-        worksheet.Cells[i + 2, 2].Value <- beer.Producer
-        worksheet.Cells[i + 2, 3].Value <- beer.Name)
+    if not shouldDelete then
+        () // Exit early without creating new worksheet
+    else
+        // Delete existing ScoreSchema worksheet if it exists
+        if existingWorksheet <> null then
+            package.Workbook.Worksheets.Delete(existingWorksheet)
 
-    tasters
-    |> List.iteri (fun i taster -> worksheet.Cells[1, i + 4].Value <- taster.Name)
+        let worksheet = package.Workbook.Worksheets.Add(sheetName)
+        worksheet.Cells[1, 1].Value <- "Id"
+        worksheet.Cells[1, 2].Value <- "Producer"
+        worksheet.Cells[1, 3].Value <- "Name"
 
-    worksheet.Row(1).Style.Font.Bold <- true
-    worksheet.Column(1).Style.Font.Bold <- true
-    worksheet.Column(2).Style.Font.Bold <- true
-    worksheet.Column(3).Style.Font.Bold <- true
+        beers
+        |> List.iteri (fun i beer ->
+            worksheet.Cells[i + 2, 1].Value <- beer.Id
+            worksheet.Cells[i + 2, 2].Value <- beer.Producer
+            worksheet.Cells[i + 2, 3].Value <- beer.Name)
 
-    package.Save()
+        tasters
+        |> List.iteri (fun i taster -> worksheet.Cells[1, i + 4].Value <- taster.Name)
+
+        worksheet.Row(1).Style.Font.Bold <- true
+        worksheet.Column(1).Style.Font.Bold <- true
+        worksheet.Column(2).Style.Font.Bold <- true
+        worksheet.Column(3).Style.Font.Bold <- true
+
+        package.Save()
 
 // Prompt user for description
 let promptForDescription () : string =
