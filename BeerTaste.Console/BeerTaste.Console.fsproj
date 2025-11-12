@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Storage.fs" />
+    <Compile Include="Configuration.fs" />
+    <Compile Include="Beers.fs" />
+    <Compile Include="Tasters.fs" />
+    <Compile Include="BeerTaste.fs" />
+    <Compile Include="Scores.fs" />
+    <Compile Include="Workflow.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
