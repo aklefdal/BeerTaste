@@ -1,0 +1,63 @@
+namespace BeerTaste.Common
+
+open System
+open Azure.Data.Tables
+open Azure
+
+type Beer = {
+    Id: int
+    Name: string
+    BeerType: string
+    Origin: string
+    Producer: string
+    ABV: float
+    Volume: float
+    Price: float
+    Packaging: string
+}
+
+type BeerEntity() =
+    interface ITableEntity with
+        member val PartitionKey = "" with get, set
+        member val RowKey = "" with get, set
+        member val Timestamp = Nullable<DateTimeOffset>() with get, set
+        member val ETag = ETag() with get, set
+
+    member val Name = "" with get, set
+    member val BeerType = "" with get, set
+    member val Origin = "" with get, set
+    member val Producer = "" with get, set
+    member val ABV = 0.0 with get, set
+    member val Volume = 0.0 with get, set
+    member val Price = 0.0 with get, set
+    member val Packaging = "" with get, set
+
+    new(partitionKey: string, rowKey: string, beer: Beer) as this =
+        BeerEntity()
+        then
+            (this :> ITableEntity).PartitionKey <- partitionKey
+            (this :> ITableEntity).RowKey <- rowKey
+            this.Name <- beer.Name
+            this.BeerType <- beer.BeerType
+            this.Origin <- beer.Origin
+            this.Producer <- beer.Producer
+            this.ABV <- beer.ABV
+            this.Volume <- beer.Volume
+            this.Price <- beer.Price
+            this.Packaging <- beer.Packaging
+
+module BeersStorage =
+    let deleteBeersForBeerTaste (beersTable: TableClient) (partitionKey: string) : unit =
+        try
+            let query = beersTable.Query<BeerEntity>(filter = $"PartitionKey eq '{partitionKey}'")
+            for entity in query do
+                beersTable.DeleteEntity(entity) |> ignore
+        with
+        | _ -> ()
+
+    let addBeers (beersTable: TableClient) (partitionKey: string) (beers: Beer list) : unit =
+        beers
+        |> List.iter (fun beer ->
+            let rowKey = beer.Id.ToString()
+            let entity = BeerEntity(partitionKey, rowKey, beer)
+            beersTable.AddEntity(entity) |> ignore)

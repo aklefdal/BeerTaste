@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BeerTaste.Console", "BeerTa
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BeerTaste.Web", "BeerTaste.Web\BeerTaste.Web.fsproj", "{7370D307-1610-4F23-BAC5-656D4D5F3C36}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "BeerTaste.Common", "BeerTaste.Common\BeerTaste.Common.fsproj", "{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{7370D307-1610-4F23-BAC5-656D4D5F3C36}.Release|x64.Build.0 = Release|Any CPU
 		{7370D307-1610-4F23-BAC5-656D4D5F3C36}.Release|x86.ActiveCfg = Release|Any CPU
 		{7370D307-1610-4F23-BAC5-656D4D5F3C36}.Release|x86.Build.0 = Release|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Debug|x64.Build.0 = Debug|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Debug|x86.Build.0 = Debug|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Release|x64.ActiveCfg = Release|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Release|x64.Build.0 = Release|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Release|x86.ActiveCfg = Release|Any CPU
+		{B011B812-D43D-4759-BF3C-8F8E89B7D1CD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

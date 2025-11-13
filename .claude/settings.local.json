@@ -3,7 +3,10 @@
     "allow": [
       "Bash(dotnet build:*)",
       "Bash(findstr:*)",
-      "Bash(powershell -Command \"(Get-Content ''BeerTaste.Console\\Program.fs'').Count\")"
+      "Bash(powershell -Command \"(Get-Content ''BeerTaste.Console\\Program.fs'').Count\")",
+      "Bash(Remove-Item \"C:\\s\\aklefdal\\beertaste\\BeerTaste.Common\\Library.fs\")",
+      "Bash(powershell -Command \"Remove-Item ''C:\\s\\aklefdal\\beertaste\\BeerTaste.Common\\Library.fs''\")",
+      "Bash(powershell -Command:*)"
     ],
     "deny": [],
     "ask": []

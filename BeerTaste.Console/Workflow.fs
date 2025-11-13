@@ -2,8 +2,11 @@ module BeerTaste.Console.Workflow
 
 open System
 open Spectre.Console
+open BeerTaste.Common
+open BeerTaste.Common.BeersStorage
+open BeerTaste.Common.BeerTasteStorage
+open BeerTaste.Common.TastersStorage
 open BeerTaste.Console.Beers
-open BeerTaste.Console.BeerTaste
 open BeerTaste.Console.Tasters
 open BeerTaste.Console.Scores
 open BeerTaste.Console.Configuration

@@ -137,58 +137,60 @@ $env:BeerTaste__FilesFolder = "C:\path\to\your\folder"
 
 A .NET 9.0 class library for code shared between Console and Web applications:
 
-- **Purpose:** Shared domain models, utilities, and business logic
+- **Purpose:** Domain models, Azure Table Storage operations, and shared business logic
 - **Current State:** Placeholder with basic example code (`Say.hello`)
-- **Future:** Will contain shared types (Beer, Taster, etc.) and common functionality
+- **Architecture:** Will contain modules split from Console project:
+  - **Storage.fs** - Azure Table Storage client setup and initialization
+  - **Beers.fs** - Beer domain types (`Beer`, `BeerEntity`) and Azure storage operations
+  - **Tasters.fs** - Taster domain types (`Taster`, `TasterEntity`) and Azure storage operations
+  - **BeerTaste.fs** - BeerTaste event types (`BeerTasteEntity`) and Azure CRUD operations
+  - **Scores.fs** - Score-related domain logic (if applicable)
+- **Responsibilities:**
+  - All Azure Table Storage entity types and operations
+  - Domain model definitions
+  - Data access layer for both Console and Web
 - **Documentation:** Generates XML documentation file for IntelliSense support
 
 ### Console Application (BeerTaste.Console)
 
-The console application follows a **modular, domain-driven architecture** with clear separation of concerns:
+The console application focuses on **Excel I/O and user interaction**, delegating all Azure operations to BeerTaste.Common:
 
 **Module Compilation Order** (bottom-up dependency chain):
-1. **Storage.fs** - Infrastructure layer
-   - `BeerTasteTableStorage` class encapsulates Azure Table Storage setup
-   - Creates and manages three table clients: `beertaste`, `beers`, `tasters`
-   - Single responsibility: storage infrastructure initialization
 
-2. **Configuration.fs** - Configuration and setup layer
+1. **Configuration.fs** - Configuration and setup layer
    - Loads user secrets and environment variables
    - Sets up folder structure and copies Excel template
    - Returns `ConsoleSetup` record with all necessary context
    - Function: `getConsoleSetup` returns `Option<ConsoleSetup>`
+   - References BeerTaste.Common.Storage for table clients
 
-3. **Beers.fs** - Beer domain module
-   - `Beer` record type and `BeerEntity` for Azure storage
+2. **Beers.fs** - Beer Excel I/O module (Console-specific)
    - Excel reading: `readBeers`, `rowToBeer`, `norwegianToFloat` helper
    - TastersSchema worksheet creation from BeerTaste.xlsx template
-   - Azure operations: `addBeers`, `deleteBeersForBeerTaste`
-   - All beer-related functionality in one cohesive module
+   - Uses EPPlus for all Excel operations
+   - Delegates to BeerTaste.Common.Beers for Azure storage operations
+   - **Split:** Domain types and Azure ops moved to Common
 
-4. **Tasters.fs** - Taster domain module
-   - `Taster` record type and `TasterEntity` for Azure storage
+3. **Tasters.fs** - Taster Excel I/O module (Console-specific)
    - Excel reading: `readTasters`, `rowToTaster`
-   - Azure operations: `addTasters`, `deleteTastersForPartitionKey`
-   - All taster-related functionality in one cohesive module
+   - Uses EPPlus for all Excel operations
+   - Delegates to BeerTaste.Common.Tasters for Azure storage operations
+   - **Split:** Domain types and Azure ops moved to Common
 
-5. **BeerTaste.fs** - BeerTaste event domain module
-   - `BeerTasteEntity` for Azure storage
-   - Event management: `getBeerTasteGuid`, `addBeerTaste`, `getBeerTastePartitionKey`
-   - Handles BeerTaste lifecycle in Azure Table Storage
-
-6. **Scores.fs** - ScoreSchema management module
+4. **Scores.fs** - ScoreSchema Excel management module
    - `ScoresSchemaState` discriminated union: `DoesNotExist | ExistsWithoutScores | ExistsWithScores`
    - State detection: `getScoresSchemaState`, `hasScores`
    - ScoreSchema creation: `deleteAndCreateScoreSchema`
-   - Combines beers and tasters into scoring matrix
+   - Combines beers and tasters into scoring matrix using EPPlus
 
-7. **Workflow.fs** - Orchestration layer
+5. **Workflow.fs** - Orchestration layer
    - User prompts: `promptForDescription`, `promptForDate`, `promptDoneEditingBeers`, `promptDoneEditingTasters`
    - Workflow functions: `setupBeerTaste`, `verifyBeers`, `verifyTasters`, `createScoreSchema`
-   - Coordinates between domain modules with pattern matching and Option types
+   - Coordinates between Console modules and Common modules
+   - Uses Spectre.Console for all user interaction
    - Handles user interaction and business logic flow
 
-8. **Program.fs** - Application entry point
+6. **Program.fs** - Application entry point
    - EPPlus license setup
    - Minimal orchestration using Workflow functions
    - Pattern matching on Option types for clean error handling
@@ -224,6 +226,48 @@ BeerTaste.Common (shared library)
 Console → Azure Tables + Excel Files → Scripts (analysis) → Reports/Slides → Web (future presentation)
 
 ## Code Conventions
+
+### Project Dependency Guidelines
+
+**IMPORTANT:** Strict separation of concerns across projects to maintain clean architecture:
+
+**BeerTaste.Common (Shared Library)**
+- ✅ Can reference: Core .NET libraries (System.*, FSharp.Core), Azure.Data.Tables
+- ❌ Cannot reference: EPPlus, Spectre.Console, System.Console, ASP.NET Core web libraries
+- **Purpose:** Domain models, Azure Table Storage operations, shared business logic
+- **Principle:** No UI dependencies - only data access and domain logic
+
+**BeerTaste.Console (Console Application)**
+- ✅ Can reference: BeerTaste.Common, EPPlus, Spectre.Console, System.Console
+- ❌ Cannot reference: ASP.NET Core, Oxpecker, or any web hosting libraries
+- **Exclusive rights:** Only project that can use EPPlus for Excel operations
+- **Exclusive rights:** Only project that can use Spectre.Console for CLI interactions
+- **Principle:** Console UI and Excel I/O only - delegates Azure operations to Common
+
+**BeerTaste.Web (Web Application)**
+- ✅ Can reference: BeerTaste.Common, ASP.NET Core, Oxpecker
+- ❌ Cannot reference: EPPlus, Spectre.Console, System.Console
+- **Exclusive rights:** Only project that can use ASP.NET Core and web hosting libraries
+- **Principle:** Web UI only - delegates Azure operations to Common
+
+**Rationale:**
+- **Common owns all Azure Table Storage operations** - single source of truth for data access
+- **UI layers stay clean** - Console and Web only handle presentation
+- Clear boundaries for where functionality belongs
+- Enables independent evolution of Console and Web UIs
+- Shared library can be referenced by any future project
+
+**Quick Reference Table:**
+
+| Dependency | BeerTaste.Common | BeerTaste.Console | BeerTaste.Web |
+|------------|------------------|-------------------|---------------|
+| Core .NET (System.*, FSharp.Core) | ✅ | ✅ | ✅ |
+| BeerTaste.Common | N/A | ✅ | ✅ |
+| Azure.Data.Tables | ✅ (owns storage) | ❌ | ❌ |
+| EPPlus | ❌ | ✅ (exclusive) | ❌ |
+| Spectre.Console | ❌ | ✅ (exclusive) | ❌ |
+| System.Console | ❌ | ✅ (exclusive) | ❌ |
+| ASP.NET Core / Oxpecker | ❌ | ❌ | ✅ (exclusive) |
 
 ### General Style
 
@@ -293,21 +337,23 @@ Console → Azure Tables + Excel Files → Scripts (analysis) → Reports/Slides
 
 ## Key Files
 
-### Shared Library
+### Shared Library (Azure Table Storage & Domain)
 
-- `BeerTaste.Common/Library.fs` - Shared code between Console and Web (currently placeholder)
+- `BeerTaste.Common/Storage.fs` - Azure Table Storage client setup (`BeerTasteTableStorage` class)
+- `BeerTaste.Common/Beers.fs` - Beer domain types (`Beer`, `BeerEntity`) and Azure operations
+- `BeerTaste.Common/Tasters.fs` - Taster domain types (`Taster`, `TasterEntity`) and Azure operations
+- `BeerTaste.Common/BeerTaste.fs` - BeerTaste event types (`BeerTasteEntity`) and Azure CRUD operations
+- `BeerTaste.Common/Scores.fs` - Score-related domain logic (if applicable)
 - `BeerTaste.Common/BeerTaste.Common.fsproj` - Class library project configuration
 
-### Console Application Modules (in compilation order)
+### Console Application Modules (Excel I/O & UI)
 
-- `BeerTaste.Console/Storage.fs` - Azure Table Storage initialization
-- `BeerTaste.Console/Configuration.fs` - Config loading, folder setup, returns ConsoleSetup
-- `BeerTaste.Console/Beers.fs` - Beer domain: types, Excel I/O, TastersSchema, Azure operations
-- `BeerTaste.Console/Tasters.fs` - Taster domain: types, Excel I/O, Azure operations
-- `BeerTaste.Console/BeerTaste.fs` - BeerTaste event management and GUID operations
+- `BeerTaste.Console/Configuration.fs` - Config loading, folder setup, references Common.Storage
+- `BeerTaste.Console/Beers.fs` - Excel I/O: `readBeers`, `norwegianToFloat`, TastersSchema creation
+- `BeerTaste.Console/Tasters.fs` - Excel I/O: `readTasters`, `rowToTaster`
 - `BeerTaste.Console/Scores.fs` - ScoreSchema state detection and creation with user warnings
-- `BeerTaste.Console/Workflow.fs` - Orchestration layer with user prompts and workflow coordination
-- `BeerTaste.Console/Program.fs` - Minimal entry point with pattern matching orchestration
+- `BeerTaste.Console/Workflow.fs` - Orchestration with Spectre.Console prompts, calls Common for Azure ops
+- `BeerTaste.Console/Program.fs` - Entry point with EPPlus license and pattern matching orchestration
 - `BeerTaste.Console/BeerTaste.Console.fsproj` - Project file with module compilation order
 - `BeerTaste.Console/BeerTaste.xlsx` - Excel template for events
 
@@ -368,14 +414,20 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 ### Shared Library (BeerTaste.Common)
 
-- **Purpose:** Share code between Console and Web applications
+- **Purpose:** Data access layer and domain models shared between Console and Web applications
 - **Current State:** Placeholder library with example code
-- **Future Direction:** Will contain:
-  - Shared domain models (Beer, Taster types)
-  - Common business logic
-  - Shared utilities and helpers
+- **Architecture Plan:** Will contain modules split from Console:
+  - **Storage.fs** - Azure Table Storage initialization and client management
+  - **Beers.fs** - Beer domain types and Azure CRUD operations
+  - **Tasters.fs** - Taster domain types and Azure CRUD operations
+  - **BeerTaste.fs** - BeerTaste event types and Azure CRUD operations
+  - **Scores.fs** - Score domain logic (if shared)
 - **Project Type:** .NET class library targeting net9.0
 - **XML Documentation:** Enabled for IntelliSense support in consuming projects
+- **Dependencies:** Azure.Data.Tables only (no UI dependencies)
+  - ✅ Azure.Data.Tables for all storage operations
+  - ❌ No EPPlus, Spectre.Console, System.Console, or ASP.NET Core
+  - Keep it focused on data access and domain logic
 
 ### Console Application
 
@@ -389,14 +441,19 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 ### Adding New Features
 
 1. Determine if the feature is shared between Console and Web:
-   - If shared: Add to BeerTaste.Common
+   - If shared: Add to BeerTaste.Common (check dependency guidelines!)
    - If Console-specific: Add to appropriate Console module
    - If Web-specific: Add to Web project
-2. For Console features, determine which domain module it belongs to (Beers, Tasters, Scores, etc.)
-3. Add types and functions to that module
-4. If workflow changes needed, update Workflow.fs
-5. Keep Program.fs minimal - just orchestration
-6. Maintain compilation order in .fsproj
+2. **Check dependency guidelines:**
+   - Excel operations? → Must go in Console (EPPlus exclusive)
+   - CLI interactions? → Must go in Console (Spectre.Console exclusive)
+   - Web hosting? → Must go in Web (ASP.NET Core exclusive)
+   - Pure domain logic? → Can go in Common (no external dependencies)
+3. For Console features, determine which domain module it belongs to (Beers, Tasters, Scores, etc.)
+4. Add types and functions to that module
+5. If workflow changes needed, update Workflow.fs
+6. Keep Program.fs minimal - just orchestration
+7. Maintain compilation order in .fsproj
 
 ### Scripts (.fsx files)
 

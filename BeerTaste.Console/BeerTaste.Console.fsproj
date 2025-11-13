@@ -8,14 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Storage.fs" />
     <Compile Include="Configuration.fs" />
     <Compile Include="Beers.fs" />
     <Compile Include="Tasters.fs" />
-    <Compile Include="BeerTaste.fs" />
     <Compile Include="Scores.fs" />
     <Compile Include="Workflow.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BeerTaste.Common\BeerTaste.Common.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,7 +28,6 @@
 
   <ItemGroup>
     <PackageReference Include="Spectre.Console" Version="0.53.0" />
-    <PackageReference Include="Azure.Data.Tables" Version="12.11.0" />
     <PackageReference Include="EPPlus" Version="8.2.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0" />

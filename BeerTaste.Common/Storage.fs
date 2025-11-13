@@ -1,10 +1,8 @@
-module BeerTaste.Console.Storage
+namespace BeerTaste.Common
 
-open Spectre.Console
 open Azure.Data.Tables
 
 type BeerTasteTableStorage (connectionString: string) =
-    do AnsiConsole.MarkupLine("[grey]Connecting to Azure Table Storage...[/]")
     let service = TableServiceClient(connectionString)
     let beerTasteTableName = "beertaste"
     let beerTasteTableClient = service.GetTableClient(beerTasteTableName)
@@ -17,8 +15,6 @@ type BeerTasteTableStorage (connectionString: string) =
     let tastersTableName = "tasters"
     let tastersTableClient = service.GetTableClient(tastersTableName)
     do tastersTableClient.CreateIfNotExists() |> ignore
-
-    do AnsiConsole.MarkupLine($"[green]Connected to Table Storage.[/] Tables [bold]{beerTasteTableName}[/], [bold]{beersTableName}[/], and [bold]{tastersTableName}[/] ready.")
 
     member this.BeerTasteTableClient = beerTasteTableClient
     member this.BeersTableClient = beersTableClient

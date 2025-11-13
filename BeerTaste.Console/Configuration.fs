@@ -2,7 +2,7 @@ module BeerTaste.Console.Configuration
 
 open Spectre.Console
 open Microsoft.Extensions.Configuration
-open BeerTaste.Console.Storage
+open BeerTaste.Common
 open System
 
 // Anchor type for UserSecrets lookup (the assembly contains the UserSecretsId via the project file)

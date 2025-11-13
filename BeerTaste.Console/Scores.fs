@@ -3,8 +3,7 @@ module BeerTaste.Console.Scores
 open Spectre.Console
 open System
 open OfficeOpenXml
-open BeerTaste.Console.Beers
-open BeerTaste.Console.Tasters
+open BeerTaste.Common
 
 type ScoresSchemaState =
     | DoesNotExist
