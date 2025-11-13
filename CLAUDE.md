@@ -467,3 +467,4 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 - Currently a placeholder ("Hello World")
 - Will be developed for results presentation
 - Oxpecker framework for F#-friendly web development
+- Text files need to use CRLF for line endings
