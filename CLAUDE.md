@@ -21,6 +21,9 @@ BeerTaste is an F# data analysis system for organizing and analyzing beer tastin
 
 ```
 beertaste/
+├── BeerTaste.Common/             # Shared F# class library
+│   ├── Library.fs               # Shared code between Console and Web (currently placeholder)
+│   └── BeerTaste.Common.fsproj  # .NET class library project
 ├── BeerTaste.Console/            # Compiled F# console program (modular architecture)
 │   ├── Storage.fs               # Azure Table Storage client setup
 │   ├── Configuration.fs         # Configuration loading and folder setup
@@ -57,6 +60,10 @@ beertaste/
 ### Build and Run
 
 ```powershell
+# Build the shared library (from root or BeerTaste.Common directory)
+dotnet build BeerTaste.Common/BeerTaste.Common.fsproj
+# Or: cd BeerTaste.Common && dotnet build
+
 # Build the console program (from root or BeerTaste.Console directory)
 dotnet build BeerTaste.Console/BeerTaste.Console.fsproj
 # Or: cd BeerTaste.Console && dotnet build
@@ -73,6 +80,9 @@ dotnet build BeerTaste.Web/BeerTaste.Web.fsproj
 dotnet run --project BeerTaste.Web/BeerTaste.Web.fsproj
 # Or: cd BeerTaste.Web && dotnet run
 # Web server will start at http://localhost:5000 (or https://localhost:5001)
+
+# Build all projects at once (from root)
+dotnet build
 
 # Execute F# scripts directly (run from scripts directory)
 cd scripts
@@ -122,6 +132,15 @@ $env:BeerTaste__FilesFolder = "C:\path\to\your\folder"
 ```
 
 ## Architecture
+
+### Shared Library (BeerTaste.Common)
+
+A .NET 9.0 class library for code shared between Console and Web applications:
+
+- **Purpose:** Shared domain models, utilities, and business logic
+- **Current State:** Placeholder with basic example code (`Say.hello`)
+- **Future:** Will contain shared types (Beer, Taster, etc.) and common functionality
+- **Documentation:** Generates XML documentation file for IntelliSense support
 
 ### Console Application (BeerTaste.Console)
 
@@ -189,6 +208,16 @@ Separate **layered F# script architecture** for analysis:
 - ASP.NET Core with Oxpecker framework
 - Currently minimal ("Hello World")
 - Future: results presentation and analysis visualization
+- Will reference BeerTaste.Common for shared types
+
+**Project Dependencies:**
+
+```
+BeerTaste.Common (shared library)
+    ↓
+    ├─→ BeerTaste.Console (references Common in future)
+    └─→ BeerTaste.Web (references Common in future)
+```
 
 **Data Flow:**
 
@@ -264,6 +293,11 @@ Console → Azure Tables + Excel Files → Scripts (analysis) → Reports/Slides
 
 ## Key Files
 
+### Shared Library
+
+- `BeerTaste.Common/Library.fs` - Shared code between Console and Web (currently placeholder)
+- `BeerTaste.Common/BeerTaste.Common.fsproj` - Class library project configuration
+
 ### Console Application Modules (in compilation order)
 
 - `BeerTaste.Console/Storage.fs` - Azure Table Storage initialization
@@ -332,6 +366,17 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 - Norwegian language context throughout (field names, output text)
 - User secrets ID: `beertaste-5f8f1d6d-b9a5-4e4a-b0d0-3c3c52e6c6c2`
 
+### Shared Library (BeerTaste.Common)
+
+- **Purpose:** Share code between Console and Web applications
+- **Current State:** Placeholder library with example code
+- **Future Direction:** Will contain:
+  - Shared domain models (Beer, Taster types)
+  - Common business logic
+  - Shared utilities and helpers
+- **Project Type:** .NET class library targeting net9.0
+- **XML Documentation:** Enabled for IntelliSense support in consuming projects
+
 ### Console Application
 
 - **Modular Architecture:** 8 modules with clear separation of concerns
@@ -343,11 +388,15 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 ### Adding New Features
 
-1. Determine which domain module the feature belongs to (Beers, Tasters, Scores, etc.)
-2. Add types and functions to that module
-3. If workflow changes needed, update Workflow.fs
-4. Keep Program.fs minimal - just orchestration
-5. Maintain compilation order in .fsproj
+1. Determine if the feature is shared between Console and Web:
+   - If shared: Add to BeerTaste.Common
+   - If Console-specific: Add to appropriate Console module
+   - If Web-specific: Add to Web project
+2. For Console features, determine which domain module it belongs to (Beers, Tasters, Scores, etc.)
+3. Add types and functions to that module
+4. If workflow changes needed, update Workflow.fs
+5. Keep Program.fs minimal - just orchestration
+6. Maintain compilation order in .fsproj
 
 ### Scripts (.fsx files)
 
