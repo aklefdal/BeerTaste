@@ -6,15 +6,22 @@ open BeerTaste.Common
 open BeerTaste.Common.BeersStorage
 open BeerTaste.Common.BeerTasteStorage
 open BeerTaste.Common.TastersStorage
+open BeerTaste.Common.ScoresStorage
 open BeerTaste.Console.Beers
 open BeerTaste.Console.Tasters
 open BeerTaste.Console.Scores
 open BeerTaste.Console.Configuration
 
-let createScoreSchema (fileName: string) (beers: Beer list) (tasters: Taster list) =
+let createScoreSchema
+    (scoresTableClient: Azure.Data.Tables.TableClient)
+    (beerTasteGuid: string)
+    (fileName: string)
+    (beers: Beer list)
+    (tasters: Taster list)
+    =
     match fileName |> getScoresSchemaState with
     | DoesNotExist
-    | ExistsWithoutScores -> deleteAndCreateScoreSchema fileName beers tasters
+    | ExistsWithoutScores -> deleteAndCreateScoreSchema scoresTableClient beerTasteGuid fileName beers tasters
     | ExistsWithScores ->
         AnsiConsole.MarkupLine("[yellow]Warning: The existing ScoreSchema worksheet contains scores![/]")
 
@@ -24,7 +31,7 @@ let createScoreSchema (fileName: string) (beers: Beer list) (tasters: Taster lis
         if not confirm then
             AnsiConsole.MarkupLine("[yellow]ScoreSchema creation cancelled. Keeping existing worksheet.[/]")
         else
-            deleteAndCreateScoreSchema fileName beers tasters
+            deleteAndCreateScoreSchema scoresTableClient beerTasteGuid fileName beers tasters
 
 // Prompt user if they are done editing beers
 let promptDoneEditingBeers () : bool =
@@ -117,9 +124,10 @@ let verifyTasters (setup: ConsoleSetup) (beers: Beer list) (beerTasteGuid: strin
         // Only ask if the user is done editing when there are 2 or more tasters
         if tasters.Length > 1 then
             let doneTasters = promptDoneEditingTasters ()
+
             if doneTasters then
                 AnsiConsole.MarkupLine("[cyan]Creating ScoreSchema worksheet...[/]")
-                createScoreSchema setup.ExcelFilePath beers tasters
+                createScoreSchema setup.TableStorage.ScoresTableClient beerTasteGuid setup.ExcelFilePath beers tasters
                 AnsiConsole.MarkupLine("[green]ScoreSchema worksheet created successfully![/]")
 
                 // Save tasters to Azure Table Storage
@@ -128,13 +136,34 @@ let verifyTasters (setup: ConsoleSetup) (beers: Beer list) (beerTasteGuid: strin
                         AnsiConsole.MarkupLine("[cyan]Saving tasters to Azure Table Storage...[/]")
                         deleteTastersForPartitionKey setup.TableStorage.TastersTableClient beerTasteGuid
                         addTasters setup.TableStorage.TastersTableClient beerTasteGuid tasters
-                        AnsiConsole.MarkupLine($"[green]Successfully saved {tasters.Length} taster(s) to Azure Table Storage.[/]")
+
+                        AnsiConsole.MarkupLine(
+                            $"[green]Successfully saved {tasters.Length} taster(s) to Azure Table Storage.[/]"
+                        )
+
+                        // Check if there are scores and save them to Azure Table Storage
+                        try
+                            let scores = readScores setup.ExcelFilePath
+
+                            if scores.Length > 0 then
+                                AnsiConsole.MarkupLine("[cyan]Saving scores to Azure Table Storage...[/]")
+                                deleteScoresForBeerTaste setup.TableStorage.ScoresTableClient beerTasteGuid
+                                addScores setup.TableStorage.ScoresTableClient beerTasteGuid scores
+
+                                AnsiConsole.MarkupLine(
+                                    $"[green]Successfully saved {scores.Length} score(s) to Azure Table Storage.[/]"
+                                )
+                        with ex ->
+                            AnsiConsole.MarkupLine(
+                                $"[red]Warning: Could not save scores to Azure Table Storage: {ex.Message}[/]"
+                            )
                     with ex ->
-                        AnsiConsole.MarkupLine($"[red]Warning: Could not save tasters to Azure Table Storage: {ex.Message}[/]")
+                        AnsiConsole.MarkupLine(
+                            $"[red]Warning: Could not save tasters to Azure Table Storage: {ex.Message}[/]"
+                        )
             else
                 AnsiConsole.MarkupLine("[yellow]Please continue editing the tasters in the Excel file.[/]")
         elif tasters.Length = 1 then
             AnsiConsole.MarkupLine("[yellow]Only one taster found. Please add more tasters to the Excel file.[/]")
     with ex ->
         AnsiConsole.MarkupLine($"[red]Warning: Could not read tasters from Excel file: {ex.Message}[/]")
-    

@@ -10,6 +10,7 @@
     <Compile Include="Beers.fs" />
     <Compile Include="Tasters.fs" />
     <Compile Include="BeerTaste.fs" />
+    <Compile Include="Scores.fs" />
   </ItemGroup>
 
   <ItemGroup>
