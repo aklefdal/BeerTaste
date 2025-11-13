@@ -32,11 +32,11 @@ type BeerEntity() =
     member val Price = 0.0 with get, set
     member val Packaging = "" with get, set
 
-    new(partitionKey: string, rowKey: string, beer: Beer) as this =
+    new(beerTasteGuid: string, beer: Beer) as this =
         BeerEntity()
         then
-            (this :> ITableEntity).PartitionKey <- partitionKey
-            (this :> ITableEntity).RowKey <- rowKey
+            (this :> ITableEntity).PartitionKey <- beerTasteGuid
+            (this :> ITableEntity).RowKey <- beer.Id.ToString()
             this.Name <- beer.Name
             this.BeerType <- beer.BeerType
             this.Origin <- beer.Origin
@@ -47,17 +47,15 @@ type BeerEntity() =
             this.Packaging <- beer.Packaging
 
 module BeersStorage =
-    let deleteBeersForBeerTaste (beersTable: TableClient) (partitionKey: string) : unit =
+    let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : unit =
         try
-            beersTable.Query<BeerEntity>(filter = $"PartitionKey eq '{partitionKey}'")
-            |> Seq.map beersTable.DeleteEntity
-            |> ignore
+            beersTable.Query<BeerEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            |> Seq.iter (beersTable.DeleteEntity >> ignore)
         with
         | _ -> ()
 
-    let addBeers (beersTable: TableClient) (partitionKey: string) (beers: Beer list) : unit =
+    let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : unit =
         beers
         |> List.iter (fun beer ->
-            let rowKey = beer.Id.ToString()
-            let entity = BeerEntity(partitionKey, rowKey, beer)
+            let entity = BeerEntity(beerTasteGuid, beer)
             beersTable.AddEntity(entity) |> ignore)

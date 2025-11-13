@@ -14,11 +14,11 @@ type BeerTasteEntity() =
     member val Description = "" with get, set
     member val Date = DateTime.MinValue with get, set
 
-    new(partitionKey: string, rowKey: string, description: string, date: DateTime) as this =
+    new(beerTasteGuid: string, rowKey: string, description: string, date: DateTime) as this =
         BeerTasteEntity()
 
         then
-            (this :> ITableEntity).PartitionKey <- partitionKey
+            (this :> ITableEntity).PartitionKey <- beerTasteGuid
             (this :> ITableEntity).RowKey <- rowKey
             this.Description <- description
             this.Date <- date
@@ -30,12 +30,12 @@ module BeerTasteStorage =
         |> Seq.tryHead
 
     let addBeerTaste (table: TableClient) (shortName: string) (description: string) (date: DateTime) =
-        let partitionKey = Guid.NewGuid().ToString()
+        let beerTasteGuid = Guid.NewGuid().ToString()
         // Azure Table Storage requires UTC dates
         let utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc)
-        let entity = BeerTasteEntity(partitionKey, shortName, description, utcDate)
+        let entity = BeerTasteEntity(beerTasteGuid, shortName, description, utcDate)
         table.AddEntity(entity) |> ignore
-        partitionKey
+        beerTasteGuid
 
     let getBeerTastePartitionKey (table: TableClient) (shortName: string) : string option =
         try

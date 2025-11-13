@@ -17,31 +17,28 @@ type TasterEntity() =
         member val Timestamp = Nullable<DateTimeOffset>() with get, set
         member val ETag = ETag() with get, set
 
-    member val Name = "" with get, set
+    member this.Name = (this :> ITableEntity).RowKey
     member val Email = "" with get, set
     member val BirthYear = 0 with get, set
 
-    new(partitionKey: string, rowKey: string, taster: Taster) as this =
+    new(beerTasteGuid: string, taster: Taster) as this =
         TasterEntity()
         then
-            (this :> ITableEntity).PartitionKey <- partitionKey
-            (this :> ITableEntity).RowKey <- rowKey
-            this.Name <- taster.Name
+            (this :> ITableEntity).PartitionKey <- beerTasteGuid
+            (this :> ITableEntity).RowKey <- taster.Name
             this.Email <- taster.Email
             this.BirthYear <- taster.BirthYear
 
 module TastersStorage =
-    let deleteTastersForPartitionKey (tastersTable: TableClient) (partitionKey: string) : unit =
+    let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : unit =
         try
-            tastersTable.Query<TasterEntity>(filter = $"PartitionKey eq '{partitionKey}'")
-            |> Seq.map tastersTable.DeleteEntity
-            |> ignore
+            tastersTable.Query<TasterEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            |> Seq.iter (tastersTable.DeleteEntity >> ignore)
         with
         | _ -> ()
 
-    let addTasters (tastersTable: TableClient) (partitionKey: string) (tasters: Taster list) : unit =
+    let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : unit =
         tasters
         |> List.iter (fun taster ->
-            let rowKey = taster.Name
-            let entity = TasterEntity(partitionKey, rowKey, taster)
+            let entity = TasterEntity(beerTasteGuid, taster)
             tastersTable.AddEntity(entity) |> ignore)

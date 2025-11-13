@@ -9,7 +9,7 @@ type Score = {
     TasterName: string
     ScoreValue: int
 } with
-    member _.RowKey = $"{_.BeerId}|{_.TasterName}"
+    member this.RowKey = $"{this.BeerId}|{this.TasterName}"
 
 type ScoreEntity() =
     interface ITableEntity with
@@ -22,28 +22,26 @@ type ScoreEntity() =
     member val TasterName = "" with get, set
     member val ScoreValue = 0 with get, set
 
-    new(partitionKey: string, rowKey: string, score: Score) as this =
+    new(beerTasteGuid: string, score: Score) as this =
         ScoreEntity()
 
         then
-            (this :> ITableEntity).PartitionKey <- partitionKey
-            (this :> ITableEntity).RowKey <- rowKey
+            (this :> ITableEntity).PartitionKey <- beerTasteGuid
+            (this :> ITableEntity).RowKey <- score.RowKey
             this.BeerId <- score.BeerId
             this.TasterName <- score.TasterName
             this.ScoreValue <- score.ScoreValue
 
 module ScoresStorage =
-    let deleteScoresForBeerTaste (scoresTable: TableClient) (partitionKey: string) : unit =
+    let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : unit =
         try
-            scoresTable.Query<ScoreEntity>(filter = $"PartitionKey eq '{partitionKey}'")
-            |> Seq.map scoresTable.DeleteEntity
-            |> ignore
+            scoresTable.Query<ScoreEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            |> Seq.iter (scoresTable.DeleteEntity >> ignore)
         with _ ->
             ()
 
-    let addScores (scoresTable: TableClient) (partitionKey: string) (scores: Score list) : unit =
+    let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : unit =
         scores
         |> List.iter (fun score ->
-            let rowKey = score.RowKey
-            let entity = ScoreEntity(partitionKey, rowKey, score)
+            let entity = ScoreEntity(beerTasteGuid, score)
             scoresTable.AddEntity(entity) |> ignore)
