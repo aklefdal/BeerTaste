@@ -21,9 +21,16 @@ BeerTaste is an F# data analysis system for organizing and analyzing beer tastin
 
 ```
 beertaste/
-├── BeerTaste.Console/            # Compiled F# console program
-│   ├── Program.fs               # Main program for Azure Table Storage and Excel management
-│   ├── BeerTaste.Console.fsproj # .NET project file
+├── BeerTaste.Console/            # Compiled F# console program (modular architecture)
+│   ├── Storage.fs               # Azure Table Storage client setup
+│   ├── Configuration.fs         # Configuration loading and folder setup
+│   ├── Beers.fs                 # Beer domain: types, Excel I/O, TastersSchema, Azure storage
+│   ├── Tasters.fs               # Taster domain: types, Excel I/O, Azure storage
+│   ├── BeerTaste.fs             # BeerTaste event management and Azure operations
+│   ├── Scores.fs                # ScoreSchema state detection and creation
+│   ├── Workflow.fs              # Orchestration of beer/taster workflows
+│   ├── Program.fs               # Application entry point
+│   ├── BeerTaste.Console.fsproj # .NET project file with compilation order
 │   └── BeerTaste.xlsx           # Beer catalog template
 ├── BeerTaste.Web/                # F# web application (future results presentation)
 │   ├── Program.fs               # ASP.NET Core web server with Oxpecker
@@ -116,69 +123,176 @@ $env:BeerTaste__FilesFolder = "C:\path\to\your\folder"
 
 ## Architecture
 
-The project uses a **layered F# script architecture** where each layer is a self-contained .fsx file with inline NuGet references:
+### Console Application (BeerTaste.Console)
 
-1. **Common functions** (`scripts/BeerTaste.Common.fsx`)
-   - Domain models: `Beer`, `Taster`, scoring types
-   - Excel I/O using EPPlus
-   - Norwegian locale handling (`norwegianToFloat` converts comma decimals)
-   - Expected Excel schema: "Beers" and "Tasters" worksheets
+The console application follows a **modular, domain-driven architecture** with clear separation of concerns:
 
-2. **Preparation functions** (`scripts/BeerTaste.Preparations.fsx`)
-   - Generates Excel templates for new tasting events
-   - Creates proper schema for data entry
+**Module Compilation Order** (bottom-up dependency chain):
+1. **Storage.fs** - Infrastructure layer
+   - `BeerTasteTableStorage` class encapsulates Azure Table Storage setup
+   - Creates and manages three table clients: `beertaste`, `beers`, `tasters`
+   - Single responsibility: storage infrastructure initialization
 
-3. **Result functions** (`scripts/BeerTaste.Results.fsx`)
-   - Loads Common layer with `#load "BeerTaste.Common.fsx"`
-   - Statistical analysis: Pearson correlations, standard deviation, rankings
-   - Uses FSharp.Stats for computations
+2. **Configuration.fs** - Configuration and setup layer
+   - Loads user secrets and environment variables
+   - Sets up folder structure and copies Excel template
+   - Returns `ConsoleSetup` record with all necessary context
+   - Function: `getConsoleSetup` returns `Option<ConsoleSetup>`
 
-4. **Reporting function** (`scripts/BeerTaste.Report.fsx`)
-   - Loads Results layer
-   - Generates Markdown reports with 6 analysis sections
-   - Creates individual slide files for presentation
+3. **Beers.fs** - Beer domain module
+   - `Beer` record type and `BeerEntity` for Azure storage
+   - Excel reading: `readBeers`, `rowToBeer`, `norwegianToFloat` helper
+   - TastersSchema worksheet creation from BeerTaste.xlsx template
+   - Azure operations: `addBeers`, `deleteBeersForBeerTaste`
+   - All beer-related functionality in one cohesive module
 
-5. **Console program** (`BeerTaste.Console/Program.fs` + `BeerTaste.Console/BeerTaste.Console.fsproj`)
-   - Manages BeerTaste events in Azure Table Storage
-   - Takes a short name as parameter and checks if it exists in Azure
-   - If new: prompts for description and date, creates Azure entry
-   - Creates event folder structure: `{FilesFolder}/{shortName}/`
-   - Copies BeerTaste.xlsx template to event folder
-   - Reads beers from Excel, creates TastersSchema worksheet (if 2+ beers)
-   - Reads tasters from Excel, creates ScoreSchema worksheet (if 2+ tasters)
-   - Configuration management with user secrets
-   - User secrets ID: `beertaste-5f8f1d6d-b9a5-4e4a-b0d0-3c3c52e6c6c2`
-   - Configurable settings: `BeerTaste:TableStorageConnectionString`, `BeerTaste:FilesFolder`
+4. **Tasters.fs** - Taster domain module
+   - `Taster` record type and `TasterEntity` for Azure storage
+   - Excel reading: `readTasters`, `rowToTaster`
+   - Azure operations: `addTasters`, `deleteTastersForPartitionKey`
+   - All taster-related functionality in one cohesive module
 
-6. **Web application** (`BeerTaste.Web/Program.fs` + `BeerTaste.Web/BeerTaste.Web.fsproj`)
-   - ASP.NET Core web server using Oxpecker framework
-   - Currently a basic "Hello World" endpoint
-   - Future: Will present tasting results and analysis via web interface
-   - Runs on http://localhost:5000 (or https://localhost:5001)
+5. **BeerTaste.fs** - BeerTaste event domain module
+   - `BeerTasteEntity` for Azure storage
+   - Event management: `getBeerTasteGuid`, `addBeerTaste`, `getBeerTastePartitionKey`
+   - Handles BeerTaste lifecycle in Azure Table Storage
+
+6. **Scores.fs** - ScoreSchema management module
+   - `ScoresSchemaState` discriminated union: `DoesNotExist | ExistsWithoutScores | ExistsWithScores`
+   - State detection: `getScoresSchemaState`, `hasScores`
+   - ScoreSchema creation: `deleteAndCreateScoreSchema`
+   - Combines beers and tasters into scoring matrix
+
+7. **Workflow.fs** - Orchestration layer
+   - User prompts: `promptForDescription`, `promptForDate`, `promptDoneEditingBeers`, `promptDoneEditingTasters`
+   - Workflow functions: `setupBeerTaste`, `verifyBeers`, `verifyTasters`, `createScoreSchema`
+   - Coordinates between domain modules with pattern matching and Option types
+   - Handles user interaction and business logic flow
+
+8. **Program.fs** - Application entry point
+   - EPPlus license setup
+   - Minimal orchestration using Workflow functions
+   - Pattern matching on Option types for clean error handling
+   - Exit codes: 0 for success, 1 for errors
+
+### Script Architecture (scripts/)
+
+Separate **layered F# script architecture** for analysis:
+
+1. **BeerTaste.Common.fsx** - Domain models and Excel I/O
+2. **BeerTaste.Preparations.fsx** - Excel template generation
+3. **BeerTaste.Results.fsx** - Statistical analysis (Pearson correlations, rankings)
+4. **BeerTaste.Report.fsx** - Markdown report generation
+
+### Web Application (BeerTaste.Web)
+
+- ASP.NET Core with Oxpecker framework
+- Currently minimal ("Hello World")
+- Future: results presentation and analysis visualization
 
 **Data Flow:**
 
-Console Program → Excel Files ({FilesFolder}/{shortName}/) → Scripts (Common → Results → Report) → Markdown/Slides (scripts/) → Web Application (future)
+Console → Azure Tables + Excel Files → Scripts (analysis) → Reports/Slides → Web (future presentation)
 
 ## Code Conventions
 
+### General Style
+
 - **Formatting:** Stroustrup brace style, 120 character line width (enforced by Fantomas + EditorConfig)
+- **Module Organization:** Each `.fs` file is a module with `module BeerTaste.Console.ModuleName` declaration
+- **Compilation Order:** Dependencies must be compiled before dependents (F# compiler requirement)
 - **Locale:** Norwegian decimal format (comma separator) handled by `norwegianToFloat`
-- **F# Scripts:** Use inline `#r "nuget: PackageName, Version"` for dependencies
-- **Functional Style:** Heavy use of piping (`|>`), composition, and immutable data structures
-- **EPPlus License:** Always call `ExcelPackage.License.SetNonCommercialPersonal("Alf Kåre Lefdal")` before Excel operations
+
+### F# Functional Patterns
+
+- **Option Types:** Prefer `Option<'T>` over null checks (e.g., `getConsoleSetup` returns `ConsoleSetup option`)
+- **Pattern Matching:** Use `match` expressions for control flow and Option handling
+- **Discriminated Unions:** Model state with DUs (e.g., `ScoresSchemaState = DoesNotExist | ExistsWithoutScores | ExistsWithScores`)
+- **Piping:** Use `|>` operator for function composition and data transformation
+- **Function Composition:** Small, focused functions with clear single responsibilities
+- **Immutability:** Record types are immutable by default
+- **Expression-Oriented:** Functions return values rather than using side effects where possible
+
+### Domain Modeling
+
+- **Records for Data:** Use record types for domain models (`Beer`, `Taster`, `ConsoleSetup`)
+- **Classes for Azure Entities:** Use classes implementing `ITableEntity` for Azure Table Storage
+- **Encapsulation:** `BeerTasteTableStorage` class encapsulates all table client initialization
+- **Type Safety:** Strong typing throughout, minimal use of `string` or generic types
+
+### Module Guidelines
+
+- **Domain Cohesion:** Related types and functions grouped in same module (Beers.fs has Beer type, BeerEntity, and all beer operations)
+- **Single Responsibility:** Each module has one clear purpose
+- **Explicit Dependencies:** Module references are clear (e.g., `open BeerTaste.Console.Beers`)
+- **Minimize Cross-Module Dependencies:** Keep modules loosely coupled
+
+### Naming Conventions
+
+- **PascalCase:** Types, modules, properties (`Beer`, `BeerEntity`, `TableStorage`)
+- **camelCase:** Functions, parameters, local bindings (`readBeers`, `shortName`, `excelFilePath`)
+- **Descriptive Names:** Function names describe what they do (`verifyBeers`, `setupBeerTaste`, `deleteTastersForPartitionKey`)
+- **Domain Language:** Use business domain terms (BeerTaste, Tasters, Scores)
+
+### Error Handling
+
+- **Option Types:** Return `None` for expected failures, `Some value` for success
+- **Try-Catch:** Use sparingly, primarily for external I/O (Excel, Azure)
+- **User Messaging:** Display errors with Spectre.Console markup for colored output
+- **Fail Fast:** Return early with clear error messages
+
+### Azure Table Storage
+
+- **Entity Classes:** Implement `ITableEntity` interface
+- **PartitionKey Strategy:** BeerTaste GUID for partitioning beers and tasters
+- **RowKey Strategy:** Natural identifiers (shortName for BeerTaste, Beer.Id for beers, Taster.Name for tasters)
+- **Delete Before Insert:** Pattern of deleting existing entities before bulk insert
+
+### Excel Operations
+
+- **EPPlus License:** Always call `ExcelPackage.License.SetNonCommercialPersonal("Alf Kåre Lefdal")` in Program.fs
+- **Using Statements:** Use `use` keyword for ExcelPackage disposal
+- **Template Pattern:** Copy from BeerTaste.xlsx template for consistency
+- **Worksheet Management:** Delete existing worksheet before creating new one
+- **Norwegian Locale:** Handle comma decimal separators with `norwegianToFloat`
+
+### Scripts (.fsx files)
+
+- **Inline Dependencies:** Use `#r "nuget: PackageName, Version"` for package references
+- **Module Loading:** Use `#load "OtherScript.fsx"` for dependencies
+- **REPL-Friendly:** Designed for interactive development in F# Interactive
 
 ## Key Files
+
+### Console Application Modules (in compilation order)
+
+- `BeerTaste.Console/Storage.fs` - Azure Table Storage initialization
+- `BeerTaste.Console/Configuration.fs` - Config loading, folder setup, returns ConsoleSetup
+- `BeerTaste.Console/Beers.fs` - Beer domain: types, Excel I/O, TastersSchema, Azure operations
+- `BeerTaste.Console/Tasters.fs` - Taster domain: types, Excel I/O, Azure operations
+- `BeerTaste.Console/BeerTaste.fs` - BeerTaste event management and GUID operations
+- `BeerTaste.Console/Scores.fs` - ScoreSchema state detection and creation with user warnings
+- `BeerTaste.Console/Workflow.fs` - Orchestration layer with user prompts and workflow coordination
+- `BeerTaste.Console/Program.fs` - Minimal entry point with pattern matching orchestration
+- `BeerTaste.Console/BeerTaste.Console.fsproj` - Project file with module compilation order
+- `BeerTaste.Console/BeerTaste.xlsx` - Excel template for events
+
+### Analysis Scripts
 
 - `scripts/BeerTaste.Common.fsx` - Core data models and Excel parsing
 - `scripts/BeerTaste.Results.fsx` - Statistical analysis functions
 - `scripts/BeerTaste.Report.fsx` - Report generation
 - `scripts/BeerTaste.Preparations.fsx` - Excel template generation
-- `BeerTaste.Console/Program.fs` - Console program for event management and Excel operations
-- `BeerTaste.Console/BeerTaste.Console.fsproj` - Console project configuration
+
+### Web Application
+
 - `BeerTaste.Web/Program.fs` - Web application for results presentation
 - `BeerTaste.Web/BeerTaste.Web.fsproj` - Web project configuration
+
+### Configuration
+
 - `.editorconfig` - F# formatting rules (crucial for consistency)
+- User secrets (via `dotnet user-secrets`): `BeerTaste:TableStorageConnectionString`, `BeerTaste:FilesFolder`
 
 ## Excel Data Schema
 
@@ -212,11 +326,38 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 ## Development Notes
 
+### General
+
 - No formal unit tests - validation is done through script execution and report inspection
-- Scripts are designed for REPL-style interactive development in FSI
-- **Important:** Scripts reference Excel files by name only (e.g., `"ØJ Ølsmaking 2024.xlsx"`), so they should be run from the `scripts/` directory: `cd scripts && dotnet fsi BeerTaste.Report.fsx`
-- Multiple Excel files in `scripts/` represent different tasting events (catalog, annual events)
-- All analysis workflow files (Excel, scripts, generated reports, presentations) are organized in `scripts/`
-- Console program manages event lifecycle: Azure registration, folder setup, Excel template creation, schema generation
-- Web application is currently a placeholder and will be developed for results presentation
 - Norwegian language context throughout (field names, output text)
+- User secrets ID: `beertaste-5f8f1d6d-b9a5-4e4a-b0d0-3c3c52e6c6c2`
+
+### Console Application
+
+- **Modular Architecture:** 8 modules with clear separation of concerns
+- **Compilation Order Matters:** F# requires dependencies to be compiled first (see .fsproj ItemGroup order)
+- **Domain-Driven Design:** Each domain (Beers, Tasters, BeerTaste, Scores) has its own module
+- **Option-Based Flow:** Functions return `Option` types, orchestration uses pattern matching
+- **Storage Encapsulation:** All Azure table initialization happens in Storage.fs
+- **Configuration First:** ConsoleSetup record provides all context to workflow functions
+
+### Adding New Features
+
+1. Determine which domain module the feature belongs to (Beers, Tasters, Scores, etc.)
+2. Add types and functions to that module
+3. If workflow changes needed, update Workflow.fs
+4. Keep Program.fs minimal - just orchestration
+5. Maintain compilation order in .fsproj
+
+### Scripts (.fsx files)
+
+- Designed for REPL-style interactive development in FSI
+- **Important:** Scripts reference Excel files by name only (e.g., `"ØJ Ølsmaking 2024.xlsx"`), so they should be run from the `scripts/` directory: `cd scripts && dotnet fsi BeerTaste.Report.fsx`
+- Multiple Excel files in `scripts/` represent different tasting events
+- All analysis workflow files organized in `scripts/`
+
+### Web Application
+
+- Currently a placeholder ("Hello World")
+- Will be developed for results presentation
+- Oxpecker framework for F#-friendly web development
