@@ -35,11 +35,9 @@ type ScoreEntity() =
 module ScoresStorage =
     let deleteScoresForBeerTaste (scoresTable: TableClient) (partitionKey: string) : unit =
         try
-            let query =
-                scoresTable.Query<ScoreEntity>(filter = $"PartitionKey eq '{partitionKey}'")
-
-            for entity in query do
-                scoresTable.DeleteEntity(entity) |> ignore
+            scoresTable.Query<ScoreEntity>(filter = $"PartitionKey eq '{partitionKey}'")
+            |> Seq.map scoresTable.DeleteEntity
+            |> ignore
         with _ ->
             ()
 

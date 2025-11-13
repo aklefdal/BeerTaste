@@ -33,9 +33,9 @@ type TasterEntity() =
 module TastersStorage =
     let deleteTastersForPartitionKey (tastersTable: TableClient) (partitionKey: string) : unit =
         try
-            let query = tastersTable.Query<TasterEntity>(filter = $"PartitionKey eq '{partitionKey}'")
-            for entity in query do
-                tastersTable.DeleteEntity(entity) |> ignore
+            tastersTable.Query<TasterEntity>(filter = $"PartitionKey eq '{partitionKey}'")
+            |> Seq.map tastersTable.DeleteEntity
+            |> ignore
         with
         | _ -> ()
 

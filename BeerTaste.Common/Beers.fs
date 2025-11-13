@@ -49,9 +49,9 @@ type BeerEntity() =
 module BeersStorage =
     let deleteBeersForBeerTaste (beersTable: TableClient) (partitionKey: string) : unit =
         try
-            let query = beersTable.Query<BeerEntity>(filter = $"PartitionKey eq '{partitionKey}'")
-            for entity in query do
-                beersTable.DeleteEntity(entity) |> ignore
+            beersTable.Query<BeerEntity>(filter = $"PartitionKey eq '{partitionKey}'")
+            |> Seq.map beersTable.DeleteEntity
+            |> ignore
         with
         | _ -> ()
 

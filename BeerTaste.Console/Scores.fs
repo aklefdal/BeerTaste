@@ -1,6 +1,5 @@
 module BeerTaste.Console.Scores
 
-open Spectre.Console
 open System
 open OfficeOpenXml
 open BeerTaste.Common
@@ -49,7 +48,7 @@ let deleteAndCreateScoreSchema
     (tasters: Taster list)
     : unit =
     // Delete scores from Azure Table Storage
-    BeerTaste.Common.ScoresStorage.deleteScoresForBeerTaste scoresTableClient beerTasteGuid
+    ScoresStorage.deleteScoresForBeerTaste scoresTableClient beerTasteGuid
 
     use package = new ExcelPackage(fileName)
 
