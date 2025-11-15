@@ -1,6 +1,7 @@
 module BeerTaste.Console.Workflow
 
 open System
+open System.Diagnostics
 open Spectre.Console
 open BeerTaste.Common
 open BeerTaste.Common.BeersStorage
@@ -153,6 +154,18 @@ let verifyTasters (setup: ConsoleSetup) (beers: Beer list) (beerTasteGuid: strin
                                 AnsiConsole.MarkupLine(
                                     $"[green]Successfully saved {scores.Length} score(s) to Azure Table Storage.[/]"
                                 )
+
+                                // Open results page in browser
+                                try
+                                    let url = $"http://localhost:5000/results/{beerTasteGuid}"
+                                    AnsiConsole.MarkupLine($"[cyan]Opening results page in browser: {url}[/]")
+
+                                    let psi = ProcessStartInfo(url, UseShellExecute = true)
+                                    Process.Start(psi) |> ignore
+                                with ex ->
+                                    AnsiConsole.MarkupLine(
+                                        $"[yellow]Could not open browser: {ex.Message}[/]"
+                                    )
                         with ex ->
                             AnsiConsole.MarkupLine(
                                 $"[red]Warning: Could not save scores to Azure Table Storage: {ex.Message}[/]"
