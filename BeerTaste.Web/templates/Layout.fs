@@ -77,6 +77,31 @@ let layout (pageTitle: string) (content: HtmlElement list) =
                     background-color: #000000;
                     color: #ffffff;
                 }
+                .results-list {
+                    margin: 20px 0;
+                }
+                .results-list a {
+                    display: block;
+                    margin-bottom: 10px;
+                    padding: 15px 20px;
+                    background-color: #ffffff;
+                    color: #000000;
+                    text-decoration: none;
+                    border: 1px solid #000000;
+                    border-radius: 3px;
+                    transition: all 0.2s;
+                }
+                .results-list a:hover {
+                    background-color: #000000;
+                    color: #ffffff;
+                }
+                .results-list .icon {
+                    display: inline-block;
+                    width: 30px;
+                    margin-right: 15px;
+                    font-size: 1.2em;
+                    text-align: center;
+                }
                 """
             }
         }
