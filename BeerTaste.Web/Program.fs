@@ -144,11 +144,7 @@ let main args =
     let builder = WebApplication.CreateBuilder(args)
 
     let config =
-        builder
-            .Configuration
-            .AddUserSecrets<SecretsAnchor>()
-            .AddEnvironmentVariables()
-            .Build()
+        builder.Configuration.AddUserSecrets<SecretsAnchor>().AddEnvironmentVariables().Build()
 
     builder.Services.AddRouting().AddOxpecker()
     |> ignore

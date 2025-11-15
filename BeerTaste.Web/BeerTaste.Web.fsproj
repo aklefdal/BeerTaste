@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <IsPackable>false</IsPackable>
@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <Compile Include="templates/Layout.fs"/>
+        <Compile Include="templates/Navigation.fs"/>
         <Compile Include="templates/ResultsIndex.fs"/>
         <Compile Include="templates/BestBeers.fs"/>
         <Compile Include="templates/Controversial.fs"/>

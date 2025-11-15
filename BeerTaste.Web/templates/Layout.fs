@@ -3,52 +3,57 @@ module BeerTaste.Web.Templates.Layout
 open Oxpecker.ViewEngine
 
 let layout (pageTitle: string) (content: HtmlElement list) =
-    html() {
-        head() {
-            meta(charset="utf-8")
-            meta(name="viewport", content="width=device-width, initial-scale=1")
-            title() { raw pageTitle }
-            style() {
-                raw """
+    html () {
+        head () {
+            meta (charset = "utf-8")
+            meta (name = "viewport", content = "width=device-width, initial-scale=1")
+            title () { raw pageTitle }
+
+            style () {
+                raw
+                    """
                 body {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                     max-width: 1200px;
                     margin: 0 auto;
                     padding: 20px;
-                    background-color: #f5f5f5;
+                    background-color: #ffffff;
+                    color: #000000;
                 }
                 h1 {
-                    color: #333;
-                    border-bottom: 3px solid #f90;
+                    color: #000000;
+                    border-bottom: 2px solid #000000;
                     padding-bottom: 10px;
                 }
                 h2 {
-                    color: #555;
+                    color: #333333;
                     margin-top: 30px;
                 }
                 table {
                     width: 100%;
                     border-collapse: collapse;
                     background-color: white;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    border: 1px solid #cccccc;
                     margin-top: 20px;
                 }
                 th {
-                    background-color: #f90;
+                    background-color: #000000;
                     color: white;
                     padding: 12px;
                     text-align: left;
                     font-weight: 600;
+                    border-bottom: 2px solid #000000;
                 }
                 td {
                     padding: 10px 12px;
-                    border-bottom: 1px solid #eee;
+                    border-bottom: 1px solid #dddddd;
+                    color: #000000;
                 }
                 tr:hover {
-                    background-color: #fafafa;
+                    background-color: #f0f0f0;
                 }
                 tr:nth-child(even) {
-                    background-color: #f9f9f9;
+                    background-color: #fafafa;
                 }
                 .value {
                     text-align: right;
@@ -61,23 +66,22 @@ let layout (pageTitle: string) (content: HtmlElement list) =
                     display: inline-block;
                     margin-right: 15px;
                     padding: 10px 20px;
-                    background-color: #fff;
-                    color: #333;
+                    background-color: #ffffff;
+                    color: #000000;
                     text-decoration: none;
-                    border-radius: 5px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    transition: all 0.3s;
+                    border: 1px solid #000000;
+                    border-radius: 3px;
+                    transition: all 0.2s;
                 }
                 .nav a:hover {
-                    background-color: #f90;
-                    color: white;
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                    background-color: #000000;
+                    color: #ffffff;
                 }
                 """
             }
         }
-        body() {
+
+        body () {
             for element in content do
                 element
         }
