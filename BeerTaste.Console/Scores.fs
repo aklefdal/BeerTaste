@@ -12,6 +12,8 @@ type ScoresSchemaState =
 [<Literal>]
 let sheetName = "ScoreSchema"
 
+let norwegianToFloat (s: string) : float = s.Replace(",", ".") |> float
+
 let hasScores (worksheet: ExcelWorksheet) : bool =
     if worksheet.Dimension <> null then
         let maxRow = worksheet.Dimension.End.Row
@@ -112,10 +114,16 @@ let readScores (fileName: string) : Score list =
                             if not (String.IsNullOrWhiteSpace(scoreText)) then
                                 let tasterName = tasterNames[col - 4]
 
+                                let scoreValue =
+                                    if scoreText = "-" then
+                                        0.0
+                                    else
+                                        norwegianToFloat scoreText
+
                                 yield {
                                     BeerId = beerId
                                     TasterName = tasterName
-                                    ScoreValue = int scoreText
+                                    ScoreValue = scoreValue
                                 }
             }
             |> Seq.toList

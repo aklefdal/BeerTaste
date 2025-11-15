@@ -21,7 +21,7 @@ module Results =
         |> List.map (fun b ->
             scores
             |> List.tryFind (fun s -> s.BeerId = b.Id && s.TasterName = tasterName)
-            |> Option.map (fun s -> float s.ScoreValue)
+            |> Option.map (fun s -> s.ScoreValue)
             |> Option.defaultValue 0.0)
         |> List.toArray
 
@@ -29,7 +29,7 @@ module Results =
     let getScoresForBeer (beerId: int) (scores: Score list) : float array =
         scores
         |> List.filter (fun s -> s.BeerId = beerId)
-        |> List.map (fun s -> float s.ScoreValue)
+        |> List.map (fun s -> s.ScoreValue)
         |> List.toArray
 
     // Best beers by average score

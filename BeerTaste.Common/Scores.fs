@@ -7,7 +7,7 @@ open Azure
 type Score = {
     BeerId: int
     TasterName: string
-    ScoreValue: int
+    ScoreValue: float
 } with
     member this.RowKey = $"{this.BeerId}|{this.TasterName}"
 
@@ -20,7 +20,7 @@ type ScoreEntity() =
 
     member val BeerId = 0 with get, set
     member val TasterName = "" with get, set
-    member val ScoreValue = 0 with get, set
+    member val ScoreValue = 0.0 with get, set
 
     new(beerTasteGuid: string, score: Score) as this =
         ScoreEntity()
