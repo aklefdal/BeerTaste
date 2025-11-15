@@ -14,7 +14,9 @@ type Beer = {
     Volume: float
     Price: float
     Packaging: string
-}
+} with
+    member this.PricePerLiter = this.Price / this.Volume
+    member this.PricePerAbv = this.PricePerLiter / (this.ABV / 100.0)
 
 type BeerEntity() =
     interface ITableEntity with
@@ -34,6 +36,7 @@ type BeerEntity() =
 
     new(beerTasteGuid: string, beer: Beer) as this =
         BeerEntity()
+
         then
             (this :> ITableEntity).PartitionKey <- beerTasteGuid
             (this :> ITableEntity).RowKey <- beer.Id.ToString()
@@ -51,8 +54,8 @@ module BeersStorage =
         try
             beersTable.Query<BeerEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
             |> Seq.iter (beersTable.DeleteEntity >> ignore)
-        with
-        | _ -> ()
+        with _ ->
+            ()
 
     let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : unit =
         beers

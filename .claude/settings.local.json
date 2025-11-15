@@ -6,7 +6,8 @@
       "Bash(powershell -Command \"(Get-Content ''BeerTaste.Console\\Program.fs'').Count\")",
       "Bash(Remove-Item \"C:\\s\\aklefdal\\beertaste\\BeerTaste.Common\\Library.fs\")",
       "Bash(powershell -Command \"Remove-Item ''C:\\s\\aklefdal\\beertaste\\BeerTaste.Common\\Library.fs''\")",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(dotnet clean:*)"
     ],
     "deny": [],
     "ask": []

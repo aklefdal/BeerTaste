@@ -1,14 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <IsPackable>false</IsPackable>
         <Nullable>enable</Nullable>
+        <!-- User secrets identifier for local development (shared with Console project) -->
+        <UserSecretsId>beertaste-5f8f1d6d-b9a5-4e4a-b0d0-3c3c52e6c6c2</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="templates/Layout.fs"/>
+        <Compile Include="templates/ResultsIndex.fs"/>
+        <Compile Include="templates/BestBeers.fs"/>
+        <Compile Include="templates/Controversial.fs"/>
+        <Compile Include="templates/Deviant.fs"/>
+        <Compile Include="templates/Similar.fs"/>
+        <Compile Include="templates/StrongBeers.fs"/>
+        <Compile Include="templates/CheapAlcohol.fs"/>
         <Compile Include="Program.fs"/>
         <Content Include="README.md" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\BeerTaste.Common\BeerTaste.Common.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
