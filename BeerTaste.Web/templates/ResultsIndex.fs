@@ -4,7 +4,7 @@ open Oxpecker.ViewEngine
 open BeerTaste.Web.Templates.Layout
 
 let view (beerTasteGuid: string) =
-    layout "Beer Tasting Results" [
+    layout "Beer Tasting Results" beerTasteGuid [
         h1 () { raw "Beer Tasting Results" }
 
         h2 () { raw "Available Results" }

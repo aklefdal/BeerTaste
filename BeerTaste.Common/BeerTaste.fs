@@ -40,3 +40,15 @@ module BeerTasteStorage =
         table.Query<TableEntity>(filter = $"RowKey eq '{shortName}'")
         |> Seq.tryHead
         |> Option.map _.PartitionKey
+
+    let entityToBeerTaste (entity: TableEntity) : BeerTaste = {
+        BeerTasteGuid = entity.PartitionKey
+        ShortName = entity.RowKey
+        Description = entity.GetString("Description") |> Option.ofObj |> Option.defaultValue ""
+        Date = entity.GetString("Date") |> DateOnly.Parse
+    }
+
+    let fetchBeerTaste (storage: BeerTasteTableStorage) (beerTasteGuid: string) : BeerTaste option =
+        storage.BeerTasteTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+        |> Seq.tryHead
+        |> Option.map entityToBeerTaste

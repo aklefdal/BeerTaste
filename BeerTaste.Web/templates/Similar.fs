@@ -6,7 +6,7 @@ open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
 
 let view (beerTasteGuid: string) (results: TasterPairResult list) =
-    layout "Most Similar Tasters" [
+    layout "Most Similar Tasters" beerTasteGuid [
         h1 () { raw "Most Similar Tasters" }
 
         renderNavigation beerTasteGuid ResultPage.Similar

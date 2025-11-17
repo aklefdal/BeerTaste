@@ -11,7 +11,7 @@ let view (beerTasteGuid: string) (beers: Beer list) (tasters: Taster list) (scor
         |> List.map (fun s -> (s.BeerId, s.TasterName), s.ScoreValue)
         |> Map.ofList
 
-    layout "Scores" [
+    layout "Scores" beerTasteGuid [
         h1 () { raw "Scores" }
 
         p () {

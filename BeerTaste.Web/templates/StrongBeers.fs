@@ -6,7 +6,7 @@ open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
 
 let view (beerTasteGuid: string) (results: TasterResult list) =
-    layout "Most Fond of Strong Beers" [
+    layout "Most Fond of Strong Beers" beerTasteGuid [
         h1 () { raw "Most Fond of Strong Beers" }
 
         renderNavigation beerTasteGuid ResultPage.StrongBeers

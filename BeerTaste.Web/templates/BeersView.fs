@@ -5,7 +5,7 @@ open BeerTaste.Common
 open BeerTaste.Web.Templates.Layout
 
 let view (beerTasteGuid: string) (beers: Beer list) =
-    layout "Beers" [
+    layout "Beers" beerTasteGuid [
         h1 () { raw "Beers" }
 
         p () {

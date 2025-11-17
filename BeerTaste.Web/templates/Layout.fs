@@ -2,7 +2,16 @@ module BeerTaste.Web.Templates.Layout
 
 open Oxpecker.ViewEngine
 
-let layout (pageTitle: string) (content: HtmlElement list) =
+let topNavigation (beerTasteGuid: string) =
+    div (class' = "nav") {
+        a (href = $"/{beerTasteGuid}") { raw "🏠 Home" }
+        a (href = $"/{beerTasteGuid}/beers") { raw "Beers" }
+        a (href = $"/{beerTasteGuid}/tasters") { raw "Tasters" }
+        a (href = $"/{beerTasteGuid}/scores") { raw "Scores" }
+        a (href = $"/{beerTasteGuid}/results") { raw "Results" }
+    }
+
+let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement list) =
     html () {
         head () {
             meta (charset = "utf-8")
@@ -107,6 +116,8 @@ let layout (pageTitle: string) (content: HtmlElement list) =
         }
 
         body () {
+            topNavigation beerTasteGuid
+
             for element in content do
                 element
         }

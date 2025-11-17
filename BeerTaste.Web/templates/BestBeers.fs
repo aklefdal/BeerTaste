@@ -6,7 +6,7 @@ open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
 
 let view (beerTasteGuid: string) (results: BeerResult list) =
-    layout "Best Beers" [
+    layout "Best Beers" beerTasteGuid [
         h1 () { raw "Best Beers" }
 
         renderNavigation beerTasteGuid ResultPage.BestBeers

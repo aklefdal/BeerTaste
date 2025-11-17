@@ -6,7 +6,7 @@ open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
 
 let view (beerTasteGuid: string) (results: BeerResult list) =
-    layout "Most Controversial Beers" [
+    layout "Most Controversial Beers" beerTasteGuid [
         h1 () { raw "Most Controversial Beers" }
 
         renderNavigation beerTasteGuid ResultPage.Controversial
