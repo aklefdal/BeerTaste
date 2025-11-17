@@ -10,27 +10,27 @@ let view (beerTasteGuid: string) =
         h2 () { raw "Available Results" }
 
         div (class' = "results-list") {
-            a (href = $"/results/{beerTasteGuid}/bestbeers") {
+            a (href = $"/{beerTasteGuid}/results/bestbeers") {
                 span (class' = "icon") { raw "★" }
                 raw "Best Beers"
             }
-            a (href = $"/results/{beerTasteGuid}/controversial") {
+            a (href = $"/{beerTasteGuid}/results/controversial") {
                 span (class' = "icon") { raw "⚡" }
                 raw "Most Controversial Beers"
             }
-            a (href = $"/results/{beerTasteGuid}/deviant") {
+            a (href = $"/{beerTasteGuid}/results/deviant") {
                 span (class' = "icon") { raw "😈" }
                 raw "Most Deviant Tasters"
             }
-            a (href = $"/results/{beerTasteGuid}/similar") {
+            a (href = $"/{beerTasteGuid}/results/similar") {
                 span (class' = "icon") { raw "❤" }
                 raw "Most Similar Tasters"
             }
-            a (href = $"/results/{beerTasteGuid}/strongbeers") {
+            a (href = $"/{beerTasteGuid}/results/strongbeers") {
                 span (class' = "icon") { raw "😵" }
                 raw "Most Fond of Strong Beers"
             }
-            a (href = $"/results/{beerTasteGuid}/cheapalcohol") {
+            a (href = $"/{beerTasteGuid}/results/cheapalcohol") {
                 span (class' = "icon") { raw "💰" }
                 raw "Most Fond of Cheap Alcohol"
             }

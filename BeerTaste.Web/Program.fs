@@ -7,13 +7,6 @@ open BeerTaste.Web.Templates
 
 type SecretsAnchor = class end
 
-let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
-    try
-        storage.ScoresTableClient.Query<ScoreEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-        |> Seq.map Scores.scoreEntityToScore
-        |> Seq.toList
-    with _ -> []
-
 let resultsIndex (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let html = ResultsIndex.view (beerTasteGuid.ToString())
@@ -22,7 +15,7 @@ let resultsIndex (beerTasteGuid: string) : EndpointHandler =
 let bestBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let beers = Beers.fetchBeers storage beerTasteGuid
-        let scores = fetchScores storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
         let results = Results.beerAverages beers scores
         let html = BestBeers.view beerTasteGuid results
         htmlView html ctx
@@ -30,7 +23,7 @@ let bestBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endpoin
 let controversial (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let beers = Beers.fetchBeers storage beerTasteGuid
-        let scores = fetchScores storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
         let results = Results.beerStandardDeviations beers scores
         let html = Controversial.view beerTasteGuid results
         htmlView html ctx
@@ -39,7 +32,7 @@ let deviant (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointH
     fun ctx ->
         let beers = Beers.fetchBeers storage beerTasteGuid
         let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let scores = fetchScores storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
         let results = Results.correlationToAverages beers tasters scores
         let html = Deviant.view beerTasteGuid results
         htmlView html ctx
@@ -48,7 +41,7 @@ let similar (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointH
     fun ctx ->
         let tasters = Tasters.fetchTasters storage beerTasteGuid
         let beers = Beers.fetchBeers storage beerTasteGuid
-        let scores = fetchScores storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
         let results = Results.correlationBetweenTasters tasters beers scores
         let html = Similar.view beerTasteGuid results
         htmlView html ctx
@@ -57,7 +50,7 @@ let strongBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endpo
     fun ctx ->
         let beers = Beers.fetchBeers storage beerTasteGuid
         let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let scores = fetchScores storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
         let results = Results.correlationToAbv beers tasters scores
         let html = StrongBeers.view beerTasteGuid results
         htmlView html ctx
@@ -66,7 +59,7 @@ let cheapAlcohol (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endp
     fun ctx ->
         let beers = Beers.fetchBeers storage beerTasteGuid
         let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let scores = fetchScores storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
         let results = Results.correlationToAbvPrice beers tasters scores
         let html = CheapAlcohol.view beerTasteGuid results
         htmlView html ctx
@@ -75,16 +68,16 @@ let endpoints storage = [
     GET [
         route "/"
         <| text "Beer Tasting Results - Navigate to /results/{beerTasteGuid}"
-        routef "/results/{%s}" <| resultsIndex
-        routef "/results/{%s}/bestbeers"
+        routef "/{%s}/results" <| resultsIndex
+        routef "/{%s}/results/bestbeers"
         <| bestBeers storage
-        routef "/results/{%s}/controversial"
+        routef "/{%s}/results/controversial"
         <| controversial storage
-        routef "/results/{%s}/deviant" <| deviant storage
-        routef "/results/{%s}/strongbeers"
+        routef "/{%s}/results/deviant" <| deviant storage
+        routef "/{%s}/results/strongbeers"
         <| strongBeers storage
-        routef "/results/{%s}/similar" <| similar storage
-        routef "/results/{%s}/cheapalcohol"
+        routef "/{%s}/results/similar" <| similar storage
+        routef "/{%s}/results/cheapalcohol"
         <| cheapAlcohol storage
     ]
 ]

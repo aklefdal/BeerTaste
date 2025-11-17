@@ -11,8 +11,8 @@ type Taster = {
 module Tasters =
     let tasterToEntity (beerTasteGuid: string) (taster: Taster) : TableEntity =
         let entity = TableEntity(beerTasteGuid, taster.Name)
-        entity.Add("Email", taster.Email)
-        entity.Add("BirthYear", taster.BirthYear)
+        entity.Add("Email", taster.Email |> Option.toObj)
+        entity.Add("BirthYear", taster.BirthYear |> Option.toNullable)
         entity
 
     let entityToTaster (entity: TableEntity) : Taster = {
@@ -30,9 +30,8 @@ module Tasters =
 
     let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : unit =
         tasters
-        |> List.iter (fun taster ->
-            let entity = taster |> tasterToEntity beerTasteGuid
-            tastersTable.AddEntity(entity) |> ignore)
+        |> List.map (tasterToEntity beerTasteGuid)
+        |> List.iter (tastersTable.AddEntity >> ignore)
 
     let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
         try

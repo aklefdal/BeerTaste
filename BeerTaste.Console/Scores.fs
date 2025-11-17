@@ -1,6 +1,5 @@
 module BeerTaste.Console.Scores
 
-open System
 open OfficeOpenXml
 open BeerTaste.Common
 
@@ -8,37 +7,71 @@ type ScoresSchemaState =
     | DoesNotExist
     | ExistsWithoutScores
     | ExistsWithScores
+    | ExistsAndComplete
 
 [<Literal>]
 let sheetName = "ScoreSchema"
 
 let norwegianToFloat (s: string) : float = s.Replace(",", ".") |> float
 
-let hasScores (worksheet: ExcelWorksheet) : bool =
-    if worksheet.Dimension <> null then
+let readScoresFroWorksheet (worksheet: ExcelWorksheet) : Score list =
+    if worksheet = null || worksheet.Dimension = null then
+        []
+    else
         let maxRow = worksheet.Dimension.End.Row
         let maxCol = worksheet.Dimension.End.Column
 
-        if maxRow >= 2 && maxCol >= 4 then
-            // Check if any cells in the score area have values
+        if maxRow < 2 || maxCol < 4 then
+            []
+        else
+            // Read taster names from row 1, columns 4+
+            let tasterNames =
+                seq { 4..maxCol }
+                |> Seq.map (fun col -> worksheet.Cells[1, col].Text)
+                |> Seq.toList
+
+            // Read scores for each beer and taster
             seq {
                 for row in 2..maxRow do
+                    let beerId = worksheet.Cells[row, 1].Text |> int
+
                     for col in 4..maxCol do
-                        yield worksheet.Cells[row, col].Value
+                        let tasterName = tasterNames[col - 4]
+                        let scoreValue =
+                            match  worksheet.Cells[row, col].Text with
+                            | null -> None
+                            | "" -> None
+                            | "-" -> Some 0.0
+                            | scoreText -> scoreText |> norwegianToFloat |> Some
+
+                        yield {
+                            BeerId = beerId
+                            TasterName = tasterName
+                            ScoreValue = scoreValue
+                        }
             }
-            |> Seq.exists (fun v ->
-                v <> null
-                && not (String.IsNullOrWhiteSpace(v.ToString())))
-        else
-            false
-    else
-        false
+            |> Seq.toList
+let readScores (fileName: string) : Score list =
+    use package = new ExcelPackage(fileName)
+    let worksheet = package.Workbook.Worksheets[sheetName]
+    worksheet |> readScoresFroWorksheet
+
+let hasScores (worksheet: ExcelWorksheet) : bool =
+    worksheet
+    |> readScoresFroWorksheet
+    |> Scores.hasScores
+
+let isComplete (worksheet: ExcelWorksheet) : bool =
+    worksheet
+    |> readScoresFroWorksheet
+    |> Scores.isComplete
 
 let getScoresSchemaState (fileName: string) : ScoresSchemaState =
     use package = new ExcelPackage(fileName)
     let existingWorksheet = package.Workbook.Worksheets[sheetName]
 
     if existingWorksheet = null then DoesNotExist
+    elif existingWorksheet |> isComplete then ExistsAndComplete
     elif existingWorksheet |> hasScores then ExistsWithScores
     else ExistsWithoutScores
 
@@ -80,50 +113,3 @@ let deleteAndCreateScoreSchema
     worksheet.Column(3).Style.Font.Bold <- true
 
     package.Save()
-
-let readScores (fileName: string) : Score list =
-    use package = new ExcelPackage(fileName)
-    let worksheet = package.Workbook.Worksheets[sheetName]
-
-    if worksheet = null || worksheet.Dimension = null then
-        []
-    else
-        let maxRow = worksheet.Dimension.End.Row
-        let maxCol = worksheet.Dimension.End.Column
-
-        if maxRow < 2 || maxCol < 4 then
-            []
-        else
-            // Read taster names from row 1, columns 4+
-            let tasterNames =
-                seq { 4..maxCol }
-                |> Seq.map (fun col -> worksheet.Cells[1, col].Text)
-                |> Seq.toList
-
-            // Read scores for each beer and taster
-            seq {
-                for row in 2..maxRow do
-                    let beerIdText = worksheet.Cells[row, 1].Text
-
-                    if not (String.IsNullOrWhiteSpace(beerIdText)) then
-                        let beerId = int beerIdText
-
-                        for col in 4..maxCol do
-                            let scoreText = worksheet.Cells[row, col].Text
-
-                            if not (String.IsNullOrWhiteSpace(scoreText)) then
-                                let tasterName = tasterNames[col - 4]
-
-                                let scoreValue =
-                                    if scoreText = "-" then
-                                        0.0
-                                    else
-                                        norwegianToFloat scoreText
-
-                                yield {
-                                    BeerId = beerId
-                                    TasterName = tasterName
-                                    ScoreValue = scoreValue
-                                }
-            }
-            |> Seq.toList

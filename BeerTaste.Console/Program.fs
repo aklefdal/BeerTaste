@@ -4,23 +4,28 @@ open Spectre.Console
 open OfficeOpenXml
 open BeerTaste.Console.Configuration
 open BeerTaste.Console.Workflow
+open FsToolkit.ErrorHandling
 
 // Set EPPlus license for non-commercial use (EPPlus 8.x API)
 do ExcelPackage.License.SetNonCommercialPersonal("Alf Kåre Lefdal")
 
+let workflow (args: string[]) =
+    option {
+        let! setup = args |> getConsoleSetup
+        let beerTasteGuid = setupBeerTaste setup
+        let! beers = verifyBeers setup beerTasteGuid
+        let! _ = verifyTasters setup beerTasteGuid beers
+        let! scores = verifyScores setup beerTasteGuid
+        showResults beerTasteGuid scores
+    }
+
 [<EntryPoint>]
 let main args =
-    try    
-        match args |> getConsoleSetup with
+    try
+        match args |> workflow with
+        | Some () -> 0
         | None -> 1
-        | Some setup ->
-            let beerTasteGuid = setupBeerTaste setup
-            
-            match verifyBeers setup beerTasteGuid with
-            | None -> 1
-            | Some beers ->
-                verifyTasters setup beers beerTasteGuid
-                0
+        
     with ex ->
         AnsiConsole.MarkupLineInterpolated($"[red]Error: {ex.Message}[/]")
         1

@@ -53,15 +53,15 @@ let getNextPage currentPage =
 
 let renderNavigation (beerTasteGuid: string) (currentPage: ResultPage) =
     div (class' = "nav") {
-        a (href = $"/results/{beerTasteGuid}") { raw "Back to Results" }
+        a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" }
 
         match getPreviousPage currentPage with
         | Some prevPage ->
-            a (href = $"/results/{beerTasteGuid}/{pageToRoute prevPage}") { raw " ← " }
+            a (href = $"/{beerTasteGuid}/results/{pageToRoute prevPage}") { raw " ← " }
         | None -> ()
 
         match getNextPage currentPage with
         | Some nextPage ->
-            a (href = $"/results/{beerTasteGuid}/{pageToRoute nextPage}") { raw " → " }
+            a (href = $"/{beerTasteGuid}/results/{pageToRoute nextPage}") { raw " → " }
         | None -> ()
     }

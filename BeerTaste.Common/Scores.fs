@@ -1,52 +1,55 @@
 namespace BeerTaste.Common
 
-open System
 open Azure.Data.Tables
-open Azure
 
 type Score = {
     BeerId: int
     TasterName: string
-    ScoreValue: float
+    ScoreValue: float option
 } with
     member this.RowKey = $"{this.BeerId}|{this.TasterName}"
 
-type ScoreEntity() =
-    interface ITableEntity with
-        member val PartitionKey = "" with get, set
-        member val RowKey = "" with get, set
-        member val Timestamp = Nullable<DateTimeOffset>() with get, set
-        member val ETag = ETag() with get, set
-
-    member val BeerId = 0 with get, set
-    member val TasterName = "" with get, set
-    member val ScoreValue = 0.0 with get, set
-
-    new(beerTasteGuid: string, score: Score) as this =
-        ScoreEntity()
-
-        then
-            (this :> ITableEntity).PartitionKey <- beerTasteGuid
-            (this :> ITableEntity).RowKey <- score.RowKey
-            this.BeerId <- score.BeerId
-            this.TasterName <- score.TasterName
-            this.ScoreValue <- score.ScoreValue
-
 module Scores =
-    let scoreEntityToScore (entity: ScoreEntity) : Score = {
-        BeerId = entity.BeerId
-        TasterName = entity.TasterName
-        ScoreValue = entity.ScoreValue
+    let entityToScore (entity: TableEntity) : Score = {
+        BeerId = entity.GetInt32("BeerId") |> Option.ofNullable |> Option.get
+        TasterName = entity.GetString("TasterName")
+        ScoreValue = entity.GetDouble("ScoreValue") |> Option.ofNullable
     }
+    
+    let scoreToEntity (beerTasteGuid: string) (score: Score) : TableEntity =
+        let entity = TableEntity(beerTasteGuid, score.RowKey)
+        entity.Add("BeerId", score.BeerId)
+        entity.Add("TasterName", score.TasterName)
+        entity.Add("ScoreValue", score.ScoreValue |> Option.toNullable)
+        entity
+    
     let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : unit =
         try
-            scoresTable.Query<ScoreEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            scoresTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
             |> Seq.iter (scoresTable.DeleteEntity >> ignore)
         with _ ->
             ()
 
     let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : unit =
         scores
-        |> List.iter (fun score ->
-            let entity = ScoreEntity(beerTasteGuid, score)
-            scoresTable.AddEntity(entity) |> ignore)
+        |> List.map (scoreToEntity beerTasteGuid)
+        |> List.iter (scoresTable.AddEntity >> ignore)
+
+    let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
+        try
+            storage.ScoresTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            |> Seq.map entityToScore
+            |> Seq.toList
+        with _ -> []
+    
+    let hasScores (scores: Score list)  : bool =
+        scores
+        |> List.filter (fun s -> s.ScoreValue |> Option.isSome)
+        |> List.length
+        |> (>) 0
+   
+    let isComplete (scores: Score list)  : bool =
+        scores
+        |> List.filter (fun s -> s.ScoreValue |> Option.isNone)
+        |> List.length
+        |> (=) 0
