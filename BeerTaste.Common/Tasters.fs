@@ -39,4 +39,5 @@ module Tasters =
             storage.TastersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
             |> Seq.map entityToTaster
             |> Seq.toList
+            |> List.sortBy _.Name
         with _ -> []
