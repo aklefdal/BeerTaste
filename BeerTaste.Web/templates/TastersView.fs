@@ -8,9 +8,7 @@ let view (beerTasteGuid: string) (tasters: Taster list) =
     layout "Tasters" beerTasteGuid [
         h1 () { raw "Tasters" }
 
-        p () {
-            a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" }
-        }
+        p () { a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" } }
 
         table () {
             thead () {
@@ -26,6 +24,7 @@ let view (beerTasteGuid: string) (tasters: Taster list) =
                     tr () {
                         td () { raw taster.Name }
                         td () { raw (taster.Email |> Option.defaultValue "") }
+
                         td (class' = "value") {
                             raw (
                                 taster.BirthYear

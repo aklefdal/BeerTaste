@@ -8,9 +8,7 @@ let view (beerTasteGuid: string) (beers: Beer list) =
     layout "Beers" beerTasteGuid [
         h1 () { raw "Beers" }
 
-        p () {
-            a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" }
-        }
+        p () { a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" } }
 
         table () {
             thead () {

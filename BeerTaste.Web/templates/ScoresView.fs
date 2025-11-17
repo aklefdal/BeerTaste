@@ -14,9 +14,7 @@ let view (beerTasteGuid: string) (beers: Beer list) (tasters: Taster list) (scor
     layout "Scores" beerTasteGuid [
         h1 () { raw "Scores" }
 
-        p () {
-            a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" }
-        }
+        p () { a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" } }
 
         table () {
             thead () {

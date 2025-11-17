@@ -44,7 +44,10 @@ module BeerTasteStorage =
     let entityToBeerTaste (entity: TableEntity) : BeerTaste = {
         BeerTasteGuid = entity.PartitionKey
         ShortName = entity.RowKey
-        Description = entity.GetString("Description") |> Option.ofObj |> Option.defaultValue ""
+        Description =
+            entity.GetString("Description")
+            |> Option.ofObj
+            |> Option.defaultValue ""
         Date = entity.GetString("Date") |> DateOnly.Parse
     }
 
