@@ -6,8 +6,8 @@ open Spectre.Console
 open BeerTaste.Common
 open BeerTaste.Common.BeersStorage
 open BeerTaste.Common.BeerTasteStorage
-open BeerTaste.Common.TastersStorage
-open BeerTaste.Common.ScoresStorage
+open BeerTaste.Common.Tasters
+open BeerTaste.Common.Scores
 open BeerTaste.Console.Beers
 open BeerTaste.Console.Tasters
 open BeerTaste.Console.Scores

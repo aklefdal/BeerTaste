@@ -8,7 +8,6 @@ open BeerTaste.Web.Templates
 
 type SecretsAnchor = class end
 
-// Helper to convert BeerEntity back to Beer
 let beerEntityToBeer (entity: BeerEntity) : Beer = {
     Id = int (entity :> ITableEntity).RowKey
     Name = entity.Name
@@ -21,21 +20,6 @@ let beerEntityToBeer (entity: BeerEntity) : Beer = {
     Packaging = entity.Packaging
 }
 
-// Helper to convert TasterEntity back to Taster
-let tasterEntityToTaster (entity: TasterEntity) : Taster = {
-    Name = entity.Name
-    Email = entity.Email
-    BirthYear = entity.BirthYear
-}
-
-// Helper to convert ScoreEntity back to Score
-let scoreEntityToScore (entity: ScoreEntity) : Score = {
-    BeerId = entity.BeerId
-    TasterName = entity.TasterName
-    ScoreValue = entity.ScoreValue
-}
-
-// Fetch beers for a beer taste GUID
 let fetchBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Beer list =
     try
         storage.BeersTableClient.Query<BeerEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
@@ -43,23 +27,14 @@ let fetchBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Beer l
         |> Seq.toList
     with _ -> []
 
-// Fetch tasters for a beer taste GUID
-let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
-    try
-        storage.TastersTableClient.Query<TasterEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-        |> Seq.map tasterEntityToTaster
-        |> Seq.toList
-    with _ -> []
 
-// Fetch scores for a beer taste GUID
 let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
     try
         storage.ScoresTableClient.Query<ScoreEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-        |> Seq.map scoreEntityToScore
+        |> Seq.map Scores.scoreEntityToScore
         |> Seq.toList
     with _ -> []
 
-// Route handlers
 let resultsIndex (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let html = ResultsIndex.view (beerTasteGuid.ToString())
@@ -84,7 +59,7 @@ let controversial (storage: BeerTasteTableStorage) (beerTasteGuid: string) : End
 let deviant (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let beers = fetchBeers storage beerTasteGuid
-        let tasters = fetchTasters storage beerTasteGuid
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.correlationToAverages beers tasters scores
         let html = Deviant.view beerTasteGuid results
@@ -92,7 +67,7 @@ let deviant (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointH
 
 let similar (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
-        let tasters = fetchTasters storage beerTasteGuid
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
         let beers = fetchBeers storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.correlationBetweenTasters tasters beers scores
@@ -102,7 +77,7 @@ let similar (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointH
 let strongBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let beers = fetchBeers storage beerTasteGuid
-        let tasters = fetchTasters storage beerTasteGuid
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.correlationToAbv beers tasters scores
         let html = StrongBeers.view beerTasteGuid results
@@ -111,7 +86,7 @@ let strongBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endpo
 let cheapAlcohol (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let beers = fetchBeers storage beerTasteGuid
-        let tasters = fetchTasters storage beerTasteGuid
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.correlationToAbvPrice beers tasters scores
         let html = CheapAlcohol.view beerTasteGuid results

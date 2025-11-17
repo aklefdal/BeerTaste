@@ -1,44 +1,42 @@
 namespace BeerTaste.Common
 
-open System
 open Azure.Data.Tables
-open Azure
 
 type Taster = {
     Name: string
-    Email: string
-    BirthYear: int
+    Email: string option
+    BirthYear: int option
 }
 
-type TasterEntity() =
-    interface ITableEntity with
-        member val PartitionKey = "" with get, set
-        member val RowKey = "" with get, set
-        member val Timestamp = Nullable<DateTimeOffset>() with get, set
-        member val ETag = ETag() with get, set
+module Tasters =
+    let tasterToEntity (beerTasteGuid: string) (taster: Taster) : TableEntity =
+        let entity = TableEntity(beerTasteGuid, taster.Name)
+        entity.Add("Email", taster.Email)
+        entity.Add("BirthYear", taster.BirthYear)
+        entity
 
-    member this.Name = (this :> ITableEntity).RowKey
-    member val Email = "" with get, set
-    member val BirthYear = 0 with get, set
+    let entityToTaster (entity: TableEntity) : Taster = {
+        Name = entity.RowKey
+        Email = entity.GetString("Email") |> Option.ofObj
+        BirthYear = entity.GetInt32("BirthYear") |> Option.ofNullable
+    }
 
-    new(beerTasteGuid: string, taster: Taster) as this =
-        TasterEntity()
-        then
-            (this :> ITableEntity).PartitionKey <- beerTasteGuid
-            (this :> ITableEntity).RowKey <- taster.Name
-            this.Email <- taster.Email
-            this.BirthYear <- taster.BirthYear
-
-module TastersStorage =
     let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : unit =
         try
-            tastersTable.Query<TasterEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            tastersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
             |> Seq.iter (tastersTable.DeleteEntity >> ignore)
-        with
-        | _ -> ()
+        with _ ->
+            ()
 
     let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : unit =
         tasters
         |> List.iter (fun taster ->
-            let entity = TasterEntity(beerTasteGuid, taster)
+            let entity = taster |> tasterToEntity beerTasteGuid
             tastersTable.AddEntity(entity) |> ignore)
+
+    let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
+        try
+            storage.TastersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            |> Seq.map entityToTaster
+            |> Seq.toList
+        with _ -> []

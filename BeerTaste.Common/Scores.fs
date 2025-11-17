@@ -32,7 +32,12 @@ type ScoreEntity() =
             this.TasterName <- score.TasterName
             this.ScoreValue <- score.ScoreValue
 
-module ScoresStorage =
+module Scores =
+    let scoreEntityToScore (entity: ScoreEntity) : Score = {
+        BeerId = entity.BeerId
+        TasterName = entity.TasterName
+        ScoreValue = entity.ScoreValue
+    }
     let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : unit =
         try
             scoresTable.Query<ScoreEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")

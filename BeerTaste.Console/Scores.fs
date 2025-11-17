@@ -50,7 +50,7 @@ let deleteAndCreateScoreSchema
     (tasters: Taster list)
     : unit =
     // Delete scores from Azure Table Storage
-    ScoresStorage.deleteScoresForBeerTaste scoresTableClient beerTasteGuid
+    Scores.deleteScoresForBeerTaste scoresTableClient beerTasteGuid
 
     use package = new ExcelPackage(fileName)
 
