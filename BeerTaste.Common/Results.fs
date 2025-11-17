@@ -24,7 +24,7 @@ module Results =
         |> List.toArray
 
     // Get all scores for a specific beer
-    let getScoresForBeer (beerId: int) (scores: Score list) : float array =
+    let getScoresForBeer (scores: Score list) (beerId: int) : float array =
         scores
         |> List.filter (fun s -> s.BeerId = beerId)
         |> List.sortBy _.TasterName
@@ -32,30 +32,29 @@ module Results =
         |> List.map float
         |> List.toArray
 
-    // Best beers by average score
+    let getAverageScoreForBeer (scores: Score list) (beerId: int) : float =
+        let beerScores = getScoresForBeer scores beerId
+
+        if beerScores.Length > 0 then
+            Array.average beerScores
+        else
+            0.0
     let beerAverages (beers: Beer list) (scores: Score list) : BeerResult list =
         beers
-        |> List.map (fun b ->
-            let beerScores = getScoresForBeer b.Id scores
-
-            let avg =
-                if beerScores.Length > 0 then
-                    Array.average beerScores
-                else
-                    0.0
-
-            ({
+        |> List.map (fun b -> b, getAverageScoreForBeer scores b.Id)
+        |> List.map (fun (b, avg) ->
+            {
                 Name = $"{b.Producer} - {b.Name}"
                 Value = avg
             }
-            : BeerResult))
-        |> List.sortByDescending (fun r -> r.Value)
+            : BeerResult)
+        |> List.sortByDescending _.Value
 
     // Most controversial beers by standard deviation
     let beerStandardDeviations (beers: Beer list) (scores: Score list) : BeerResult list =
         beers
         |> List.map (fun b ->
-            let beerScores = getScoresForBeer b.Id scores
+            let beerScores = getScoresForBeer scores b.Id
 
             let stdDev =
                 if beerScores.Length > 0 then
@@ -70,24 +69,12 @@ module Results =
             : BeerResult))
         |> List.sortByDescending (fun r -> r.Value)
 
-    let averageOfInts (ints: int array) : float =
-        if ints.Length = 0 then
-            0.0
-        else
-            ints |> Array.map float |> Array.average
-
-    // Taster correlation to beer averages (most deviant tasters)
     let correlationToAverages (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
         let avgScoresByBeer =
             beers
-            |> List.sortBy (fun b -> b.Id)
-            |> List.map (fun b ->
-                let beerScores = getScoresForBeer b.Id scores
-
-                if beerScores.Length > 0 then
-                    Array.average beerScores
-                else
-                    0.0)
+            |> List.map _.Id
+            |> List.sort
+            |> List.map (getAverageScoreForBeer scores)
 
         tasters
         |> List.map (fun t ->
@@ -112,7 +99,6 @@ module Results =
     // Correlation between tasters (most similar tasters)
     let correlationBetweenTasters
         (tasters: Taster list)
-        (beers: Beer list)
         (scores: Score list)
         : TasterPairResult list =
         let tasterPairs = combineAllTasters tasters

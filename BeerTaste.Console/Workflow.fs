@@ -83,17 +83,17 @@ let promptForDescription () : string =
     )
 
 // Prompt user for date
-let promptForDate () : DateTime =
+let promptForDate () : DateOnly =
     AnsiConsole.Prompt(
         TextPrompt<string>("Enter [green]date[/] (yyyy-MM-dd):")
             .PromptStyle("yellow")
             .ValidationErrorMessage("[red]Invalid date format. Use yyyy-MM-dd[/]")
             .Validate(fun input ->
-                match DateTime.TryParse(input) with
+                match DateOnly.TryParse(input) with
                 | true, _ -> ValidationResult.Success()
                 | false, _ -> ValidationResult.Error("[red]Invalid date format. Use yyyy-MM-dd[/]"))
     )
-    |> DateTime.Parse
+    |> DateOnly.Parse
 
 let setupBeerTaste (setup: ConsoleSetup) : string =
     match getBeerTasteGuid setup.TableStorage.BeerTasteTableClient setup.ShortName with

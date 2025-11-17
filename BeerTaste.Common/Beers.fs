@@ -1,8 +1,6 @@
 namespace BeerTaste.Common
 
-open System
 open Azure.Data.Tables
-open Azure
 
 type Beer = {
     Id: int

@@ -40,9 +40,8 @@ let deviant (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointH
 let similar (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let beers = Beers.fetchBeers storage beerTasteGuid
         let scores = Scores.fetchScores storage beerTasteGuid
-        let results = Results.correlationBetweenTasters tasters beers scores
+        let results = Results.correlationBetweenTasters tasters scores
         let html = Similar.view beerTasteGuid results
         htmlView html ctx
 
