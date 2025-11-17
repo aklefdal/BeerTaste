@@ -152,8 +152,7 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) =
     :> Task
 
 let configureApp (appBuilder: WebApplication) storage =
-    appBuilder.UseStaticFiles().UseRouting().UseOxpecker(endpoints storage)
-    |> ignore
+    appBuilder.Use(errorHandler).UseRouting().UseOxpecker(endpoints storage).Run(notFoundHandler)
 
 [<EntryPoint>]
 let main args =
@@ -182,5 +181,4 @@ let main args =
         // Initialize Azure Table Storage
         let storage = BeerTasteTableStorage(connStr)
         configureApp app storage
-        app.Run()
         0
