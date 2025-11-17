@@ -16,20 +16,18 @@ module Results =
 
     // Get all scores for a specific taster, sorted by beer ID
     let getScoresForTaster (tasterName: string) (beers: Beer list) (scores: Score list) : float array =
-        beers
-        |> List.sortBy (fun b -> b.Id)
-        |> List.map (fun b ->
-            scores
-            |> List.tryFind (fun s -> s.BeerId = b.Id && s.TasterName = tasterName)
-            |> Option.map (fun s -> s.ScoreValue)
-            |> Option.defaultValue 0.0)
+        scores
+        |> List.filter (fun s -> s.TasterName = tasterName)
+        |> List.sortBy _.BeerId
+        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0.0)
         |> List.toArray
 
     // Get all scores for a specific beer
     let getScoresForBeer (beerId: int) (scores: Score list) : float array =
         scores
         |> List.filter (fun s -> s.BeerId = beerId)
-        |> List.map (fun s -> s.ScoreValue)
+        |> List.sortBy _.TasterName
+        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0.0)
         |> List.toArray
 
     // Best beers by average score
