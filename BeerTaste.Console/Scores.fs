@@ -13,6 +13,7 @@ type ScoresSchemaState =
 let sheetName = "ScoreSchema"
 
 let norwegianToFloat (s: string) : float = s.Replace(",", ".") |> float
+let norwegianToInt (s: string) : int = s.Replace(",", ".") |> int
 
 let readScoresFroWorksheet (worksheet: ExcelWorksheet) : Score list =
     if worksheet = null || worksheet.Dimension = null then
@@ -41,8 +42,8 @@ let readScoresFroWorksheet (worksheet: ExcelWorksheet) : Score list =
                             match  worksheet.Cells[row, col].Text with
                             | null -> None
                             | "" -> None
-                            | "-" -> Some 0.0
-                            | scoreText -> scoreText |> norwegianToFloat |> Some
+                            | "-" -> Some 0
+                            | scoreText -> scoreText |> norwegianToInt |> Some
 
                         yield {
                             BeerId = beerId

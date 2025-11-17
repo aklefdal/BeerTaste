@@ -5,7 +5,7 @@ open Azure.Data.Tables
 type Score = {
     BeerId: int
     TasterName: string
-    ScoreValue: float option
+    ScoreValue: int option
 } with
     member this.RowKey = $"{this.BeerId}|{this.TasterName}"
 
@@ -13,7 +13,7 @@ module Scores =
     let entityToScore (entity: TableEntity) : Score = {
         BeerId = entity.GetInt32("BeerId") |> Option.ofNullable |> Option.get
         TasterName = entity.GetString("TasterName")
-        ScoreValue = entity.GetDouble("ScoreValue") |> Option.ofNullable
+        ScoreValue = entity.GetInt32("ScoreValue") |> Option.ofNullable
     }
     
     let scoreToEntity (beerTasteGuid: string) (score: Score) : TableEntity =

@@ -15,11 +15,12 @@ module Results =
     }
 
     // Get all scores for a specific taster, sorted by beer ID
-    let getScoresForTaster (tasterName: string) (beers: Beer list) (scores: Score list) : float array =
+    let getScoresForTaster (tasterName: string) (scores: Score list) : float array =
         scores
         |> List.filter (fun s -> s.TasterName = tasterName)
         |> List.sortBy _.BeerId
-        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0.0)
+        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0)
+        |> List.map float
         |> List.toArray
 
     // Get all scores for a specific beer
@@ -27,7 +28,8 @@ module Results =
         scores
         |> List.filter (fun s -> s.BeerId = beerId)
         |> List.sortBy _.TasterName
-        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0.0)
+        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0)
+        |> List.map float
         |> List.toArray
 
     // Best beers by average score
@@ -68,6 +70,14 @@ module Results =
             : BeerResult))
         |> List.sortByDescending (fun r -> r.Value)
 
+    let averageOfInts (ints: int array) : float =
+        if ints.Length = 0 then
+            0.0
+        else
+            ints
+            |> Array.map float
+            |> Array.average
+    
     // Taster correlation to beer averages (most deviant tasters)
     let correlationToAverages (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
         let avgScoresByBeer =
@@ -83,7 +93,7 @@ module Results =
 
         tasters
         |> List.map (fun t ->
-            let tasterScores = getScoresForTaster t.Name beers scores
+            let tasterScores = getScoresForTaster t.Name scores
             let correlation = pearson tasterScores avgScoresByBeer
             ({ Name = t.Name; Value = correlation }: TasterResult))
         |> List.sortBy (fun r -> r.Value)
@@ -111,8 +121,8 @@ module Results =
 
         tasterPairs
         |> List.map (fun (tasterName1, tasterName2) ->
-            let scores1 = getScoresForTaster tasterName1 beers scores
-            let scores2 = getScoresForTaster tasterName2 beers scores
+            let scores1 = getScoresForTaster tasterName1 scores
+            let scores2 = getScoresForTaster tasterName2 scores
             let correlation = pearson scores1 scores2
 
             {
@@ -131,7 +141,7 @@ module Results =
 
         tasters
         |> List.map (fun t ->
-            let tasterScores = getScoresForTaster t.Name beers scores
+            let tasterScores = getScoresForTaster t.Name scores
             let correlation = pearson tasterScores beerAbv
             ({ Name = t.Name; Value = correlation }: TasterResult))
         |> List.sortByDescending (fun r -> r.Value)
@@ -145,7 +155,7 @@ module Results =
 
         tasters
         |> List.map (fun t ->
-            let tasterScores = getScoresForTaster t.Name beers scores
+            let tasterScores = getScoresForTaster t.Name scores
             let correlation = pearson tasterScores beerAbvPrice
             ({ Name = t.Name; Value = correlation }: TasterResult))
         |> List.sortByDescending (fun r -> r.Value)
