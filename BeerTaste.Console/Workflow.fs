@@ -27,8 +27,7 @@ let createScoreSchema
     | ExistsWithScores ->
         AnsiConsole.MarkupLine("[yellow]Warning: The existing ScoreSchema worksheet contains scores![/]")
 
-        let confirm =
-            AnsiConsole.Confirm("[red]Do you want to delete it and create a new one?[/]", false)
+        let confirm = AnsiConsole.Confirm("[red]Do you want to delete it and create a new one?[/]", false)
 
         if not confirm then
             AnsiConsole.MarkupLine("[yellow]ScoreSchema creation cancelled. Keeping existing worksheet.[/]")

@@ -31,8 +31,7 @@ let readBeers (fileName: string) : Beer list =
 
 let createTastersSchema (fileName: string) (beers: Beer list) : unit =
     // Get the template file path
-    let templateFile =
-        System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BeerTaste.xlsx")
+    let templateFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BeerTaste.xlsx")
 
     use templatePackage = new ExcelPackage(templateFile)
     use targetPackage = new ExcelPackage(fileName)

@@ -53,8 +53,7 @@ let getConsoleSetup (args: string[]) : ConsoleSetup option =
         let shortName = args[0]
 
         // Load configuration
-        let config =
-            ConfigurationBuilder().AddUserSecrets<SecretsAnchor>().AddEnvironmentVariables().Build()
+        let config = ConfigurationBuilder().AddUserSecrets<SecretsAnchor>().AddEnvironmentVariables().Build()
 
         let connStr = config["BeerTaste:TableStorageConnectionString"]
         // Get the folder path for Excel files, default to "../scripts" relative to executable
@@ -69,8 +68,7 @@ let getConsoleSetup (args: string[]) : ConsoleSetup option =
 
         setupBeerTasteFolder filesFolder shortName
 
-        let excelFilePath =
-            System.IO.Path.Combine(filesFolder, shortName, $"{shortName}.xlsx")
+        let excelFilePath = System.IO.Path.Combine(filesFolder, shortName, $"{shortName}.xlsx")
 
         if String.IsNullOrWhiteSpace connStr then
             AnsiConsole.MarkupLine(

@@ -15,80 +15,66 @@ type SecretsAnchor = class end
 let notFound (s: string) : EndpointHandler = setStatusCode 404 >=> text s
 
 let resultsIndex (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let html = ResultsIndex.view (beerTasteGuid.ToString())
-        htmlView html ctx
+    ResultsIndex.view beerTasteGuid |> htmlView
 
 let bestBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let beers = Beers.fetchBeers storage beerTasteGuid
-        let scores = Scores.fetchScores storage beerTasteGuid
-        let results = Results.beerAverages beers scores
-        let html = BestBeers.view beerTasteGuid results
-        htmlView html ctx
+    let beers = Beers.fetchBeers storage beerTasteGuid
+    let scores = Scores.fetchScores storage beerTasteGuid
+    let results = Results.beerAverages beers scores
+    BestBeers.view beerTasteGuid results |> htmlView
 
 let controversial (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let beers = Beers.fetchBeers storage beerTasteGuid
-        let scores = Scores.fetchScores storage beerTasteGuid
-        let results = Results.beerStandardDeviations beers scores
-        let html = Controversial.view beerTasteGuid results
-        htmlView html ctx
+    let beers = Beers.fetchBeers storage beerTasteGuid
+    let scores = Scores.fetchScores storage beerTasteGuid
+    let results = Results.beerStandardDeviations beers scores
+
+    Controversial.view beerTasteGuid results
+    |> htmlView
 
 let deviant (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let beers = Beers.fetchBeers storage beerTasteGuid
-        let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let scores = Scores.fetchScores storage beerTasteGuid
-        let results = Results.correlationToAverages beers tasters scores
-        let html = Deviant.view beerTasteGuid results
-        htmlView html ctx
+    let beers = Beers.fetchBeers storage beerTasteGuid
+    let tasters = Tasters.fetchTasters storage beerTasteGuid
+    let scores = Scores.fetchScores storage beerTasteGuid
+    let results = Results.correlationToAverages beers tasters scores
+    Deviant.view beerTasteGuid results |> htmlView
 
 let similar (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let scores = Scores.fetchScores storage beerTasteGuid
-        let results = Results.correlationBetweenTasters tasters scores
-        let html = Similar.view beerTasteGuid results
-        htmlView html ctx
+    let tasters = Tasters.fetchTasters storage beerTasteGuid
+    let scores = Scores.fetchScores storage beerTasteGuid
+    let results = Results.correlationBetweenTasters tasters scores
+    Similar.view beerTasteGuid results |> htmlView
 
 let strongBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let beers = Beers.fetchBeers storage beerTasteGuid
-        let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let scores = Scores.fetchScores storage beerTasteGuid
-        let results = Results.correlationToAbv beers tasters scores
-        let html = StrongBeers.view beerTasteGuid results
-        htmlView html ctx
+    let beers = Beers.fetchBeers storage beerTasteGuid
+    let tasters = Tasters.fetchTasters storage beerTasteGuid
+    let scores = Scores.fetchScores storage beerTasteGuid
+    let results = Results.correlationToAbv beers tasters scores
+    StrongBeers.view beerTasteGuid results |> htmlView
 
 let cheapAlcohol (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let beers = Beers.fetchBeers storage beerTasteGuid
-        let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let scores = Scores.fetchScores storage beerTasteGuid
-        let results = Results.correlationToAbvPrice beers tasters scores
-        let html = CheapAlcohol.view beerTasteGuid results
-        htmlView html ctx
+    let beers = Beers.fetchBeers storage beerTasteGuid
+    let tasters = Tasters.fetchTasters storage beerTasteGuid
+    let scores = Scores.fetchScores storage beerTasteGuid
+    let results = Results.correlationToAbvPrice beers tasters scores
+
+    CheapAlcohol.view beerTasteGuid results
+    |> htmlView
 
 let beersView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let beers = Beers.fetchBeers storage beerTasteGuid
-        let html = BeersView.view beerTasteGuid beers
-        htmlView html ctx
+    let beers = Beers.fetchBeers storage beerTasteGuid
+    BeersView.view beerTasteGuid beers |> htmlView
 
 let tastersView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let html = TastersView.view beerTasteGuid tasters
-        htmlView html ctx
+    let tasters = Tasters.fetchTasters storage beerTasteGuid
+    TastersView.view beerTasteGuid tasters |> htmlView
 
 let scoresView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    fun ctx ->
-        let beers = Beers.fetchBeers storage beerTasteGuid
-        let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let scores = Scores.fetchScores storage beerTasteGuid
-        let html = ScoresView.view beerTasteGuid beers tasters scores
-        htmlView html ctx
+    let beers = Beers.fetchBeers storage beerTasteGuid
+    let tasters = Tasters.fetchTasters storage beerTasteGuid
+    let scores = Scores.fetchScores storage beerTasteGuid
+
+    ScoresView.view beerTasteGuid beers tasters scores
+    |> htmlView
 
 let beerTasteView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     match BeerTasteStorage.fetchBeerTaste storage beerTasteGuid with
@@ -100,21 +86,17 @@ let endpoints storage = [
     GET [
         route "/"
         <| text "Beer Tasting Results - Navigate to /results/{beerTasteGuid}"
-        routef "/{%s}/results" <| resultsIndex
-        routef "/{%s}/results/bestbeers"
-        <| bestBeers storage
-        routef "/{%s}/results/controversial"
-        <| controversial storage
-        routef "/{%s}/results/deviant" <| deviant storage
-        routef "/{%s}/results/strongbeers"
-        <| strongBeers storage
-        routef "/{%s}/results/similar" <| similar storage
-        routef "/{%s}/results/cheapalcohol"
-        <| cheapAlcohol storage
-        routef "/{%s}/beers" <| beersView storage
-        routef "/{%s}/tasters" <| tastersView storage
-        routef "/{%s}/scores" <| scoresView storage
-        routef "/{%s}" <| beerTasteView storage
+        routef "/{%s}/results" resultsIndex
+        routef "/{%s}/results/bestbeers" (bestBeers storage)
+        routef "/{%s}/results/controversial" (controversial storage)
+        routef "/{%s}/results/deviant" (deviant storage)
+        routef "/{%s}/results/strongbeers" (strongBeers storage)
+        routef "/{%s}/results/similar" (similar storage)
+        routef "/{%s}/results/cheapalcohol" (cheapAlcohol storage)
+        routef "/{%s}/beers" (beersView storage)
+        routef "/{%s}/tasters" (tastersView storage)
+        routef "/{%s}/scores" (scoresView storage)
+        routef "/{%s}" (beerTasteView storage)
     ]
 ]
 
@@ -157,8 +139,7 @@ let configureApp (appBuilder: WebApplication) storage =
 let main args =
     let builder = WebApplication.CreateBuilder(args)
 
-    let config =
-        builder.Configuration.AddUserSecrets<SecretsAnchor>().AddEnvironmentVariables().Build()
+    let config = builder.Configuration.AddUserSecrets<SecretsAnchor>().AddEnvironmentVariables().Build()
 
     builder.Services.AddRouting().AddOxpecker()
     |> ignore
@@ -175,9 +156,8 @@ let main args =
         printfn
             "Set it using: dotnet user-secrets set \"BeerTaste:TableStorageConnectionString\" \"<your-connection-string>\""
 
-        1 // Exit with error
+        1
     | Some connStr ->
-        // Initialize Azure Table Storage
         let storage = BeerTasteTableStorage(connStr)
         configureApp app storage
         0
