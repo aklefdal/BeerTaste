@@ -29,40 +29,26 @@ module Beers =
         entity.Add("Packaging", beer.Packaging)
         entity
 
+    let getNonNullString (e: TableEntity) (propertyName: string) : string =
+        match e.GetString(propertyName) |> Option.ofObj with
+        | Some value -> value
+        | None -> failwithf $"Property %s{propertyName} is null"
+
+    let getNonNullFloat (e: TableEntity) (propertyName: string) : float =
+        match e.GetDouble(propertyName) |> Option.ofNullable with
+        | Some value -> value
+        | None -> failwithf $"Property %s{propertyName} is null"
+
     let entityToBeer (entity: TableEntity) : Beer = {
         Id = int (entity :> ITableEntity).RowKey
-        Name =
-            entity.GetString("Name")
-            |> Option.ofObj
-            |> Option.get
-        BeerType =
-            entity.GetString("BeerType")
-            |> Option.ofObj
-            |> Option.get
-        Origin =
-            entity.GetString("Origin")
-            |> Option.ofObj
-            |> Option.get
-        Producer =
-            entity.GetString("Producer")
-            |> Option.ofObj
-            |> Option.get
-        ABV =
-            entity.GetDouble("ABV")
-            |> Option.ofNullable
-            |> Option.get
-        Volume =
-            entity.GetDouble("Volume")
-            |> Option.ofNullable
-            |> Option.get
-        Price =
-            entity.GetDouble("Price")
-            |> Option.ofNullable
-            |> Option.get
-        Packaging =
-            entity.GetString("Packaging")
-            |> Option.ofObj
-            |> Option.get
+        Name = getNonNullString entity "Name"
+        BeerType = getNonNullString entity "BeerType"
+        Origin = getNonNullString entity "Origin"
+        Producer = getNonNullString entity "Producer"
+        ABV = getNonNullFloat entity "ABV"
+        Volume = getNonNullFloat entity "Volume"
+        Price = getNonNullFloat entity "Price"
+        Packaging = getNonNullString entity "Packaging"
     }
 
     let fetchBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Beer list =
