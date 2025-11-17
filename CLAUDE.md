@@ -35,7 +35,17 @@ beertaste/
 │   ├── Program.fs               # Application entry point
 │   ├── BeerTaste.Console.fsproj # .NET project file with compilation order
 │   └── BeerTaste.xlsx           # Beer catalog template
-├── BeerTaste.Web/                # F# web application (future results presentation)
+├── BeerTaste.Web/                # F# web application for results presentation
+│   ├── templates/               # Oxpecker HTML templates
+│   │   ├── Layout.fs           # Shared page layout and styling
+│   │   ├── Navigation.fs       # Navigation between result pages
+│   │   ├── ResultsIndex.fs     # Results hub page
+│   │   ├── BestBeers.fs        # Best beers result page
+│   │   ├── Controversial.fs    # Most controversial beers page
+│   │   ├── Deviant.fs          # Most deviant tasters page
+│   │   ├── Similar.fs          # Most similar tasters page
+│   │   ├── StrongBeers.fs      # Strong beer preference page
+│   │   └── CheapAlcohol.fs     # Cheap alcohol preference page
 │   ├── Program.fs               # ASP.NET Core web server with Oxpecker
 │   ├── BeerTaste.Web.fsproj     # .NET web project file
 │   └── README.md                # Web project documentation
@@ -138,16 +148,18 @@ $env:BeerTaste__FilesFolder = "C:\path\to\your\folder"
 A .NET 9.0 class library for code shared between Console and Web applications:
 
 - **Purpose:** Domain models, Azure Table Storage operations, and shared business logic
-- **Current State:** Placeholder with basic example code (`Say.hello`)
-- **Architecture:** Will contain modules split from Console project:
-  - **Storage.fs** - Azure Table Storage client setup and initialization
-  - **Beers.fs** - Beer domain types (`Beer`, `BeerEntity`) and Azure storage operations
-  - **Tasters.fs** - Taster domain types (`Taster`, `TasterEntity`) and Azure storage operations
-  - **BeerTaste.fs** - BeerTaste event types (`BeerTasteEntity`) and Azure CRUD operations
-  - **Scores.fs** - Score-related domain logic (if applicable)
+- **Current State:** Fully implemented with domain types, storage operations, and statistical analysis
+- **Architecture:** Contains modules for all shared functionality:
+  - **Storage.fs** - Azure Table Storage client setup (`BeerTasteTableStorage` class)
+  - **Beers.fs** - Beer domain types and Azure storage operations (`Beer`, `entityToScore`, `addBeers`, `deleteBeersForBeerTaste`)
+  - **Tasters.fs** - Taster domain types and Azure storage operations
+  - **BeerTaste.fs** - BeerTaste event types and Azure CRUD operations
+  - **Scores.fs** - Score type with optional values (`ScoreValue: float option`), entity conversion, and validation (`hasScores`, `isComplete`)
+  - **Results.fs** - Statistical analysis functions (correlations, averages, standard deviations)
 - **Responsibilities:**
   - All Azure Table Storage entity types and operations
-  - Domain model definitions
+  - Domain model definitions with optional score values
+  - Statistical analysis for results computation
   - Data access layer for both Console and Web
 - **Documentation:** Generates XML documentation file for IntelliSense support
 
@@ -178,14 +190,17 @@ The console application focuses on **Excel I/O and user interaction**, delegatin
    - **Split:** Domain types and Azure ops moved to Common
 
 4. **Scores.fs** - ScoreSchema Excel management module
-   - `ScoresSchemaState` discriminated union: `DoesNotExist | ExistsWithoutScores | ExistsWithScores`
-   - State detection: `getScoresSchemaState`, `hasScores`
+   - `ScoresSchemaState` discriminated union: `DoesNotExist | ExistsWithoutScores | ExistsWithScores | ExistsAndComplete`
+   - State detection: `getScoresSchemaState`, `hasScores`, `isComplete`
    - ScoreSchema creation: `deleteAndCreateScoreSchema`
+   - Score reading: `readScores`, `readScoresFroWorksheet` with optional score values
+   - Handles Norwegian decimal format and `-` as zero
    - Combines beers and tasters into scoring matrix using EPPlus
 
 5. **Workflow.fs** - Orchestration layer
    - User prompts: `promptForDescription`, `promptForDate`, `promptDoneEditingBeers`, `promptDoneEditingTasters`
-   - Workflow functions: `setupBeerTaste`, `verifyBeers`, `verifyTasters`, `createScoreSchema`
+   - Workflow functions: `setupBeerTaste`, `verifyBeers`, `verifyTasters`, `verifyScores`, `createScoreSchema`
+   - `showResults` - Opens browser to results page when scores are complete
    - Coordinates between Console modules and Common modules
    - Uses Spectre.Console for all user interaction
    - Handles user interaction and business logic flow
@@ -208,22 +223,33 @@ Separate **layered F# script architecture** for analysis:
 ### Web Application (BeerTaste.Web)
 
 - ASP.NET Core with Oxpecker framework
-- Currently minimal ("Hello World")
-- Future: results presentation and analysis visualization
-- Will reference BeerTaste.Common for shared types
+- **Fully implemented** results presentation with 6 statistical analysis pages
+- Routes follow `/{beerTasteGuid}/results/...` pattern
+- Black and white theme with responsive layout
+- Features:
+  - **Results Index** - Hub page with icons for each result type
+  - **Best Beers** - Ranked by average score
+  - **Most Controversial** - Ranked by standard deviation
+  - **Most Deviant Tasters** - Lowest correlation to average
+  - **Most Similar Tasters** - Taster pairs by correlation
+  - **Strong Beer Preference** - Correlation to ABV
+  - **Cheap Alcohol Preference** - Correlation to price per ABV
+- Navigation with previous/next arrows between pages
+- Fetches data from Azure Table Storage via BeerTaste.Common
 
 **Project Dependencies:**
 
 ```
 BeerTaste.Common (shared library)
     ↓
-    ├─→ BeerTaste.Console (references Common in future)
-    └─→ BeerTaste.Web (references Common in future)
+    ├─→ BeerTaste.Console (references Common)
+    └─→ BeerTaste.Web (references Common)
 ```
 
 **Data Flow:**
 
-Console → Azure Tables + Excel Files → Scripts (analysis) → Reports/Slides → Web (future presentation)
+Console → Azure Tables + Excel Files → Web (results presentation) → Browser (auto-opened when scores complete)
+Console → Excel Files → Scripts (analysis) → Reports/Slides
 
 ## Code Conventions
 
@@ -278,18 +304,21 @@ Console → Azure Tables + Excel Files → Scripts (analysis) → Reports/Slides
 
 ### F# Functional Patterns
 
-- **Option Types:** Prefer `Option<'T>` over null checks (e.g., `getConsoleSetup` returns `ConsoleSetup option`)
+- **Option Types:** Prefer `Option<'T>` over null checks (e.g., `getConsoleSetup` returns `ConsoleSetup option`, `ScoreValue: float option`)
 - **Pattern Matching:** Use `match` expressions for control flow and Option handling
-- **Discriminated Unions:** Model state with DUs (e.g., `ScoresSchemaState = DoesNotExist | ExistsWithoutScores | ExistsWithScores`)
+- **Discriminated Unions:** Model state with DUs (e.g., `ScoresSchemaState = DoesNotExist | ExistsWithoutScores | ExistsWithScores | ExistsAndComplete`)
 - **Piping:** Use `|>` operator for function composition and data transformation
+- **Underscore Shorthand:** Use `_.Property` syntax for property access in lambdas (e.g., `List.sortBy _.BeerId`)
 - **Function Composition:** Small, focused functions with clear single responsibilities
 - **Immutability:** Record types are immutable by default
 - **Expression-Oriented:** Functions return values rather than using side effects where possible
 
 ### Domain Modeling
 
-- **Records for Data:** Use record types for domain models (`Beer`, `Taster`, `ConsoleSetup`)
-- **Classes for Azure Entities:** Use classes implementing `ITableEntity` for Azure Table Storage
+- **Records for Data:** Use record types for domain models (`Beer`, `Taster`, `ConsoleSetup`, `Score`)
+- **Optional Fields:** Use `Option<'T>` for nullable domain values (e.g., `ScoreValue: float option` for missing scores)
+- **TableEntity Pattern:** Use `TableEntity` with conversion functions (`entityToScore`, `scoreToEntity`) instead of custom entity classes
+- **Classes for Azure Entities:** Use classes implementing `ITableEntity` for Azure Table Storage (Beers, Tasters, BeerTaste)
 - **Encapsulation:** `BeerTasteTableStorage` class encapsulates all table client initialization
 - **Type Safety:** Strong typing throughout, minimal use of `string` or generic types
 
@@ -340,10 +369,11 @@ Console → Azure Tables + Excel Files → Scripts (analysis) → Reports/Slides
 ### Shared Library (Azure Table Storage & Domain)
 
 - `BeerTaste.Common/Storage.fs` - Azure Table Storage client setup (`BeerTasteTableStorage` class)
-- `BeerTaste.Common/Beers.fs` - Beer domain types (`Beer`, `BeerEntity`) and Azure operations
-- `BeerTaste.Common/Tasters.fs` - Taster domain types (`Taster`, `TasterEntity`) and Azure operations
+- `BeerTaste.Common/Beers.fs` - Beer domain types (`Beer`) and Azure operations (`addBeers`, `deleteBeersForBeerTaste`)
+- `BeerTaste.Common/Tasters.fs` - Taster domain types (`Taster`) and Azure operations (`addTasters`, `deleteTastersForPartitionKey`)
 - `BeerTaste.Common/BeerTaste.fs` - BeerTaste event types (`BeerTasteEntity`) and Azure CRUD operations
-- `BeerTaste.Common/Scores.fs` - Score-related domain logic (if applicable)
+- `BeerTaste.Common/Scores.fs` - Score type with optional values, entity conversion (`entityToScore`, `scoreToEntity`), validation (`hasScores`, `isComplete`)
+- `BeerTaste.Common/Results.fs` - Statistical analysis functions (`beerAverages`, `beerStandardDeviations`, `correlationToAverages`, `correlationBetweenTasters`, `correlationToAbv`, `correlationToAbvPrice`)
 - `BeerTaste.Common/BeerTaste.Common.fsproj` - Class library project configuration
 
 ### Console Application Modules (Excel I/O & UI)
@@ -366,7 +396,16 @@ Console → Azure Tables + Excel Files → Scripts (analysis) → Reports/Slides
 
 ### Web Application
 
-- `BeerTaste.Web/Program.fs` - Web application for results presentation
+- `BeerTaste.Web/Program.fs` - Web application entry point with routing and data fetching
+- `BeerTaste.Web/templates/Layout.fs` - Shared page layout with black and white theme
+- `BeerTaste.Web/templates/Navigation.fs` - Navigation between result pages with prev/next arrows
+- `BeerTaste.Web/templates/ResultsIndex.fs` - Results hub page with icons for each result type
+- `BeerTaste.Web/templates/BestBeers.fs` - Best beers ranked by average score
+- `BeerTaste.Web/templates/Controversial.fs` - Most controversial beers by standard deviation
+- `BeerTaste.Web/templates/Deviant.fs` - Most deviant tasters by correlation
+- `BeerTaste.Web/templates/Similar.fs` - Most similar taster pairs by correlation
+- `BeerTaste.Web/templates/StrongBeers.fs` - Strong beer preference by ABV correlation
+- `BeerTaste.Web/templates/CheapAlcohol.fs` - Cheap alcohol preference by price/ABV correlation
 - `BeerTaste.Web/BeerTaste.Web.fsproj` - Web project configuration
 
 ### Configuration
@@ -414,20 +453,22 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 ### Shared Library (BeerTaste.Common)
 
-- **Purpose:** Data access layer and domain models shared between Console and Web applications
-- **Current State:** Placeholder library with example code
-- **Architecture Plan:** Will contain modules split from Console:
+- **Purpose:** Data access layer, domain models, and statistical analysis shared between Console and Web applications
+- **Current State:** Fully implemented with all core functionality
+- **Architecture:** Contains all shared modules:
   - **Storage.fs** - Azure Table Storage initialization and client management
   - **Beers.fs** - Beer domain types and Azure CRUD operations
   - **Tasters.fs** - Taster domain types and Azure CRUD operations
   - **BeerTaste.fs** - BeerTaste event types and Azure CRUD operations
-  - **Scores.fs** - Score domain logic (if shared)
+  - **Scores.fs** - Score type with optional values (`float option`), TableEntity conversion, validation
+  - **Results.fs** - Statistical analysis (correlations, averages, standard deviations)
 - **Project Type:** .NET class library targeting net9.0
 - **XML Documentation:** Enabled for IntelliSense support in consuming projects
-- **Dependencies:** Azure.Data.Tables only (no UI dependencies)
+- **Dependencies:** Azure.Data.Tables and FSharp.Stats (no UI dependencies)
   - ✅ Azure.Data.Tables for all storage operations
+  - ✅ FSharp.Stats for statistical analysis
   - ❌ No EPPlus, Spectre.Console, System.Console, or ASP.NET Core
-  - Keep it focused on data access and domain logic
+  - Keep it focused on data access, domain logic, and analysis
 
 ### Console Application
 
@@ -437,6 +478,8 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 - **Option-Based Flow:** Functions return `Option` types, orchestration uses pattern matching
 - **Storage Encapsulation:** All Azure table initialization happens in Storage.fs
 - **Configuration First:** ConsoleSetup record provides all context to workflow functions
+- **Browser Integration:** Automatically opens results page when all scores are complete
+- **Score Handling:** Supports decimal scores (Norwegian comma format), treats `-` as zero, missing scores as `None`
 
 ### Adding New Features
 
@@ -464,7 +507,11 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 ### Web Application
 
-- Currently a placeholder ("Hello World")
-- Will be developed for results presentation
+- **Fully implemented** results presentation with 6 analysis pages
 - Oxpecker framework for F#-friendly web development
+- Routes: `/{beerTasteGuid}/results/...` pattern
+- Black and white theme for professional appearance
+- Navigation with Unicode arrows (← →) between pages
+- Icons for each result type (★, ⚡, 😈, ❤, 😵, 💰)
+- Auto-opens in browser when Console detects complete scores
 - Text files need to use CRLF for line endings
