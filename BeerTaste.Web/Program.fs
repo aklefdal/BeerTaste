@@ -69,6 +69,12 @@ let beersView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endpoin
         let html = BeersView.view beerTasteGuid beers
         htmlView html ctx
 
+let tastersView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
+    fun ctx ->
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
+        let html = TastersView.view beerTasteGuid tasters
+        htmlView html ctx
+
 let endpoints storage = [
     GET [
         route "/"
@@ -85,6 +91,7 @@ let endpoints storage = [
         routef "/{%s}/results/cheapalcohol"
         <| cheapAlcohol storage
         routef "/{%s}/beers" <| beersView storage
+        routef "/{%s}/tasters" <| tastersView storage
     ]
 ]
 
