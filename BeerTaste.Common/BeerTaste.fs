@@ -16,7 +16,7 @@ module BeerTasteStorage =
         entity.Add("Description", beerTaste.Description)
         entity.Add("Date", beerTaste.Date.ToString("yyyy-MM-dd"))
         entity
-        
+
     let getBeerTasteGuid (table: TableClient) (shortName: string) : string option =
         table.Query<TableEntity>(filter = $"RowKey eq '{shortName}'")
         |> Seq.map _.PartitionKey
@@ -24,13 +24,14 @@ module BeerTasteStorage =
 
     let addBeerTaste (table: TableClient) (shortName: string) (description: string) (date: DateOnly) =
         let beerTasteGuid = Guid.NewGuid().ToString()
+
         let beerTaste = {
             BeerTasteGuid = beerTasteGuid
             ShortName = shortName
             Description = description
             Date = date
         }
-        
+
         let entity = beertasteToEntity beerTaste
         table.AddEntity(entity) |> ignore
         beerTasteGuid

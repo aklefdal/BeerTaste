@@ -39,6 +39,7 @@ module Results =
             Array.average beerScores
         else
             0.0
+
     let beerAverages (beers: Beer list) (scores: Score list) : BeerResult list =
         beers
         |> List.map (fun b -> b, getAverageScoreForBeer scores b.Id)
@@ -97,10 +98,7 @@ module Results =
         |> Seq.toList
 
     // Correlation between tasters (most similar tasters)
-    let correlationBetweenTasters
-        (tasters: Taster list)
-        (scores: Score list)
-        : TasterPairResult list =
+    let correlationBetweenTasters (tasters: Taster list) (scores: Score list) : TasterPairResult list =
         let tasterPairs = combineAllTasters tasters
 
         tasterPairs
