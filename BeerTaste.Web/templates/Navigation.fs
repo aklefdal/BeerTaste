@@ -56,12 +56,10 @@ let renderNavigation (beerTasteGuid: string) (currentPage: ResultPage) =
         a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" }
 
         match getPreviousPage currentPage with
-        | Some prevPage ->
-            a (href = $"/{beerTasteGuid}/results/{pageToRoute prevPage}") { raw " ← " }
+        | Some prevPage -> a (href = $"/{beerTasteGuid}/results/{pageToRoute prevPage}") { raw " ← " }
         | None -> ()
 
         match getNextPage currentPage with
-        | Some nextPage ->
-            a (href = $"/{beerTasteGuid}/results/{pageToRoute nextPage}") { raw " → " }
+        | Some nextPage -> a (href = $"/{beerTasteGuid}/results/{pageToRoute nextPage}") { raw " → " }
         | None -> ()
     }

@@ -74,10 +74,8 @@ module Results =
         if ints.Length = 0 then
             0.0
         else
-            ints
-            |> Array.map float
-            |> Array.average
-    
+            ints |> Array.map float |> Array.average
+
     // Taster correlation to beer averages (most deviant tasters)
     let correlationToAverages (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
         let avgScoresByBeer =

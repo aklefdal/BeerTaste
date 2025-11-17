@@ -33,14 +33,38 @@ module Beers =
 
     let entityToBeer (entity: TableEntity) : Beer = {
         Id = int (entity :> ITableEntity).RowKey
-        Name = entity.GetString("Name") |> Option.ofObj |> Option.get
-        BeerType = entity.GetString("BeerType") |> Option.ofObj |> Option.get
-        Origin = entity.GetString("Origin") |> Option.ofObj |> Option.get
-        Producer = entity.GetString("Producer") |> Option.ofObj |> Option.get
-        ABV = entity.GetDouble("ABV") |> Option.ofNullable |> Option.get
-        Volume = entity.GetDouble("Volume") |> Option.ofNullable |> Option.get
-        Price = entity.GetDouble("Price") |> Option.ofNullable |> Option.get
-        Packaging = entity.GetString("Packaging") |> Option.ofObj |> Option.get
+        Name =
+            entity.GetString("Name")
+            |> Option.ofObj
+            |> Option.get
+        BeerType =
+            entity.GetString("BeerType")
+            |> Option.ofObj
+            |> Option.get
+        Origin =
+            entity.GetString("Origin")
+            |> Option.ofObj
+            |> Option.get
+        Producer =
+            entity.GetString("Producer")
+            |> Option.ofObj
+            |> Option.get
+        ABV =
+            entity.GetDouble("ABV")
+            |> Option.ofNullable
+            |> Option.get
+        Volume =
+            entity.GetDouble("Volume")
+            |> Option.ofNullable
+            |> Option.get
+        Price =
+            entity.GetDouble("Price")
+            |> Option.ofNullable
+            |> Option.get
+        Packaging =
+            entity.GetString("Packaging")
+            |> Option.ofObj
+            |> Option.get
     }
 
     let fetchBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Beer list =

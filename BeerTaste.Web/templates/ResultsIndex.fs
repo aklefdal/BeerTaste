@@ -14,22 +14,27 @@ let view (beerTasteGuid: string) =
                 span (class' = "icon") { raw "★" }
                 raw "Best Beers"
             }
+
             a (href = $"/{beerTasteGuid}/results/controversial") {
                 span (class' = "icon") { raw "⚡" }
                 raw "Most Controversial Beers"
             }
+
             a (href = $"/{beerTasteGuid}/results/deviant") {
                 span (class' = "icon") { raw "😈" }
                 raw "Most Deviant Tasters"
             }
+
             a (href = $"/{beerTasteGuid}/results/similar") {
                 span (class' = "icon") { raw "❤" }
                 raw "Most Similar Tasters"
             }
+
             a (href = $"/{beerTasteGuid}/results/strongbeers") {
                 span (class' = "icon") { raw "😵" }
                 raw "Most Fond of Strong Beers"
             }
+
             a (href = $"/{beerTasteGuid}/results/cheapalcohol") {
                 span (class' = "icon") { raw "💰" }
                 raw "Most Fond of Cheap Alcohol"

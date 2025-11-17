@@ -23,9 +23,9 @@ let workflow (args: string[]) =
 let main args =
     try
         match args |> workflow with
-        | Some () -> 0
+        | Some() -> 0
         | None -> 1
-        
+
     with ex ->
         AnsiConsole.MarkupLineInterpolated($"[red]Error: {ex.Message}[/]")
         1

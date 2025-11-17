@@ -31,7 +31,8 @@ let readBeers (fileName: string) : Beer list =
 
 let createTastersSchema (fileName: string) (beers: Beer list) : unit =
     // Get the template file path
-    let templateFile = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BeerTaste.xlsx")
+    let templateFile =
+        System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BeerTaste.xlsx")
 
     use templatePackage = new ExcelPackage(templateFile)
     use targetPackage = new ExcelPackage(fileName)
@@ -40,12 +41,15 @@ let createTastersSchema (fileName: string) (beers: Beer list) : unit =
 
     // Delete existing TastersSchema worksheet if it exists
     let existingWorksheet = targetPackage.Workbook.Worksheets[schemaName]
+
     if existingWorksheet <> null then
         targetPackage.Workbook.Worksheets.Delete(existingWorksheet)
 
     // Copy the template from BeerTaste.xlsx
     let templateWorksheet = templatePackage.Workbook.Worksheets["TastersSchema"]
-    targetPackage.Workbook.Worksheets.Add(schemaName, templateWorksheet) |> ignore
+
+    targetPackage.Workbook.Worksheets.Add(schemaName, templateWorksheet)
+    |> ignore
 
     let worksheet = targetPackage.Workbook.Worksheets[schemaName]
     let height = worksheet.Row(3).Height
@@ -65,4 +69,3 @@ let createTastersSchema (fileName: string) (beers: Beer list) : unit =
         worksheet.Cells[i + 3, 6].Value <- beer.ABV)
 
     targetPackage.Save()
-

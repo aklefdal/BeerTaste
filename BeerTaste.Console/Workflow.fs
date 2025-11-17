@@ -124,7 +124,7 @@ let verifyTasters (setup: ConsoleSetup) (beerTasteGuid: string) (beers: Beer lis
         AnsiConsole.MarkupLine($"[green]Found {tasters.Length} taster(s) in the Excel file.[/]")
 
         // Only ask if the user is done editing when there are 2 or more tasters
-        if  tasters.Length <= 1 then
+        if tasters.Length <= 1 then
             AnsiConsole.MarkupLine("[yellow]Please continue editing the tasters in the Excel file.[/]")
             None
         elif promptDoneEditingTasters () then
@@ -132,20 +132,18 @@ let verifyTasters (setup: ConsoleSetup) (beerTasteGuid: string) (beers: Beer lis
             createScoreSchema setup.TableStorage.ScoresTableClient beerTasteGuid setup.ExcelFilePath beers tasters
             AnsiConsole.MarkupLine("[green]ScoreSchema worksheet created successfully![/]")
 
-            try 
+            try
                 AnsiConsole.MarkupLine("[cyan]Saving tasters to Azure Table Storage...[/]")
                 deleteTastersForPartitionKey setup.TableStorage.TastersTableClient beerTasteGuid
                 addTasters setup.TableStorage.TastersTableClient beerTasteGuid tasters
-        
+
                 AnsiConsole.MarkupLine(
                     $"[green]Successfully saved {tasters.Length} taster(s) to Azure Table Storage.[/]"
                 )
-            
+
                 Some tasters
             with ex ->
-                AnsiConsole.MarkupLine(
-                    $"[red]Warning: Could not save scores to Azure Table Storage: {ex.Message}[/]"
-                )
+                AnsiConsole.MarkupLine($"[red]Warning: Could not save scores to Azure Table Storage: {ex.Message}[/]")
                 None
         else
             Some tasters
@@ -163,13 +161,11 @@ let verifyScores (setup: ConsoleSetup) (beerTasteGuid: string) =
             deleteScoresForBeerTaste setup.TableStorage.ScoresTableClient beerTasteGuid
             addScores setup.TableStorage.ScoresTableClient beerTasteGuid scores
 
-            AnsiConsole.MarkupLine(
-                $"[green]Successfully saved {scores.Length} score(s) to Azure Table Storage.[/]"
-            )
+            AnsiConsole.MarkupLine($"[green]Successfully saved {scores.Length} score(s) to Azure Table Storage.[/]")
             Some scores
         else
             None
-        
+
     with ex ->
         AnsiConsole.MarkupLine($"[red]Warning: Could not read tasters from Excel file: {ex.Message}[/]")
         None
@@ -184,8 +180,6 @@ let showResults (beerTasteGuid: string) (scores: Score list) =
             let psi = ProcessStartInfo(url, UseShellExecute = true)
             Process.Start(psi) |> ignore
         with ex ->
-            AnsiConsole.MarkupLine(
-                $"[yellow]Could not open browser: {ex.Message}[/]"
-            )
+            AnsiConsole.MarkupLine($"[yellow]Could not open browser: {ex.Message}[/]")
     else
         AnsiConsole.MarkupLine("[yellow]Scores are not complete.[/]")

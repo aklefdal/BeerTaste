@@ -38,8 +38,9 @@ let readScoresFroWorksheet (worksheet: ExcelWorksheet) : Score list =
 
                     for col in 4..maxCol do
                         let tasterName = tasterNames[col - 4]
+
                         let scoreValue =
-                            match  worksheet.Cells[row, col].Text with
+                            match worksheet.Cells[row, col].Text with
                             | null -> None
                             | "" -> None
                             | "-" -> Some 0
@@ -52,6 +53,7 @@ let readScoresFroWorksheet (worksheet: ExcelWorksheet) : Score list =
                         }
             }
             |> Seq.toList
+
 let readScores (fileName: string) : Score list =
     use package = new ExcelPackage(fileName)
     let worksheet = package.Workbook.Worksheets[sheetName]
