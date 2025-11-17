@@ -132,7 +132,7 @@ let notFoundHandler (ctx: HttpContext) =
     ctx.SetStatusCode 404
     ctx.WriteHtmlView(errorView 404 "Page not found!")
 
-let errorHandler (ctx: HttpContext) (next: RequestDelegate) =
+let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
     task {
         try
             return! next.Invoke(ctx)
@@ -149,7 +149,6 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) =
             ctx.SetStatusCode StatusCodes.Status500InternalServerError
             return! ctx.WriteHtmlView(errorView 500 (string ex))
     }
-    :> Task
 
 let configureApp (appBuilder: WebApplication) storage =
     appBuilder.Use(errorHandler).UseRouting().UseOxpecker(endpoints storage).Run(notFoundHandler)
