@@ -56,6 +56,7 @@ module Beers =
             storage.BeersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
             |> Seq.map entityToBeer
             |> Seq.toList
+            |> List.sortBy _.Id
         with _ -> []
 
     let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : unit =

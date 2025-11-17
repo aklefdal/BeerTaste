@@ -17,6 +17,7 @@
         <Compile Include="templates/Similar.fs"/>
         <Compile Include="templates/StrongBeers.fs"/>
         <Compile Include="templates/CheapAlcohol.fs"/>
+        <Compile Include="templates/BeersView.fs"/>
         <Compile Include="Program.fs"/>
         <Content Include="README.md" />
     </ItemGroup>
