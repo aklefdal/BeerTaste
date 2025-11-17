@@ -18,47 +18,46 @@ type Beer = {
     member this.PricePerLiter = this.Price / this.Volume
     member this.PricePerAbv = this.PricePerLiter / (this.ABV / 100.0)
 
-type BeerEntity() =
-    interface ITableEntity with
-        member val PartitionKey = "" with get, set
-        member val RowKey = "" with get, set
-        member val Timestamp = Nullable<DateTimeOffset>() with get, set
-        member val ETag = ETag() with get, set
+module Beers =
+    let beerToEntity (beerTasteGuid: string) (beer: Beer) =
+        let entity = TableEntity(beerTasteGuid, beer.Id.ToString())
+        entity.Add("Name", beer.Name)
+        entity.Add("BeerType", beer.BeerType)
+        entity.Add("Origin", beer.Origin)
+        entity.Add("Producer", beer.Producer)
+        entity.Add("ABV", beer.ABV)
+        entity.Add("Volume", beer.Volume)
+        entity.Add("Price", beer.Price)
+        entity.Add("Packaging", beer.Packaging)
+        entity
 
-    member val Name = "" with get, set
-    member val BeerType = "" with get, set
-    member val Origin = "" with get, set
-    member val Producer = "" with get, set
-    member val ABV = 0.0 with get, set
-    member val Volume = 0.0 with get, set
-    member val Price = 0.0 with get, set
-    member val Packaging = "" with get, set
+    let entityToBeer (entity: TableEntity) : Beer = {
+        Id = int (entity :> ITableEntity).RowKey
+        Name = entity.GetString("Name") |> Option.ofObj |> Option.get
+        BeerType = entity.GetString("BeerType") |> Option.ofObj |> Option.get
+        Origin = entity.GetString("Origin") |> Option.ofObj |> Option.get
+        Producer = entity.GetString("Producer") |> Option.ofObj |> Option.get
+        ABV = entity.GetDouble("ABV") |> Option.ofNullable |> Option.get
+        Volume = entity.GetDouble("Volume") |> Option.ofNullable |> Option.get
+        Price = entity.GetDouble("Price") |> Option.ofNullable |> Option.get
+        Packaging = entity.GetString("Packaging") |> Option.ofObj |> Option.get
+    }
 
-    new(beerTasteGuid: string, beer: Beer) as this =
-        BeerEntity()
+    let fetchBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Beer list =
+        try
+            storage.BeersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            |> Seq.map entityToBeer
+            |> Seq.toList
+        with _ -> []
 
-        then
-            (this :> ITableEntity).PartitionKey <- beerTasteGuid
-            (this :> ITableEntity).RowKey <- beer.Id.ToString()
-            this.Name <- beer.Name
-            this.BeerType <- beer.BeerType
-            this.Origin <- beer.Origin
-            this.Producer <- beer.Producer
-            this.ABV <- beer.ABV
-            this.Volume <- beer.Volume
-            this.Price <- beer.Price
-            this.Packaging <- beer.Packaging
-
-module BeersStorage =
     let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : unit =
         try
-            beersTable.Query<BeerEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+            beersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
             |> Seq.iter (beersTable.DeleteEntity >> ignore)
         with _ ->
             ()
 
     let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : unit =
         beers
-        |> List.iter (fun beer ->
-            let entity = BeerEntity(beerTasteGuid, beer)
-            beersTable.AddEntity(entity) |> ignore)
+        |> List.map (beerToEntity beerTasteGuid)
+        |> List.iter (beersTable.AddEntity >> ignore)

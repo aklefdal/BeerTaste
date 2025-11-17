@@ -2,31 +2,10 @@
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Configuration
 open Oxpecker
-open Azure.Data.Tables
 open BeerTaste.Common
 open BeerTaste.Web.Templates
 
 type SecretsAnchor = class end
-
-let beerEntityToBeer (entity: BeerEntity) : Beer = {
-    Id = int (entity :> ITableEntity).RowKey
-    Name = entity.Name
-    BeerType = entity.BeerType
-    Origin = entity.Origin
-    Producer = entity.Producer
-    ABV = entity.ABV
-    Volume = entity.Volume
-    Price = entity.Price
-    Packaging = entity.Packaging
-}
-
-let fetchBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Beer list =
-    try
-        storage.BeersTableClient.Query<BeerEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-        |> Seq.map beerEntityToBeer
-        |> Seq.toList
-    with _ -> []
-
 
 let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
     try
@@ -42,7 +21,7 @@ let resultsIndex (beerTasteGuid: string) : EndpointHandler =
 
 let bestBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
-        let beers = fetchBeers storage beerTasteGuid
+        let beers = Beers.fetchBeers storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.beerAverages beers scores
         let html = BestBeers.view beerTasteGuid results
@@ -50,7 +29,7 @@ let bestBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endpoin
 
 let controversial (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
-        let beers = fetchBeers storage beerTasteGuid
+        let beers = Beers.fetchBeers storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.beerStandardDeviations beers scores
         let html = Controversial.view beerTasteGuid results
@@ -58,7 +37,7 @@ let controversial (storage: BeerTasteTableStorage) (beerTasteGuid: string) : End
 
 let deviant (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
-        let beers = fetchBeers storage beerTasteGuid
+        let beers = Beers.fetchBeers storage beerTasteGuid
         let tasters = Tasters.fetchTasters storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.correlationToAverages beers tasters scores
@@ -68,7 +47,7 @@ let deviant (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointH
 let similar (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let tasters = Tasters.fetchTasters storage beerTasteGuid
-        let beers = fetchBeers storage beerTasteGuid
+        let beers = Beers.fetchBeers storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.correlationBetweenTasters tasters beers scores
         let html = Similar.view beerTasteGuid results
@@ -76,7 +55,7 @@ let similar (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointH
 
 let strongBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
-        let beers = fetchBeers storage beerTasteGuid
+        let beers = Beers.fetchBeers storage beerTasteGuid
         let tasters = Tasters.fetchTasters storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.correlationToAbv beers tasters scores
@@ -85,7 +64,7 @@ let strongBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endpo
 
 let cheapAlcohol (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
-        let beers = fetchBeers storage beerTasteGuid
+        let beers = Beers.fetchBeers storage beerTasteGuid
         let tasters = Tasters.fetchTasters storage beerTasteGuid
         let scores = fetchScores storage beerTasteGuid
         let results = Results.correlationToAbvPrice beers tasters scores

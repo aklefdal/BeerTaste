@@ -4,7 +4,7 @@ open System
 open System.Diagnostics
 open Spectre.Console
 open BeerTaste.Common
-open BeerTaste.Common.BeersStorage
+open BeerTaste.Common.Beers
 open BeerTaste.Common.BeerTasteStorage
 open BeerTaste.Common.Tasters
 open BeerTaste.Common.Scores
