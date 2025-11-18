@@ -133,7 +133,8 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
     }
 
 let configureApp (appBuilder: WebApplication) storage =
-    appBuilder.Use(errorHandler).UseRouting().UseOxpecker(endpoints storage).Run(notFoundHandler)
+    appBuilder.Use(errorHandler).UseRouting().UseOxpecker(endpoints storage)
+    |> ignore
 
 [<EntryPoint>]
 let main args =
@@ -160,4 +161,5 @@ let main args =
     | Some connStr ->
         let storage = BeerTasteTableStorage(connStr)
         configureApp app storage
+        app.Run()
         0
