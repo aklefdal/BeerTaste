@@ -116,10 +116,7 @@ module Results =
 
     // Correlation to ABV (fondest of strong beers)
     let correlationToAbv (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
-        let beerAbv =
-            beers
-            |> List.sortBy _.Id
-            |> List.map _.ABV
+        let beerAbv = beers |> List.sortBy _.Id |> List.map _.ABV
 
         tasters
         |> List.map (fun t ->
