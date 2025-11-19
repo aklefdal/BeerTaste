@@ -51,20 +51,20 @@ let createTastersSchema (fileName: string) (beers: Beer list) : unit =
     |> ignore
 
     let worksheet = targetPackage.Workbook.Worksheets[schemaName]
-    let height = worksheet.Row(3).Height
+    let height = worksheet.Row(4).Height
 
-    worksheet.InsertRow(3, beers.Length - 1, 3)
+    worksheet.InsertRow(4, beers.Length - 1, 4)
 
-    for i in 3 .. (beers.Length + 1) do
+    for i in 4 .. (beers.Length + 4) do
         worksheet.Row(i).Height <- height
 
     beers
     |> List.iteri (fun i beer ->
-        worksheet.Cells[i + 3, 1].Value <- beer.Id
-        worksheet.Cells[i + 3, 2].Value <- beer.Producer
-        worksheet.Cells[i + 3, 3].Value <- beer.Name
-        worksheet.Cells[i + 3, 4].Value <- beer.BeerType
-        worksheet.Cells[i + 3, 5].Value <- beer.Origin
-        worksheet.Cells[i + 3, 6].Value <- beer.ABV)
+        worksheet.Cells[i + 4, 1].Value <- beer.Id
+        worksheet.Cells[i + 4, 2].Value <- beer.Producer
+        worksheet.Cells[i + 4, 3].Value <- beer.Name
+        worksheet.Cells[i + 4, 4].Value <- beer.BeerType
+        worksheet.Cells[i + 4, 5].Value <- beer.Origin
+        worksheet.Cells[i + 4, 6].Value <- beer.ABV)
 
     targetPackage.Save()
