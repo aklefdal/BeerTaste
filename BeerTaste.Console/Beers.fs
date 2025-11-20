@@ -61,8 +61,8 @@ let createTastersSchema (fileName: string) (beers: Beer list) : unit =
     beers
     |> List.iteri (fun i beer ->
         worksheet.Cells[i + 4, 1].Value <- beer.Id
-        worksheet.Cells[i + 4, 2].Value <- beer.Producer
-        worksheet.Cells[i + 4, 3].Value <- beer.Name
+        worksheet.Cells[i + 4, 2].Value <- beer.Name
+        worksheet.Cells[i + 4, 3].Value <- beer.Producer
         worksheet.Cells[i + 4, 4].Value <- beer.BeerType
         worksheet.Cells[i + 4, 5].Value <- beer.Origin
         worksheet.Cells[i + 4, 6].Value <- beer.ABV)
