@@ -27,7 +27,8 @@ module Email =
                 let toName = message.ToName |> Option.defaultValue message.To
                 let toAddress = new EmailAddress(message.To, toName)
 
-                let msg = MailHelper.CreateSingleEmail(from, toAddress, message.Subject, message.Body, message.Body)
+                // SendGrid API: plainTextContent, htmlContent (we only use plain text)
+                let msg = MailHelper.CreateSingleEmail(from, toAddress, message.Subject, message.Body, null)
 
                 let! response = client.SendEmailAsync(msg) |> Async.AwaitTask
 

@@ -199,10 +199,11 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
                         let baseMessage = Email.createBeerTasteResultsEmail taster.Name setup.ShortName resultsUrl
                         { baseMessage with To = email })
 
-                // Send emails
+                // Send emails (using safer async execution pattern for console apps)
                 let results =
                     Email.sendEmails emailConfig messages
-                    |> Async.RunSynchronously
+                    |> Async.StartAsTask
+                    |> fun task -> task.GetAwaiter().GetResult()
 
                 // Partition results into successes and failures
                 let (successes, failures) =
