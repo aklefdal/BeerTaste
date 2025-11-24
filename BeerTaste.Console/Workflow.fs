@@ -202,22 +202,16 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
                 // Send emails
                 let results = Email.sendEmails emailConfig messages
 
-                // Display results
-                let successCount =
+                // Partition results into successes and failures
+                let (successes, failures) =
                     results
-                    |> List.filter (fun (_, result) ->
+                    |> List.partition (fun (_, result) ->
                         match result with
                         | Ok _ -> true
                         | Error _ -> false)
-                    |> List.length
 
-                let failCount =
-                    results
-                    |> List.filter (fun (_, result) ->
-                        match result with
-                        | Ok _ -> false
-                        | Error _ -> true)
-                    |> List.length
+                let successCount = successes |> List.length
+                let failCount = failures |> List.length
 
                 if successCount > 0 then
                     AnsiConsole.MarkupLine($"[green]Successfully sent {successCount} email(s).[/]")
@@ -226,15 +220,12 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
                     AnsiConsole.MarkupLine($"[red]Failed to send {failCount} email(s).[/]")
 
                     // Show details of failures
-                    results
-                    |> List.filter (fun (_, result) ->
+                    failures
+                    |> List.choose (fun (msg, result) ->
                         match result with
-                        | Ok _ -> false
-                        | Error _ -> true)
-                    |> List.iter (fun (msg, result) ->
-                        match result with
-                        | Error err -> AnsiConsole.MarkupLine($"[red]  - {msg.To}: {err}[/]")
-                        | _ -> ())
+                        | Error err -> Some(msg.To, err)
+                        | _ -> None)
+                    |> List.iter (fun (email, err) -> AnsiConsole.MarkupLine($"[red]  - {email}: {err}[/]"))
         else
             AnsiConsole.MarkupLine("[yellow]Email sending cancelled.[/]")
 
