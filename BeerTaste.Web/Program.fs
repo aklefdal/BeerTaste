@@ -60,6 +60,13 @@ let cheapAlcohol (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endp
     CheapAlcohol.view beerTasteGuid results
     |> htmlView
 
+let oldManBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
+    let beers = Beers.fetchBeers storage beerTasteGuid
+    let tasters = Tasters.fetchTasters storage beerTasteGuid
+    let scores = Scores.fetchScores storage beerTasteGuid
+    let results = Results.correlationToAge beers tasters scores
+    OldManBeers.view beerTasteGuid results |> htmlView
+
 let beersView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
     let beers = Beers.fetchBeers storage beerTasteGuid
     BeersView.view beerTasteGuid beers |> htmlView
@@ -93,6 +100,7 @@ let endpoints storage = [
         routef "/{%s}/results/strongbeers" (strongBeers storage)
         routef "/{%s}/results/similar" (similar storage)
         routef "/{%s}/results/cheapalcohol" (cheapAlcohol storage)
+        routef "/{%s}/results/oldmanbeers" (oldManBeers storage)
         routef "/{%s}/beers" (beersView storage)
         routef "/{%s}/tasters" (tastersView storage)
         routef "/{%s}/scores" (scoresView storage)
