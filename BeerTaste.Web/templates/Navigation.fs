@@ -37,29 +37,26 @@ let pageToTitle page =
     | StrongBeers -> "Most Fond of Strong Beers"
     | CheapAlcohol -> "Most Fond of Cheap Alcohol"
 
-let getPreviousPage currentPage =
-    allPages
-    |> List.tryFindIndex ((=) currentPage)
-    |> Option.bind (fun idx -> if idx > 0 then Some allPages.[idx - 1] else None)
-
-let getNextPage currentPage =
-    allPages
-    |> List.tryFindIndex ((=) currentPage)
-    |> Option.bind (fun idx ->
-        if idx < allPages.Length - 1 then
-            Some allPages.[idx + 1]
-        else
-            None)
+let pageToIcon page =
+    match page with
+    | BestBeers -> "★"
+    | Controversial -> "⚡"
+    | Deviant -> "😈"
+    | Similar -> "❤"
+    | StrongBeers -> "😵"
+    | CheapAlcohol -> "💰"
 
 let renderNavigation (beerTasteGuid: string) (currentPage: ResultPage) =
-    div (class' = "nav") {
-        a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" }
-
-        match getPreviousPage currentPage with
-        | Some prevPage -> a (href = $"/{beerTasteGuid}/results/{pageToRoute prevPage}") { raw " ← " }
-        | None -> ()
-
-        match getNextPage currentPage with
-        | Some nextPage -> a (href = $"/{beerTasteGuid}/results/{pageToRoute nextPage}") { raw " → " }
-        | None -> ()
+    div (class' = "results-nav") {
+        for page in allPages do
+            if page = currentPage then
+                span (class' = "results-nav-button current") {
+                    span (class' = "icon") { raw (pageToIcon page) }
+                    raw (pageToTitle page)
+                }
+            else
+                a (class' = "results-nav-button", href = $"/{beerTasteGuid}/results/{pageToRoute page}") {
+                    span (class' = "icon") { raw (pageToIcon page) }
+                    raw (pageToTitle page)
+                }
     }

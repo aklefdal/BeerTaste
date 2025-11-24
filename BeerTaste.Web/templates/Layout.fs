@@ -114,6 +114,40 @@ let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement lis
                     font-size: 1.2em;
                     text-align: center;
                 }
+                .results-nav {
+                    margin: 20px 0;
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+                .results-nav-button {
+                    display: inline-block;
+                    padding: 10px 15px;
+                    background-color: #ffffff;
+                    color: #000000;
+                    text-decoration: none;
+                    border: 1px solid #000000;
+                    border-radius: 3px;
+                    transition: all 0.2s;
+                    flex: 1 1 auto;
+                    min-width: 200px;
+                    text-align: center;
+                }
+                .results-nav-button:hover {
+                    background-color: #000000;
+                    color: #ffffff;
+                }
+                .results-nav-button.current {
+                    background-color: #000000;
+                    color: #ffffff;
+                    font-weight: 600;
+                    cursor: default;
+                }
+                .results-nav-button .icon {
+                    display: inline-block;
+                    margin-right: 8px;
+                    font-size: 1.1em;
+                }
                 """
             }
         }
