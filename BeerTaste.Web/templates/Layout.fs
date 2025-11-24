@@ -130,7 +130,7 @@ let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement lis
                     border-radius: 3px;
                     transition: all 0.2s;
                     flex: 1 1 auto;
-                    min-width: 200px;
+                    min-width: 50px;
                     text-align: center;
                 }
                 .results-nav-button:hover {
