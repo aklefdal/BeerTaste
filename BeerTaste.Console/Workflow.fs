@@ -179,7 +179,7 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
         if confirm then
             AnsiConsole.MarkupLine("[cyan]Sending emails to tasters...[/]")
 
-            let resultsUrl = $"http://localhost:5000/{beerTasteGuid}/results"
+            let resultsUrl = $"{setup.ResultsBaseUrl}/{beerTasteGuid}/results"
 
             // Filter tasters who have email addresses
             let tastersWithEmail =
@@ -205,12 +205,18 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
                 // Display results
                 let successCount =
                     results
-                    |> List.filter (fun (_, result) -> Result.isOk result)
+                    |> List.filter (fun (_, result) ->
+                        match result with
+                        | Ok _ -> true
+                        | Error _ -> false)
                     |> List.length
 
                 let failCount =
                     results
-                    |> List.filter (fun (_, result) -> Result.isError result)
+                    |> List.filter (fun (_, result) ->
+                        match result with
+                        | Ok _ -> false
+                        | Error _ -> true)
                     |> List.length
 
                 if successCount > 0 then
@@ -221,7 +227,10 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
 
                     // Show details of failures
                     results
-                    |> List.filter (fun (_, result) -> Result.isError result)
+                    |> List.filter (fun (_, result) ->
+                        match result with
+                        | Ok _ -> false
+                        | Error _ -> true)
                     |> List.iter (fun (msg, result) ->
                         match result with
                         | Error err -> AnsiConsole.MarkupLine($"[red]  - {msg.To}: {err}[/]")
@@ -233,7 +242,7 @@ let showResults (setup: ConsoleSetup) (beerTasteGuid: string) (scores: Score lis
     if scores |> Scores.isComplete then
         // Open results page in browser
         try
-            let url = $"http://localhost:5000/{beerTasteGuid}/results"
+            let url = $"{setup.ResultsBaseUrl}/{beerTasteGuid}/results"
             AnsiConsole.MarkupLine($"[cyan]Opening results page in browser: {url}[/]")
 
             let psi = ProcessStartInfo(url, UseShellExecute = true)

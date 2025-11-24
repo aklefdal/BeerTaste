@@ -10,6 +10,7 @@ A comprehensive F# data analysis system for organizing and analyzing beer tastin
   - Most controversial beers by standard deviation
   - Taster similarity analysis using Pearson correlations
   - Preference correlations with ABV and price metrics
+- **Email Notifications**: Send results to tasters automatically when scoring is complete (optional)
 - **Multiple Interfaces**:
   - Console application for event setup and data management
   - Web application for results presentation
@@ -195,6 +196,17 @@ Store sensitive configuration using .NET user secrets:
 cd BeerTaste.Console
 dotnet user-secrets set "BeerTaste:TableStorageConnectionString" "<connection-string>"
 dotnet user-secrets set "BeerTaste:FilesFolder" "C:\path\to\data\folder"
+
+# Results base URL (optional - defaults to http://localhost:5000)
+dotnet user-secrets set "BeerTaste:ResultsBaseUrl" "http://localhost:5000"
+
+# Email configuration (optional - for sending results to tasters)
+dotnet user-secrets set "BeerTaste:Email:SmtpHost" "smtp.gmail.com"
+dotnet user-secrets set "BeerTaste:Email:SmtpPort" "587"
+dotnet user-secrets set "BeerTaste:Email:SmtpUsername" "<your-email@example.com>"
+dotnet user-secrets set "BeerTaste:Email:SmtpPassword" "<your-app-password>"
+dotnet user-secrets set "BeerTaste:Email:FromEmail" "<your-email@example.com>"
+dotnet user-secrets set "BeerTaste:Email:FromName" "BeerTaste"
 ```
 
 ### Environment Variables
@@ -205,15 +217,51 @@ Alternatively, use environment variables:
 # PowerShell
 $env:BeerTaste__TableStorageConnectionString = "<connection-string>"
 $env:BeerTaste__FilesFolder = "C:\path\to\data\folder"
+$env:BeerTaste__ResultsBaseUrl = "http://localhost:5000"
+$env:BeerTaste__Email__SmtpHost = "smtp.gmail.com"
+$env:BeerTaste__Email__SmtpPort = "587"
+$env:BeerTaste__Email__SmtpUsername = "<your-email>"
+$env:BeerTaste__Email__SmtpPassword = "<your-password>"
+$env:BeerTaste__Email__FromEmail = "<your-email>"
+$env:BeerTaste__Email__FromName = "BeerTaste"
 
 # Bash
 export BeerTaste__TableStorageConnectionString="<connection-string>"
 export BeerTaste__FilesFolder="/path/to/data/folder"
+export BeerTaste__ResultsBaseUrl="http://localhost:5000"
+export BeerTaste__Email__SmtpHost="smtp.gmail.com"
+export BeerTaste__Email__SmtpPort="587"
+export BeerTaste__Email__SmtpUsername="<your-email>"
+export BeerTaste__Email__SmtpPassword="<your-password>"
+export BeerTaste__Email__FromEmail="<your-email>"
+export BeerTaste__Email__FromName="BeerTaste"
 ```
 
 ### Default Folder
 
 If `FilesFolder` is not configured, defaults to `./BeerTastes` relative to the current directory.
+
+### Email Configuration (Optional)
+
+The email feature allows you to send results to all tasters when scoring is complete. Configuration is optional and the application works without it.
+
+**Supported SMTP Providers:**
+- Gmail (smtp.gmail.com:587) - requires app password
+- Outlook/Office365 (smtp.office365.com:587)
+- Any other SMTP server with TLS support
+
+**Gmail Setup:**
+1. Enable 2-factor authentication on your Google account
+2. Generate an [App Password](https://myaccount.google.com/apppasswords)
+3. Use the app password in the `SmtpPassword` configuration
+
+**Usage:**
+When scoring is complete, the console application will:
+1. Prompt: "Do you want to send results emails to all tasters?"
+2. If you select "Yes", emails are sent to all tasters with email addresses
+3. Each email contains a personalized link to view the results
+
+If email configuration is missing or incomplete, the feature is disabled and the application continues normally.
 
 ## Development
 

@@ -13,6 +13,7 @@ type ConsoleSetup = {
     ExcelFilePath: string
     TableStorage: BeerTasteTableStorage
     EmailConfig: EmailConfiguration option
+    ResultsBaseUrl: string
 }
 
 // Setup folder and copy template file for a BeerTaste event
@@ -141,10 +142,20 @@ let getConsoleSetup (args: string[]) : ConsoleSetup option =
 
                             None
 
+                // Get the results base URL (defaults to localhost:5000)
+                let resultsBaseUrl =
+                    let configUrl = config["BeerTaste:ResultsBaseUrl"]
+
+                    if String.IsNullOrWhiteSpace configUrl then
+                        "http://localhost:5000"
+                    else
+                        configUrl
+
                 {
                     ShortName = shortName
                     ExcelFilePath = excelFilePath
                     TableStorage = connStr |> BeerTasteTableStorage
                     EmailConfig = emailConfig
+                    ResultsBaseUrl = resultsBaseUrl
                 }
                 |> Some
