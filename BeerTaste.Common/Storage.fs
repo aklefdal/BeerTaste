@@ -2,6 +2,11 @@ namespace BeerTaste.Common
 
 open Azure.Data.Tables
 
+/// <summary>
+/// Manages Azure Table Storage clients for BeerTaste application.
+/// Creates and provides access to four tables: beertaste, beers, tasters, and scores.
+/// All tables are created automatically if they don't exist.
+/// </summary>
 type BeerTasteTableStorage(connectionString: string) =
     let service = TableServiceClient(connectionString)
     let beerTasteTableName = "beertaste"
