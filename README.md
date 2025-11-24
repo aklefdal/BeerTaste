@@ -249,6 +249,6 @@ This is a personal project. Feel free to fork and adapt for your own use.
 
 ## Documentation
 
+- **README.md** (this file) - Project overview and getting started guide
 - **CLAUDE.md** - Detailed guidance for Claude AI assistant
-- **.github/copilot-instructions.md** - GitHub Copilot-specific instructions
-- **BeerTaste.Web/README.md** - Web application documentation
+- **.github/copilot-instructions.md** - GitHub Copilot-specific instructions and code patterns
