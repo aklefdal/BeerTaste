@@ -68,6 +68,9 @@ let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement lis
                     text-align: right;
                     font-weight: 500;
                 }
+                .supportingvalue {
+                    text-align: right;
+                }
                 .nav {
                     margin: 20px 0;
                 }
