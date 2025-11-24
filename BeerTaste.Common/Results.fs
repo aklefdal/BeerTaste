@@ -69,11 +69,7 @@ module Results =
                 else
                     0.0
 
-            let avg =
-                if beerScores.Length > 0 then
-                    Array.average beerScores
-                else
-                    0.0
+            let avg = getAverageScoreForBeer scores b.Id
 
             ({
                 Name = $"{b.Producer} - {b.Name}"
