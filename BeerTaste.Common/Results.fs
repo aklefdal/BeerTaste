@@ -3,17 +3,25 @@ namespace BeerTaste.Common
 open FSharp.Stats
 open FSharp.Stats.Correlation
 
+/// <summary>
+/// Statistical analysis functions for beer tasting results.
+/// Provides correlations, averages, standard deviations, and rankings.
+/// </summary>
 module Results =
+    /// Result for a single beer with a calculated value (e.g., average score, standard deviation)
     type BeerResult = { Name: string; Value: float }
 
+    /// Result for a beer including both a calculated value and the overall average
     type BeerResultWithAverage = {
         Name: string
         Value: float
         Average: float
     }
 
+    /// Result for a single taster with a calculated value (e.g., correlation coefficient)
     type TasterResult = { Name: string; Value: float }
 
+    /// Result for a pair of tasters with a calculated value (e.g., similarity correlation)
     type TasterPairResult = {
         Name1: string
         Name2: string

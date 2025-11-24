@@ -2,21 +2,44 @@ namespace BeerTaste.Common
 
 open Azure.Data.Tables
 
+/// <summary>
+/// Represents a beer with all its properties including pricing and alcohol content.
+/// Includes computed properties for price per liter and price per ABV unit.
+/// </summary>
 type Beer = {
+    /// Unique identifier for the beer within a tasting event
     Id: int
+    /// Name of the beer
     Name: string
+    /// Type/style of beer (e.g., IPA, Stout, Lager)
     BeerType: string
+    /// Country or region of origin
     Origin: string
+    /// Brewery or producer name
     Producer: string
+    /// Alcohol by volume as a percentage (e.g., 5.5 for 5.5%)
     ABV: float
+    /// Volume in liters
     Volume: float
+    /// Price in local currency
     Price: float
+    /// Packaging type (e.g., Bottle, Can)
     Packaging: string
 } with
+    /// Calculated price per liter
     member this.PricePerLiter = this.Price / this.Volume
+    /// Calculated price per ABV unit (value for money metric)
     member this.PricePerAbv = this.PricePerLiter / (this.ABV / 100.0)
 
+/// <summary>
+/// Azure Table Storage operations for beer data.
+/// Handles conversion between Beer domain type and TableEntity, and provides CRUD operations.
+/// </summary>
 module Beers =
+    /// <summary>Converts a Beer domain object to an Azure TableEntity for storage.</summary>
+    /// <param name="beerTasteGuid">The partition key (BeerTaste event GUID as string)</param>
+    /// <param name="beer">The Beer to convert</param>
+    /// <returns>A TableEntity ready for Azure Table Storage</returns>
     let beerToEntity (beerTasteGuid: string) (beer: Beer) =
         let entity = TableEntity(beerTasteGuid, beer.Id.ToString())
         entity.Add("Name", beer.Name)

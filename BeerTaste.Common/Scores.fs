@@ -2,14 +2,28 @@ namespace BeerTaste.Common
 
 open Azure.Data.Tables
 
+/// <summary>
+/// Represents a taster's score for a specific beer.
+/// ScoreValue is optional to handle missing or incomplete ratings.
+/// </summary>
 type Score = {
+    /// The ID of the beer being rated
     BeerId: int
+    /// Name of the taster providing the score
     TasterName: string
+    /// Optional integer score (typically 1-10). None indicates missing/incomplete data.
     ScoreValue: int option
 } with
+    /// Composite row key for Azure Table Storage: "BeerId|TasterName"
     member this.RowKey = $"{this.BeerId}|{this.TasterName}"
 
+/// <summary>
+/// Azure Table Storage operations for score data.
+/// Handles conversion between Score domain type and TableEntity, CRUD operations, 
+/// and validation functions (hasScores, isComplete).
+/// </summary>
 module Scores =
+    /// <summary>Converts an Azure TableEntity to a Score domain object.</summary>
     let entityToScore (entity: TableEntity) : Score = {
         BeerId =
             entity.GetInt32("BeerId")
