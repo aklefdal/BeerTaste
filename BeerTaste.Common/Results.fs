@@ -6,6 +6,12 @@ open FSharp.Stats.Correlation
 module Results =
     type BeerResult = { Name: string; Value: float }
 
+    type BeerResultWithAverage = {
+        Name: string
+        Value: float
+        Average: float
+    }
+
     type TasterResult = { Name: string; Value: float }
 
     type TasterPairResult = {
@@ -52,7 +58,7 @@ module Results =
         |> List.sortByDescending _.Value
 
     // Most controversial beers by standard deviation
-    let beerStandardDeviations (beers: Beer list) (scores: Score list) : BeerResult list =
+    let beerStandardDeviations (beers: Beer list) (scores: Score list) : BeerResultWithAverage list =
         beers
         |> List.map (fun b ->
             let beerScores = getScoresForBeer scores b.Id
@@ -63,11 +69,18 @@ module Results =
                 else
                     0.0
 
+            let avg =
+                if beerScores.Length > 0 then
+                    Array.average beerScores
+                else
+                    0.0
+
             ({
                 Name = $"{b.Producer} - {b.Name}"
                 Value = stdDev
+                Average = avg
             }
-            : BeerResult))
+            : BeerResultWithAverage))
         |> List.sortByDescending _.Value
 
     let correlationToAverages (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
