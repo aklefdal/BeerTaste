@@ -9,77 +9,127 @@ open Oxpecker.ViewEngine
 open Oxpecker.ViewEngine.Aria
 open BeerTaste.Common
 open BeerTaste.Web.Templates
+open BeerTaste.Web.Localization
 
 type SecretsAnchor = class end
 
 let notFound (s: string) : EndpointHandler = setStatusCode 404 >=> text s
 
 let resultsIndex (beerTasteGuid: string) : EndpointHandler =
-    ResultsIndex.view beerTasteGuid |> htmlView
+    fun ctx ->
+        let language = getLanguage ctx
+
+        ResultsIndex.view beerTasteGuid language
+        |> htmlView
+        <| ctx
 
 let bestBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let beers = Beers.fetchBeers storage beerTasteGuid
-    let scores = Scores.fetchScores storage beerTasteGuid
-    let results = Results.beerAverages beers scores
-    BestBeers.view beerTasteGuid results |> htmlView
+    fun ctx ->
+        let language = getLanguage ctx
+        let beers = Beers.fetchBeers storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
+        let results = Results.beerAverages beers scores
+
+        BestBeers.view beerTasteGuid language results
+        |> htmlView
+        <| ctx
 
 let controversial (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let beers = Beers.fetchBeers storage beerTasteGuid
-    let scores = Scores.fetchScores storage beerTasteGuid
-    let results = Results.beerStandardDeviations beers scores
+    fun ctx ->
+        let language = getLanguage ctx
+        let beers = Beers.fetchBeers storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
+        let results = Results.beerStandardDeviations beers scores
 
-    Controversial.view beerTasteGuid results
-    |> htmlView
+        Controversial.view beerTasteGuid language results
+        |> htmlView
+        <| ctx
 
 let deviant (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let beers = Beers.fetchBeers storage beerTasteGuid
-    let tasters = Tasters.fetchTasters storage beerTasteGuid
-    let scores = Scores.fetchScores storage beerTasteGuid
-    let results = Results.correlationToAverages beers tasters scores
-    Deviant.view beerTasteGuid results |> htmlView
+    fun ctx ->
+        let language = getLanguage ctx
+        let beers = Beers.fetchBeers storage beerTasteGuid
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
+        let results = Results.correlationToAverages beers tasters scores
+
+        Deviant.view beerTasteGuid language results
+        |> htmlView
+        <| ctx
 
 let similar (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let tasters = Tasters.fetchTasters storage beerTasteGuid
-    let scores = Scores.fetchScores storage beerTasteGuid
-    let results = Results.correlationBetweenTasters tasters scores
-    Similar.view beerTasteGuid results |> htmlView
+    fun ctx ->
+        let language = getLanguage ctx
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
+        let results = Results.correlationBetweenTasters tasters scores
+
+        Similar.view beerTasteGuid language results
+        |> htmlView
+        <| ctx
 
 let strongBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let beers = Beers.fetchBeers storage beerTasteGuid
-    let tasters = Tasters.fetchTasters storage beerTasteGuid
-    let scores = Scores.fetchScores storage beerTasteGuid
-    let results = Results.correlationToAbv beers tasters scores
-    StrongBeers.view beerTasteGuid results |> htmlView
+    fun ctx ->
+        let language = getLanguage ctx
+        let beers = Beers.fetchBeers storage beerTasteGuid
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
+        let results = Results.correlationToAbv beers tasters scores
+
+        StrongBeers.view beerTasteGuid language results
+        |> htmlView
+        <| ctx
 
 let cheapAlcohol (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let beers = Beers.fetchBeers storage beerTasteGuid
-    let tasters = Tasters.fetchTasters storage beerTasteGuid
-    let scores = Scores.fetchScores storage beerTasteGuid
-    let results = Results.correlationToAbvPrice beers tasters scores
+    fun ctx ->
+        let language = getLanguage ctx
+        let beers = Beers.fetchBeers storage beerTasteGuid
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
+        let results = Results.correlationToAbvPrice beers tasters scores
 
-    CheapAlcohol.view beerTasteGuid results
-    |> htmlView
+        CheapAlcohol.view beerTasteGuid language results
+        |> htmlView
+        <| ctx
 
 let beersView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let beers = Beers.fetchBeers storage beerTasteGuid
-    BeersView.view beerTasteGuid beers |> htmlView
+    fun ctx ->
+        let language = getLanguage ctx
+        let beers = Beers.fetchBeers storage beerTasteGuid
+
+        BeersView.view beerTasteGuid language beers
+        |> htmlView
+        <| ctx
 
 let tastersView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let tasters = Tasters.fetchTasters storage beerTasteGuid
-    TastersView.view beerTasteGuid tasters |> htmlView
+    fun ctx ->
+        let language = getLanguage ctx
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
+
+        TastersView.view beerTasteGuid language tasters
+        |> htmlView
+        <| ctx
 
 let scoresView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    let beers = Beers.fetchBeers storage beerTasteGuid
-    let tasters = Tasters.fetchTasters storage beerTasteGuid
-    let scores = Scores.fetchScores storage beerTasteGuid
+    fun ctx ->
+        let language = getLanguage ctx
+        let beers = Beers.fetchBeers storage beerTasteGuid
+        let tasters = Tasters.fetchTasters storage beerTasteGuid
+        let scores = Scores.fetchScores storage beerTasteGuid
 
-    ScoresView.view beerTasteGuid beers tasters scores
-    |> htmlView
+        ScoresView.view beerTasteGuid language beers tasters scores
+        |> htmlView
+        <| ctx
 
 let beerTasteView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : EndpointHandler =
-    match BeerTasteStorage.fetchBeerTaste storage beerTasteGuid with
-    | Some beerTaste -> BeerTasteView.view beerTaste |> htmlView
-    | None -> "BeerTaste not found" |> notFound
+    fun ctx ->
+        let language = getLanguage ctx
+
+        match BeerTasteStorage.fetchBeerTaste storage beerTasteGuid with
+        | Some beerTaste ->
+            BeerTasteView.view beerTaste language |> htmlView
+            <| ctx
+        | None -> "BeerTaste not found" |> notFound <| ctx
 
 
 let endpoints storage = [
@@ -100,19 +150,23 @@ let endpoints storage = [
     ]
 ]
 
-let errorView errorCode (errorText: string) =
+let errorView errorCode (errorText: string) (language: Language) =
+    let t = getTranslations language
+
     html () {
         body (style = "width: 800px; margin: 0 auto") {
-            h1 (style = "text-align: center; color: red") { raw $"Error <i>%d{errorCode}</i>" }
+            h1 (style = "text-align: center; color: red") { raw $"{t.Error} <i>%d{errorCode}</i>" }
             p(ariaErrorMessage = "err1").on ("click", "console.log('clicked on error')") { errorText }
         }
     }
 
 let notFoundHandler (ctx: HttpContext) =
+    let language = getLanguage ctx
+    let t = getTranslations language
     let logger = ctx.GetLogger()
     logger.LogWarning("Unhandled 404 error")
     ctx.SetStatusCode 404
-    ctx.WriteHtmlView(errorView 404 "Page not found!")
+    ctx.WriteHtmlView(errorView 404 t.PageNotFound language)
 
 let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
     task {
@@ -121,15 +175,17 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
         with
         | :? ModelBindException
         | :? RouteParseException as ex ->
+            let language = getLanguage ctx
             let logger = ctx.GetLogger()
             logger.LogWarning(ex, "Unhandled 400 error")
             ctx.SetStatusCode StatusCodes.Status400BadRequest
-            return! ctx.WriteHtmlView(errorView 400 (string ex))
+            return! ctx.WriteHtmlView(errorView 400 (string ex) language)
         | ex ->
+            let language = getLanguage ctx
             let logger = ctx.GetLogger()
             logger.LogError(ex, "Unhandled 500 error")
             ctx.SetStatusCode StatusCodes.Status500InternalServerError
-            return! ctx.WriteHtmlView(errorView 500 (string ex))
+            return! ctx.WriteHtmlView(errorView 500 (string ex) language)
     }
 
 let configureApp (appBuilder: WebApplication) storage =

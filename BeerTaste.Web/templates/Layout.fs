@@ -1,17 +1,29 @@
 module BeerTaste.Web.Templates.Layout
 
 open Oxpecker.ViewEngine
+open BeerTaste.Web.Localization
 
-let topNavigation (beerTasteGuid: string) =
+let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: Language) =
     div (class' = "nav") {
-        a (href = $"/{beerTasteGuid}") { raw "🏠 Home" }
-        a (href = $"/{beerTasteGuid}/beers") { raw "Beers" }
-        a (href = $"/{beerTasteGuid}/tasters") { raw "Tasters" }
-        a (href = $"/{beerTasteGuid}/scores") { raw "Scores" }
-        a (href = $"/{beerTasteGuid}/results") { raw "Results" }
+        a (href = $"/{beerTasteGuid}") { raw $"🏠 {t.Home}" }
+        a (href = $"/{beerTasteGuid}/beers") { raw t.Beers }
+        a (href = $"/{beerTasteGuid}/tasters") { raw t.Tasters }
+        a (href = $"/{beerTasteGuid}/scores") { raw t.Scores }
+        a (href = $"/{beerTasteGuid}/results") { raw t.Results }
+
+        div (style = "float: right;") {
+            label (for' = "language-selector", style = "margin-right: 5px;") { raw t.LanguageLabel }
+
+            select (id = "language-selector", style = "padding: 5px;") {
+                option (value = "en", selected = (currentLanguage = English)) { raw "English" }
+                option (value = "no", selected = (currentLanguage = Norwegian)) { raw "Norsk" }
+            }
+        }
     }
 
-let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement list) =
+let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (content: HtmlElement list) =
+    let t = getTranslations language
+
     html () {
         head () {
             meta (charset = "utf-8")
@@ -153,9 +165,23 @@ let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement lis
         }
 
         body () {
-            topNavigation beerTasteGuid
+            topNavigation beerTasteGuid t language
 
             for element in content do
                 element
+
+            // JavaScript for language switching
+            script () {
+                raw
+                    """
+                    document.getElementById('language-selector').addEventListener('change', function() {
+                        const selectedLanguage = this.value;
+                        const expiryDate = new Date();
+                        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                        document.cookie = 'beertaste-language=' + selectedLanguage + '; expires=' + expiryDate.toUTCString() + '; path=/';
+                        location.reload();
+                    });
+                    """
+            }
         }
     }

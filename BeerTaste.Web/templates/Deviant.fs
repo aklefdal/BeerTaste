@@ -4,19 +4,22 @@ open Oxpecker.ViewEngine
 open BeerTaste.Common.Results
 open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
+open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (results: TasterResult list) =
-    layout "Most Deviant Tasters" beerTasteGuid [
-        h1 () { raw "Most Deviant Tasters" }
+let view (beerTasteGuid: string) (language: Language) (results: TasterResult list) =
+    let t = getTranslations language
 
-        renderNavigation beerTasteGuid ResultPage.Deviant
+    layout t.MostDeviantTasters beerTasteGuid language [
+        h1 () { raw t.MostDeviantTasters }
+
+        renderNavigation beerTasteGuid t ResultPage.Deviant
 
         table () {
             thead () {
                 tr () {
-                    th () { raw "Rank" }
-                    th () { raw "Taster" }
-                    th (class' = "value") { raw "Correlation to Average" }
+                    th () { raw t.Rank }
+                    th () { raw t.Taster }
+                    th (class' = "value") { raw t.CorrelationToAverage }
                 }
             }
 

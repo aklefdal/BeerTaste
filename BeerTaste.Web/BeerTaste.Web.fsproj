@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Localization.fs"/>
         <Compile Include="templates/Layout.fs"/>
         <Compile Include="templates/Navigation.fs"/>
         <Compile Include="templates/ResultsIndex.fs"/>
