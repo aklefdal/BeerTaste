@@ -179,7 +179,8 @@ module Results =
                     | Some age, Some score -> Some(float score, age)
                     | _ -> None)
 
-            if scoreAgesPairs.Length > 1 then
+            // Require at least 3 data points for meaningful correlation
+            if scoreAgesPairs.Length >= 3 then
                 let beerScores = scoreAgesPairs |> List.map fst |> List.toArray
                 let ages = scoreAgesPairs |> List.map snd |> List.toArray
                 let correlation = Seq.pearson beerScores ages
