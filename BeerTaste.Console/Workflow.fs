@@ -169,7 +169,67 @@ let verifyScores (setup: ConsoleSetup) (beerTasteGuid: string) =
         AnsiConsole.MarkupLine($"[red]Warning: Could not read tasters from Excel file: {ex.Message}[/]")
         None
 
-let showResults (beerTasteGuid: string) (scores: Score list) =
+let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: Taster list) =
+    match setup.EmailConfig with
+    | None -> AnsiConsole.MarkupLine("[grey]Email configuration not available. Skipping email sending.[/]")
+    | Some emailConfig ->
+        let confirm =
+            AnsiConsole.Confirm("[yellow]Do you want to send results emails to all tasters?[/]", false)
+
+        if confirm then
+            AnsiConsole.MarkupLine("[cyan]Sending emails to tasters...[/]")
+
+            let resultsUrl = $"http://localhost:5000/{beerTasteGuid}/results"
+
+            // Filter tasters who have email addresses
+            let tastersWithEmail =
+                tasters
+                |> List.choose (fun t ->
+                    match t.Email with
+                    | Some email when not (String.IsNullOrWhiteSpace(email)) -> Some(t, email)
+                    | _ -> None)
+
+            if tastersWithEmail.IsEmpty then
+                AnsiConsole.MarkupLine("[yellow]No tasters with email addresses found.[/]")
+            else
+                // Create email messages for each taster
+                let messages =
+                    tastersWithEmail
+                    |> List.map (fun (taster, email) ->
+                        let baseMessage = Email.createBeerTasteResultsEmail taster.Name setup.ShortName resultsUrl
+                        { baseMessage with To = email })
+
+                // Send emails
+                let results = Email.sendEmails emailConfig messages
+
+                // Display results
+                let successCount =
+                    results
+                    |> List.filter (fun (_, result) -> Result.isOk result)
+                    |> List.length
+
+                let failCount =
+                    results
+                    |> List.filter (fun (_, result) -> Result.isError result)
+                    |> List.length
+
+                if successCount > 0 then
+                    AnsiConsole.MarkupLine($"[green]Successfully sent {successCount} email(s).[/]")
+
+                if failCount > 0 then
+                    AnsiConsole.MarkupLine($"[red]Failed to send {failCount} email(s).[/]")
+
+                    // Show details of failures
+                    results
+                    |> List.filter (fun (_, result) -> Result.isError result)
+                    |> List.iter (fun (msg, result) ->
+                        match result with
+                        | Error err -> AnsiConsole.MarkupLine($"[red]  - {msg.To}: {err}[/]")
+                        | _ -> ())
+        else
+            AnsiConsole.MarkupLine("[yellow]Email sending cancelled.[/]")
+
+let showResults (setup: ConsoleSetup) (beerTasteGuid: string) (scores: Score list) (tasters: Taster list) : unit =
     if scores |> Scores.isComplete then
         // Open results page in browser
         try
@@ -180,5 +240,8 @@ let showResults (beerTasteGuid: string) (scores: Score list) =
             Process.Start(psi) |> ignore
         with ex ->
             AnsiConsole.MarkupLine($"[yellow]Could not open browser: {ex.Message}[/]")
+
+        // Ask if user wants to send emails
+        sendEmailsToTasters setup beerTasteGuid tasters
     else
         AnsiConsole.MarkupLine("[yellow]Scores are not complete.[/]")

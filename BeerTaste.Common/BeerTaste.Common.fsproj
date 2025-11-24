@@ -11,12 +11,14 @@
     <Compile Include="Tasters.fs" />
     <Compile Include="BeerTaste.fs" />
     <Compile Include="Scores.fs" />
+    <Compile Include="Email.fs" />
     <Compile Include="Results.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Data.Tables" Version="12.11.0" />
     <PackageReference Include="FSharp.Stats" Version="0.6.0" />
+    <PackageReference Include="MailKit" Version="4.14.1" />
   </ItemGroup>
 
 </Project>

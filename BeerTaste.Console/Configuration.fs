@@ -12,6 +12,7 @@ type ConsoleSetup = {
     ShortName: string
     ExcelFilePath: string
     TableStorage: BeerTasteTableStorage
+    EmailConfig: EmailConfiguration option
 }
 
 // Setup folder and copy template file for a BeerTaste event
@@ -93,9 +94,57 @@ let getConsoleSetup (args: string[]) : ConsoleSetup option =
 
                 None
             else
+                // Try to load email configuration (optional)
+                let emailConfig =
+                    let smtpHost = config["BeerTaste:Email:SmtpHost"]
+                    let smtpPort = config["BeerTaste:Email:SmtpPort"]
+                    let smtpUsername = config["BeerTaste:Email:SmtpUsername"]
+                    let smtpPassword = config["BeerTaste:Email:SmtpPassword"]
+                    let fromEmail = config["BeerTaste:Email:FromEmail"]
+                    let fromName = config["BeerTaste:Email:FromName"]
+
+                    if
+                        String.IsNullOrWhiteSpace smtpHost
+                        || String.IsNullOrWhiteSpace smtpPort
+                        || String.IsNullOrWhiteSpace smtpUsername
+                        || String.IsNullOrWhiteSpace smtpPassword
+                        || String.IsNullOrWhiteSpace fromEmail
+                    then
+                        AnsiConsole.MarkupLine(
+                            "[grey]Email configuration not found or incomplete. Email sending will be disabled.[/]"
+                        )
+
+                        None
+                    else
+                        match Int32.TryParse(smtpPort) with
+                        | true, port ->
+                            AnsiConsole.MarkupLine("[grey]Email configuration loaded successfully.[/]")
+
+                            let actualFromName =
+                                if String.IsNullOrWhiteSpace fromName then
+                                    fromEmail
+                                else
+                                    fromName
+
+                            Some {
+                                SmtpHost = smtpHost
+                                SmtpPort = port
+                                SmtpUsername = smtpUsername
+                                SmtpPassword = smtpPassword
+                                FromEmail = fromEmail
+                                FromName = actualFromName
+                            }
+                        | false, _ ->
+                            AnsiConsole.MarkupLine(
+                                "[yellow]Warning: Invalid SMTP port. Email sending will be disabled.[/]"
+                            )
+
+                            None
+
                 {
                     ShortName = shortName
                     ExcelFilePath = excelFilePath
                     TableStorage = connStr |> BeerTasteTableStorage
+                    EmailConfig = emailConfig
                 }
                 |> Some
