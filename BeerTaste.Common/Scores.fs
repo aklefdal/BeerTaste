@@ -19,7 +19,7 @@ type Score = {
 
 /// <summary>
 /// Azure Table Storage operations for score data.
-/// Handles conversion between Score domain type and TableEntity, CRUD operations, 
+/// Handles conversion between Score domain type and TableEntity, CRUD operations,
 /// and validation functions (hasScores, isComplete).
 /// </summary>
 module Scores =
