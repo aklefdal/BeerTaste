@@ -9,6 +9,10 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  AZURE_WEBAPP_NAME: beertaste
+  AZURE_WEBAPP_PACKAGE_PATH: "./publish"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,10 +22,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Set up .NET Core
+      - name: Set up .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '10.x'
+          dotnet-version: "10.x"
 
       - name: Restore .NET Tools
         run: dotnet tool restore
@@ -33,13 +37,13 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish ./BeerTaste.Web/BeerTaste.Web.fsproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish ./BeerTaste.Web/BeerTaste.Web.fsproj -c Release -o ${{env.AZURE_WEBAPP_PACKAGE_PATH}}
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: ${{env.AZURE_WEBAPP_PACKAGE_PATH}}
 
   deploy:
     runs-on: ubuntu-latest
@@ -53,7 +57,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: .net-app
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -65,7 +69,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'beertaste'
-          slot-name: 'Production'
+          app-name: "beertaste"
+          slot-name: "Production"
           package: .
-          
