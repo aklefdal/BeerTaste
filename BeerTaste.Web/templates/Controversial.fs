@@ -17,7 +17,7 @@ let view (beerTasteGuid: string) (results: BeerResultWithAverage list) =
                     th () { raw "Rank" }
                     th () { raw "Beer" }
                     th (class' = "value") { raw "Standard Deviation" }
-                    th (class' = "value") { raw "Average Score" }
+                    th (class' = "supportingvalue") { raw "(Average Score)" }
                 }
             }
 
@@ -27,7 +27,7 @@ let view (beerTasteGuid: string) (results: BeerResultWithAverage list) =
                         td () { raw (string (i + 1)) }
                         td () { raw result.Name }
                         td (class' = "value") { raw $"%.2f{result.Value}" }
-                        td (class' = "value") { raw $"%.2f{result.Average}" }
+                        td (class' = "supportingvalue") { raw $"%.2f{result.Average}" }
                     }
             }
         }
