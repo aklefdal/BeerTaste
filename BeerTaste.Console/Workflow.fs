@@ -200,7 +200,9 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
                         { baseMessage with To = email })
 
                 // Send emails
-                let results = Email.sendEmails emailConfig messages
+                let results =
+                    Email.sendEmails emailConfig messages
+                    |> Async.RunSynchronously
 
                 // Partition results into successes and failures
                 let (successes, failures) =

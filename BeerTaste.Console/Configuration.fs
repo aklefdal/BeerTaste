@@ -97,18 +97,12 @@ let getConsoleSetup (args: string[]) : ConsoleSetup option =
             else
                 // Try to load email configuration (optional)
                 let emailConfig =
-                    let smtpHost = config["BeerTaste:Email:SmtpHost"]
-                    let smtpPort = config["BeerTaste:Email:SmtpPort"]
-                    let smtpUsername = config["BeerTaste:Email:SmtpUsername"]
-                    let smtpPassword = config["BeerTaste:Email:SmtpPassword"]
+                    let sendGridApiKey = config["BeerTaste:Email:SendGridApiKey"]
                     let fromEmail = config["BeerTaste:Email:FromEmail"]
                     let fromName = config["BeerTaste:Email:FromName"]
 
                     if
-                        String.IsNullOrWhiteSpace smtpHost
-                        || String.IsNullOrWhiteSpace smtpPort
-                        || String.IsNullOrWhiteSpace smtpUsername
-                        || String.IsNullOrWhiteSpace smtpPassword
+                        String.IsNullOrWhiteSpace sendGridApiKey
                         || String.IsNullOrWhiteSpace fromEmail
                     then
                         AnsiConsole.MarkupLine(
@@ -117,30 +111,19 @@ let getConsoleSetup (args: string[]) : ConsoleSetup option =
 
                         None
                     else
-                        match Int32.TryParse(smtpPort) with
-                        | true, port ->
-                            AnsiConsole.MarkupLine("[grey]Email configuration loaded successfully.[/]")
+                        AnsiConsole.MarkupLine("[grey]Email configuration loaded successfully.[/]")
 
-                            let actualFromName =
-                                if String.IsNullOrWhiteSpace fromName then
-                                    fromEmail
-                                else
-                                    fromName
+                        let actualFromName =
+                            if String.IsNullOrWhiteSpace fromName then
+                                fromEmail
+                            else
+                                fromName
 
-                            Some {
-                                SmtpHost = smtpHost
-                                SmtpPort = port
-                                SmtpUsername = smtpUsername
-                                SmtpPassword = smtpPassword
-                                FromEmail = fromEmail
-                                FromName = actualFromName
-                            }
-                        | false, _ ->
-                            AnsiConsole.MarkupLine(
-                                "[yellow]Warning: Invalid SMTP port. Email sending will be disabled.[/]"
-                            )
-
-                            None
+                        Some {
+                            SendGridApiKey = sendGridApiKey
+                            FromEmail = fromEmail
+                            FromName = actualFromName
+                        }
 
                 // Get the results base URL (defaults to localhost:5000)
                 let resultsBaseUrl =

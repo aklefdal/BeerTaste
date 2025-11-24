@@ -200,12 +200,9 @@ dotnet user-secrets set "BeerTaste:FilesFolder" "C:\path\to\data\folder"
 # Results base URL (optional - defaults to http://localhost:5000)
 dotnet user-secrets set "BeerTaste:ResultsBaseUrl" "http://localhost:5000"
 
-# Email configuration (optional - for sending results to tasters)
-dotnet user-secrets set "BeerTaste:Email:SmtpHost" "smtp.gmail.com"
-dotnet user-secrets set "BeerTaste:Email:SmtpPort" "587"
-dotnet user-secrets set "BeerTaste:Email:SmtpUsername" "<your-email@example.com>"
-dotnet user-secrets set "BeerTaste:Email:SmtpPassword" "<your-app-password>"
-dotnet user-secrets set "BeerTaste:Email:FromEmail" "<your-email@example.com>"
+# Email configuration (optional - for sending results to tasters via SendGrid)
+dotnet user-secrets set "BeerTaste:Email:SendGridApiKey" "<your-sendgrid-api-key>"
+dotnet user-secrets set "BeerTaste:Email:FromEmail" "<your-verified-sender@example.com>"
 dotnet user-secrets set "BeerTaste:Email:FromName" "BeerTaste"
 ```
 
@@ -218,22 +215,16 @@ Alternatively, use environment variables:
 $env:BeerTaste__TableStorageConnectionString = "<connection-string>"
 $env:BeerTaste__FilesFolder = "C:\path\to\data\folder"
 $env:BeerTaste__ResultsBaseUrl = "http://localhost:5000"
-$env:BeerTaste__Email__SmtpHost = "smtp.gmail.com"
-$env:BeerTaste__Email__SmtpPort = "587"
-$env:BeerTaste__Email__SmtpUsername = "<your-email>"
-$env:BeerTaste__Email__SmtpPassword = "<your-password>"
-$env:BeerTaste__Email__FromEmail = "<your-email>"
+$env:BeerTaste__Email__SendGridApiKey = "<your-sendgrid-api-key>"
+$env:BeerTaste__Email__FromEmail = "<your-verified-sender@example.com>"
 $env:BeerTaste__Email__FromName = "BeerTaste"
 
 # Bash
 export BeerTaste__TableStorageConnectionString="<connection-string>"
 export BeerTaste__FilesFolder="/path/to/data/folder"
 export BeerTaste__ResultsBaseUrl="http://localhost:5000"
-export BeerTaste__Email__SmtpHost="smtp.gmail.com"
-export BeerTaste__Email__SmtpPort="587"
-export BeerTaste__Email__SmtpUsername="<your-email>"
-export BeerTaste__Email__SmtpPassword="<your-password>"
-export BeerTaste__Email__FromEmail="<your-email>"
+export BeerTaste__Email__SendGridApiKey="<your-sendgrid-api-key>"
+export BeerTaste__Email__FromEmail="<your-verified-sender@example.com>"
 export BeerTaste__Email__FromName="BeerTaste"
 ```
 
@@ -245,15 +236,19 @@ If `FilesFolder` is not configured, defaults to `./BeerTastes` relative to the c
 
 The email feature allows you to send results to all tasters when scoring is complete. Configuration is optional and the application works without it.
 
-**Supported SMTP Providers:**
-- Gmail (smtp.gmail.com:587) - requires app password
-- Outlook/Office365 (smtp.office365.com:587)
-- Any other SMTP server with TLS support
+**Email Service: SendGrid**
 
-**Gmail Setup:**
-1. Enable 2-factor authentication on your Google account
-2. Generate an [App Password](https://myaccount.google.com/apppasswords)
-3. Use the app password in the `SmtpPassword` configuration
+BeerTaste uses SendGrid for reliable email delivery. SendGrid offers:
+- Free tier: 100 emails/day (plenty for most tasting events)
+- Simple API with just an API key (no SMTP configuration needed)
+- High deliverability rates
+- Email tracking and analytics
+
+**SendGrid Setup:**
+1. Sign up for a free account at [SendGrid](https://sendgrid.com/)
+2. Verify your sender email address (or domain)
+3. Create an API key with "Mail Send" permissions
+4. Configure the API key in user secrets or environment variables
 
 **Usage:**
 When scoring is complete, the console application will:

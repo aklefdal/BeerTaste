@@ -1,14 +1,11 @@
 namespace BeerTaste.Common
 
 open System
-open MailKit.Net.Smtp
-open MimeKit
+open SendGrid
+open SendGrid.Helpers.Mail
 
 type EmailConfiguration = {
-    SmtpHost: string
-    SmtpPort: int
-    SmtpUsername: string
-    SmtpPassword: string
+    SendGridApiKey: string
     FromEmail: string
     FromName: string
 }
@@ -21,47 +18,47 @@ type EmailMessage = {
 }
 
 module Email =
-    let sendEmail (config: EmailConfiguration) (message: EmailMessage) : Result<unit, string> =
-        try
-            use client = new SmtpClient()
+    let sendEmail (config: EmailConfiguration) (message: EmailMessage) : Async<Result<unit, string>> =
+        async {
+            try
+                let client = new SendGridClient(config.SendGridApiKey)
 
-            // Connect to SMTP server
-            client.Connect(config.SmtpHost, config.SmtpPort, MailKit.Security.SecureSocketOptions.StartTls)
+                let from = new EmailAddress(config.FromEmail, config.FromName)
+                let toName = message.ToName |> Option.defaultValue message.To
+                let toAddress = new EmailAddress(message.To, toName)
 
-            // Authenticate
-            client.Authenticate(config.SmtpUsername, config.SmtpPassword)
+                let msg = MailHelper.CreateSingleEmail(from, toAddress, message.Subject, message.Body, message.Body)
 
-            // Create message
-            let mimeMessage = new MimeMessage()
-            mimeMessage.From.Add(new MailboxAddress(config.FromName, config.FromEmail))
+                let! response = client.SendEmailAsync(msg) |> Async.AwaitTask
 
-            let toName = message.ToName |> Option.defaultValue message.To
-            mimeMessage.To.Add(new MailboxAddress(toName, message.To))
+                if response.IsSuccessStatusCode then
+                    return Ok()
+                else
+                    let! body =
+                        response.Body.ReadAsStringAsync()
+                        |> Async.AwaitTask
 
-            mimeMessage.Subject <- message.Subject
-
-            let bodyBuilder = new BodyBuilder()
-            bodyBuilder.TextBody <- message.Body
-            mimeMessage.Body <- bodyBuilder.ToMessageBody()
-
-            // Send message
-            client.Send(mimeMessage) |> ignore
-
-            // Disconnect
-            client.Disconnect(true)
-
-            Ok()
-        with ex ->
-            Error $"Failed to send email to {message.To}: {ex.Message}"
+                    return Error $"Failed to send email to {message.To}: {response.StatusCode} - {body}"
+            with ex ->
+                return Error $"Failed to send email to {message.To}: {ex.Message}"
+        }
 
     let sendEmails
         (config: EmailConfiguration)
         (messages: EmailMessage list)
-        : (EmailMessage * Result<unit, string>) list =
-        messages
-        |> List.map (fun message ->
-            let result = sendEmail config message
-            (message, result))
+        : Async<(EmailMessage * Result<unit, string>) list> =
+        async {
+            let! results =
+                messages
+                |> List.map (fun message ->
+                    async {
+                        let! result = sendEmail config message
+                        return (message, result)
+                    })
+                |> Async.Parallel
+
+            return results |> Array.toList
+        }
 
     let createBeerTasteResultsEmail (tasterName: string) (beerTasteName: string) (resultsUrl: string) : EmailMessage = {
         To = "" // Will be set by caller
