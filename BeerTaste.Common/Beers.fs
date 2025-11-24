@@ -37,7 +37,7 @@ type Beer = {
 /// </summary>
 module Beers =
     /// <summary>Converts a Beer domain object to an Azure TableEntity for storage.</summary>
-    /// <param name="beerTasteGuid">The partition key (BeerTaste event GUID)</param>
+    /// <param name="beerTasteGuid">The partition key (BeerTaste event GUID as string)</param>
     /// <param name="beer">The Beer to convert</param>
     /// <returns>A TableEntity ready for Azure Table Storage</returns>
     let beerToEntity (beerTasteGuid: string) (beer: Beer) =
