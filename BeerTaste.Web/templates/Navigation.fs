@@ -63,6 +63,5 @@ let renderNavigation (beerTasteGuid: string) (t: Translations) (currentPage: Res
             else
                 a (class' = "results-nav-button", href = $"/{beerTasteGuid}/results/{pageToRoute page}") {
                     span (class' = "icon") { raw (pageToIcon page) }
-                    raw (pageToTitle t page)
                 }
     }
