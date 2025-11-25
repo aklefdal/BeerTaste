@@ -139,7 +139,7 @@ let verifyTasters (setup: ConsoleSetup) (beerTasteGuid: string) (beers: Beer lis
                 AnsiConsole.MarkupLine("[cyan]Creating ScoreSchema worksheet...[/]")
                 createScoreSchema setup.TableStorage.ScoresTableClient beerTasteGuid setup.ExcelFilePath beers tasters
                 AnsiConsole.MarkupLine("[green]ScoreSchema worksheet created successfully![/]")
-                
+
                 Some tasters
             with ex ->
                 AnsiConsole.MarkupLine($"[red]Warning: Could not save scores to Azure Table Storage: {ex.Message}[/]")
