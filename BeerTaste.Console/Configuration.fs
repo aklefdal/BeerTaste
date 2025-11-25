@@ -125,12 +125,12 @@ let getConsoleSetup (args: string[]) : ConsoleSetup option =
                             FromName = actualFromName
                         }
 
-                // Get the results base URL (defaults to localhost:5000)
+                // Get the results base URL (defaults to the Azure website)
                 let resultsBaseUrl =
                     let configUrl = config["BeerTaste:ResultsBaseUrl"]
 
                     if String.IsNullOrWhiteSpace configUrl then
-                        "http://localhost:5000"
+                        "https://beertaste.azurewebsites.net"
                     else
                         configUrl
 
