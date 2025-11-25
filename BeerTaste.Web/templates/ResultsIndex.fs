@@ -42,5 +42,10 @@ let view (beerTasteGuid: string) (language: Language) =
                 span (class' = "icon") { raw "💰" }
                 raw t.MostFondOfCheapAlcohol
             }
+
+            a (href = $"/{beerTasteGuid}/results/oldmanbeers") {
+                span (class' = "icon") { raw "👴" }
+                raw "Beers Preferred by Older Tasters"
+            }
         }
     ]

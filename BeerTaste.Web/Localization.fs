@@ -27,6 +27,7 @@ type Translations = {
     MostSimilarTasters: string
     MostFondOfStrongBeers: string
     MostFondOfCheapAlcohol: string
+    OldManBeers: string
 
     // Table headers - Common
     Rank: string
@@ -57,6 +58,7 @@ type Translations = {
     Correlation: string
     CorrelationToABV: string
     CorrelationToPricePerABV: string
+    AgeCorrelation: string
 
     // Labels and actions
     Description: string
@@ -77,8 +79,8 @@ let englishTranslations: Translations = {
     Beers = "Beers"
     Tasters = "Tasters"
     Scores = "Scores"
-    Results = "Results"
     BackToResults = "Back to Results"
+    Results = "Results"
 
     // Page titles
     BeerTastingResults = "Beer Tasting Results"
@@ -89,6 +91,7 @@ let englishTranslations: Translations = {
     MostSimilarTasters = "Most Similar Tasters"
     MostFondOfStrongBeers = "Most Fond of Strong Beers"
     MostFondOfCheapAlcohol = "Most Fond of Cheap Alcohol"
+    OldManBeers = "Beers Preferred by Older Tasters"
 
     // Table headers - Common
     Rank = "Rank"
@@ -119,6 +122,7 @@ let englishTranslations: Translations = {
     Correlation = "Correlation"
     CorrelationToABV = "Correlation to ABV"
     CorrelationToPricePerABV = "Correlation to Price per ABV"
+    AgeCorrelation = "Age Correlation"
 
     // Labels and actions
     Description = "Description"
@@ -151,6 +155,7 @@ let norwegianTranslations: Translations = {
     MostSimilarTasters = "Mest like smakere"
     MostFondOfStrongBeers = "Mest glad i sterk øl"
     MostFondOfCheapAlcohol = "Mest glad i billig alkohol"
+    OldManBeers = "Øl foretrukket av eldre smakere"
 
     // Table headers - Common
     Rank = "Rang"
@@ -181,6 +186,7 @@ let norwegianTranslations: Translations = {
     Correlation = "Korrelasjon"
     CorrelationToABV = "Korrelasjon til alkoholprosent"
     CorrelationToPricePerABV = "Korrelasjon til pris per alkoholprosent"
+    AgeCorrelation = "Alderskorrelasjon"
 
     // Labels and actions
     Description = "Beskrivelse"
