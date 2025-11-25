@@ -173,7 +173,7 @@ let showResults (beerTasteGuid: string) (scores: Score list) =
     if scores |> Scores.isComplete then
         // Open results page in browser
         try
-            let url = $"http://localhost:5000/{beerTasteGuid}/results"
+            let url = $"https://beertaste.azurewebsites.net/{beerTasteGuid}/results"
             AnsiConsole.MarkupLine($"[cyan]Opening results page in browser: {url}[/]")
 
             let psi = ProcessStartInfo(url, UseShellExecute = true)
