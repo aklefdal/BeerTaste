@@ -14,7 +14,7 @@ let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: La
         div (style = "float: right;") {
             label (for' = "language-selector", style = "margin-right: 5px;") { raw t.LanguageLabel }
 
-            select (id = "language-selector", style = "padding: 5px;") {
+            select (id = "language-selector", name = "language", style = "padding: 5px;") {
                 option (value = "en", selected = (currentLanguage = English)) { raw "English" }
                 option (value = "no", selected = (currentLanguage = Norwegian)) { raw "Norsk" }
             }
@@ -178,7 +178,7 @@ let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (con
                         const selectedLanguage = this.value;
                         const expiryDate = new Date();
                         expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-                        document.cookie = 'beertaste-language=' + selectedLanguage + '; expires=' + expiryDate.toUTCString() + '; path=/';
+                        document.cookie = 'beertaste-language=' + selectedLanguage + '; expires=' + expiryDate.toUTCString() + '; path=/; SameSite=Lax';
                         location.reload();
                     });
                     """

@@ -230,12 +230,18 @@ let getLanguageFromCookie (ctx: HttpContext) : Language option =
 let getLanguageFromHeader (ctx: HttpContext) : Language option =
     match ctx.Request.Headers.TryGetValue("Accept-Language") with
     | true, values ->
-        let acceptLanguage = values.ToString()
+        let acceptLanguage = values.ToString().ToLowerInvariant()
+
+        let languages = acceptLanguage.Split([| ','; ';' |], StringSplitOptions.RemoveEmptyEntries)
 
         if
-            acceptLanguage.Contains("no")
-            || acceptLanguage.Contains("nb")
-            || acceptLanguage.Contains("nn")
+            languages
+            |> Array.exists (fun lang ->
+                let trimmed = lang.Trim()
+
+                trimmed.StartsWith("no")
+                || trimmed.StartsWith("nb")
+                || trimmed.StartsWith("nn"))
         then
             Some Norwegian
         else
@@ -250,10 +256,3 @@ let getLanguage (ctx: HttpContext) : Language =
         match getLanguageFromHeader ctx with
         | Some lang -> lang
         | None -> English // Default to English
-
-// Set language cookie
-let setLanguageCookie (ctx: HttpContext) (language: Language) =
-    let cookieOptions = CookieOptions()
-    cookieOptions.Expires <- DateTimeOffset.UtcNow.AddYears(1)
-    cookieOptions.Path <- "/"
-    ctx.Response.Cookies.Append(languageCookieName, languageToCode language, cookieOptions)
