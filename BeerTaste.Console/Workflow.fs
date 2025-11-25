@@ -127,10 +127,6 @@ let verifyTasters (setup: ConsoleSetup) (beerTasteGuid: string) (beers: Beer lis
             AnsiConsole.MarkupLine("[yellow]Please continue editing the tasters in the Excel file.[/]")
             None
         elif promptDoneEditingTasters () then
-            AnsiConsole.MarkupLine("[cyan]Creating ScoreSchema worksheet...[/]")
-            createScoreSchema setup.TableStorage.ScoresTableClient beerTasteGuid setup.ExcelFilePath beers tasters
-            AnsiConsole.MarkupLine("[green]ScoreSchema worksheet created successfully![/]")
-
             try
                 AnsiConsole.MarkupLine("[cyan]Saving tasters to Azure Table Storage...[/]")
                 deleteTastersForPartitionKey setup.TableStorage.TastersTableClient beerTasteGuid
@@ -140,6 +136,10 @@ let verifyTasters (setup: ConsoleSetup) (beerTasteGuid: string) (beers: Beer lis
                     $"[green]Successfully saved {tasters.Length} taster(s) to Azure Table Storage.[/]"
                 )
 
+                AnsiConsole.MarkupLine("[cyan]Creating ScoreSchema worksheet...[/]")
+                createScoreSchema setup.TableStorage.ScoresTableClient beerTasteGuid setup.ExcelFilePath beers tasters
+                AnsiConsole.MarkupLine("[green]ScoreSchema worksheet created successfully![/]")
+                
                 Some tasters
             with ex ->
                 AnsiConsole.MarkupLine($"[red]Warning: Could not save scores to Azure Table Storage: {ex.Message}[/]")
@@ -173,7 +173,7 @@ let showResults (beerTasteGuid: string) (scores: Score list) =
     if scores |> Scores.isComplete then
         // Open results page in browser
         try
-            let url = $"http://localhost:5000/{beerTasteGuid}/results"
+            let url = $"https://beertaste.azurewebsites.net/{beerTasteGuid}/results"
             AnsiConsole.MarkupLine($"[cyan]Opening results page in browser: {url}[/]")
 
             let psi = ProcessStartInfo(url, UseShellExecute = true)
