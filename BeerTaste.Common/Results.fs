@@ -155,3 +155,46 @@ module Results =
             let correlation = Seq.pearson tasterScores beerAbvPrice
             ({ Name = t.Name; Value = correlation }: TasterResult))
         |> List.sortByDescending _.Value
+
+    // Correlation to taster age (beers preferred by older tasters)
+    let correlationToAge (beers: Beer list) (tasters: Taster list) (scores: Score list) : BeerResult list =
+        let currentYear = System.DateTime.Now.Year
+
+        // Create a map of taster names to their ages
+        let tasterAges =
+            tasters
+            |> List.choose (fun t ->
+                t.BirthYear
+                |> Option.map (fun birthYear -> t.Name, float (currentYear - birthYear)))
+            |> Map.ofList
+
+        beers
+        |> List.map (fun beer ->
+            // Get all scores for this beer along with the taster ages
+            let scoreAgesPairs =
+                scores
+                |> List.filter (fun s -> s.BeerId = beer.Id)
+                |> List.choose (fun s ->
+                    match Map.tryFind s.TasterName tasterAges, s.ScoreValue with
+                    | Some age, Some score -> Some(float score, age)
+                    | _ -> None)
+
+            // Require at least 3 data points for meaningful correlation
+            if scoreAgesPairs.Length >= 3 then
+                let beerScores = scoreAgesPairs |> List.map fst |> List.toArray
+                let ages = scoreAgesPairs |> List.map snd |> List.toArray
+                let correlation = Seq.pearson beerScores ages
+
+                {
+                    Name = $"{beer.Producer} - {beer.Name}"
+                    Value = correlation
+                }
+                : BeerResult
+            else
+                // Not enough data to calculate correlation
+                {
+                    Name = $"{beer.Producer} - {beer.Name}"
+                    Value = 0.0
+                }
+                : BeerResult)
+        |> List.sortByDescending _.Value

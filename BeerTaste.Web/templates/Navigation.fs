@@ -9,6 +9,7 @@ type ResultPage =
     | Similar
     | StrongBeers
     | CheapAlcohol
+    | OldManBeers
 
 let allPages = [
     BestBeers
@@ -17,6 +18,7 @@ let allPages = [
     Similar
     StrongBeers
     CheapAlcohol
+    OldManBeers
 ]
 
 let pageToRoute page =
@@ -27,6 +29,7 @@ let pageToRoute page =
     | Similar -> "similar"
     | StrongBeers -> "strongbeers"
     | CheapAlcohol -> "cheapalcohol"
+    | OldManBeers -> "oldmanbeers"
 
 let pageToTitle page =
     match page with
@@ -36,6 +39,7 @@ let pageToTitle page =
     | Similar -> "Most Similar Tasters"
     | StrongBeers -> "Most Fond of Strong Beers"
     | CheapAlcohol -> "Most Fond of Cheap Alcohol"
+    | OldManBeers -> "Beers Preferred by Older Tasters"
 
 let pageToIcon page =
     match page with
@@ -45,6 +49,7 @@ let pageToIcon page =
     | Similar -> "❤"
     | StrongBeers -> "😵"
     | CheapAlcohol -> "💰"
+    | OldManBeers -> "👴"
 
 let renderNavigation (beerTasteGuid: string) (currentPage: ResultPage) =
     div (class' = "results-nav") {
