@@ -1,5 +1,6 @@
 namespace BeerTaste.Common
 
+open System.Threading.Tasks
 open Azure.Data.Tables
 
 /// <summary>
@@ -82,14 +83,46 @@ module Beers =
             |> List.sortBy _.Id
         with _ -> []
 
+    let deleteBeersForBeerTasteAsync (beersTable: TableClient) (beerTasteGuid: string) : Task =
+        task {
+            try
+                let entities =
+                    beersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+                    |> Seq.toList
+
+                let deleteTasks =
+                    entities
+                    |> List.map (fun e -> beersTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
+
+                do! Task.WhenAll(deleteTasks)
+            with _ ->
+                ()
+        }
+
     let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : unit =
-        try
-            beersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.iter (beersTable.DeleteEntity >> ignore)
-        with _ ->
-            ()
+        deleteBeersForBeerTasteAsync beersTable beerTasteGuid
+        |> Async.AwaitTask
+        |> Async.RunSynchronously
+
+    let addBeersAsync (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : Task =
+        task {
+            let entities = beers |> List.map (beerToEntity beerTasteGuid)
+
+            // Azure Table Storage supports up to 100 entities per batch transaction
+            let batches = entities |> List.chunkBySize 100
+
+            for batch in batches do
+                let actions =
+                    batch
+                    |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
+
+                do!
+                    beersTable.SubmitTransactionAsync(actions)
+                    |> Async.AwaitTask
+                    |> Async.Ignore
+        }
 
     let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : unit =
-        beers
-        |> List.map (beerToEntity beerTasteGuid)
-        |> List.iter (beersTable.AddEntity >> ignore)
+        addBeersAsync beersTable beerTasteGuid beers
+        |> Async.AwaitTask
+        |> Async.RunSynchronously
