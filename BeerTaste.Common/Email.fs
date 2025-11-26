@@ -49,7 +49,7 @@ module Email =
                 // SendGrid API: plainTextContent, htmlContent (we only use plain text)
                 let msg = MailHelper.CreateSingleEmail(from, toAddress, message.Subject, message.Body, null)
 
-                let! response = client.SendEmailAsync(msg) |> Async.AwaitTask
+                let! response = client.SendEmailAsync(msg)
 
                 if response.IsSuccessStatusCode then
                     return Ok()
