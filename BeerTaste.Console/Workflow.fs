@@ -181,7 +181,7 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
             |> List.filter Email.isAdmin
 
         let confirm =
-            AnsiConsole.Confirm($"[yellow]Do you want to send results emails to {messages.Length}  tasters?[/]", false)
+            AnsiConsole.Confirm($"[yellow]Do you want to send results emails to {messages.Length} tasters?[/]", false)
 
         if confirm then
             AnsiConsole.MarkupLine("[cyan]Sending emails to tasters...[/]")
