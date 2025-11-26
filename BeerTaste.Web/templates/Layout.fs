@@ -15,7 +15,7 @@ let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: La
             // Visually hidden label for accessibility (screen readers)
             label (for' = "language-selector", class' = "visually-hidden") { raw t.LanguageLabel }
 
-            select (id = "language-selector", name = "language", style = "padding: 5px; font-size: 1.2em;") {
+            select (id = "language-selector", name = "language", style = "padding: 5px; font-size: 1.2em;", class' = "noto-color-emoji-regular") {
                 option (value = "en", selected = (currentLanguage = English)) { raw "🇬🇧" }
                 option (value = "no", selected = (currentLanguage = Norwegian)) { raw "🇳🇴" }
             }
@@ -29,6 +29,10 @@ let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (con
         head () {
             meta (charset = "utf-8")
             meta (name = "viewport", content = "width=device-width, initial-scale=1")
+            link (rel = "preconnect", href = "https://fonts.googleapis.com")
+            link (rel = "preconnect", href = "https://fonts.gstatic.com", crossorigin = "true")
+            link (rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap")
+
             title () { raw pageTitle }
 
             style () {
@@ -171,6 +175,11 @@ let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (con
                     clip: rect(0, 0, 0, 0);
                     white-space: nowrap;
                     border: 0;
+                }
+                .noto-color-emoji-regular {
+                  font-family: "Noto Color Emoji", sans-serif;
+                  font-weight: 400;
+                  font-style: normal;
                 }
                 """
             }
