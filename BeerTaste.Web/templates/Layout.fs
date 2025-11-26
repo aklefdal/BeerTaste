@@ -5,11 +5,15 @@ open BeerTaste.Web.Localization
 
 let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: Language) =
     div (class' = "nav") {
-        a (href = $"/{beerTasteGuid}") { raw $"🏠 {t.Home}" }
-        a (href = $"/{beerTasteGuid}/beers") { raw t.Beers }
-        a (href = $"/{beerTasteGuid}/tasters") { raw t.Tasters }
-        a (href = $"/{beerTasteGuid}/scores") { raw t.Scores }
-        a (href = $"/{beerTasteGuid}/results") { raw t.Results }
+        a (class' = "nav-button", href = $"/{beerTasteGuid}") {
+            span (class' = "icon") { raw "🏠" }
+            raw t.Home
+        }
+
+        a (class' = "nav-button", href = $"/{beerTasteGuid}/beers") { raw t.Beers }
+        a (class' = "nav-button", href = $"/{beerTasteGuid}/tasters") { raw t.Tasters }
+        a (class' = "nav-button", href = $"/{beerTasteGuid}/scores") { raw t.Scores }
+        a (class' = "nav-button", href = $"/{beerTasteGuid}/results") { raw t.Results }
 
         div (style = "float: right;") {
             // Visually hidden label for accessibility (screen readers)
@@ -95,22 +99,28 @@ let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (con
                 }
                 .nav {
                     margin: 20px 0;
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
                 }
-                .nav a {
+                .nav-button {
                     display: inline-block;
-                    margin-right: 15px;
-                    padding: 10px 20px;
+                    padding: 10px 15px;
                     background-color: #ffffff;
                     color: #000000;
                     text-decoration: none;
                     border: 1px solid #000000;
                     border-radius: 3px;
                     transition: all 0.2s;
+                    flex: 1 1 auto;
+                    min-width: 50px;
+                    text-align: center;
                 }
-                .nav a:hover {
+                .nav-button:hover {
                     background-color: #000000;
                     color: #ffffff;
                 }
+
                 .results-list {
                     margin: 20px 0;
                 }
@@ -128,6 +138,9 @@ let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (con
                 .results-list a:hover {
                     background-color: #000000;
                     color: #ffffff;
+                }
+                .icon {
+                    font-family: 'Noto Color Emoji', sans-serif;
                 }
                 .results-list .icon {
                     display: inline-block;
