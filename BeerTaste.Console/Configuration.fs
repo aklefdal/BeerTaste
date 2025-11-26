@@ -53,12 +53,18 @@ let setupBeerTasteFolder (filesFolder: string) (shortName: string) : unit =
         AnsiConsole.MarkupLine($"[grey]Excel file already exists: {targetFile}[/]")
 
 let getEmailConfig (config: IConfigurationRoot) =
-    let sendGridApiKey = config["BeerTaste:Email:SendGridApiKey"]
-    let fromEmail = config["BeerTaste:Email:FromEmail"]
-    let fromName = config["BeerTaste:Email:FromName"]
+    let smtpServer = config["BeerTaste:Smtp:Server"]
+    let smtpPortStr = config["BeerTaste:Smtp:Port"]
+    let smtpUsername = config["BeerTaste:Smtp:Username"]
+    let smtpPassword = config["BeerTaste:Smtp:Password"]
+    let fromEmail = config["BeerTaste:Smtp:FromEmail"]
+    let fromName = config["BeerTaste:Smtp:FromName"]
 
     let emailSetupMissing =
-        String.IsNullOrWhiteSpace sendGridApiKey
+        String.IsNullOrWhiteSpace smtpServer
+        || String.IsNullOrWhiteSpace smtpPortStr
+        || String.IsNullOrWhiteSpace smtpUsername
+        || String.IsNullOrWhiteSpace smtpPassword
         || String.IsNullOrWhiteSpace fromEmail
 
     if emailSetupMissing then
@@ -66,20 +72,28 @@ let getEmailConfig (config: IConfigurationRoot) =
 
         None
     else
-        AnsiConsole.MarkupLine("[grey]Email configuration loaded successfully.[/]")
+        match Int32.TryParse(smtpPortStr) with
+        | (true, smtpPort) ->
+            AnsiConsole.MarkupLine("[grey]Email configuration loaded successfully.[/]")
 
-        let actualFromName =
-            if String.IsNullOrWhiteSpace fromName then
-                fromEmail
-            else
-                fromName
+            let actualFromName =
+                if String.IsNullOrWhiteSpace fromName then
+                    fromEmail
+                else
+                    fromName
 
-        {
-            SendGridApiKey = sendGridApiKey
-            FromEmail = fromEmail
-            FromName = actualFromName
-        }
-        |> Some
+            {
+                SmtpServer = smtpServer
+                SmtpPort = smtpPort
+                SmtpUsername = smtpUsername
+                SmtpPassword = smtpPassword
+                FromEmail = fromEmail
+                FromName = actualFromName
+            }
+            |> Some
+        | (false, _) ->
+            AnsiConsole.MarkupLine("[red]Invalid SMTP port number. Email sending will be disabled.[/]")
+            None
 
 let getResultsBaseUrl (config: IConfigurationRoot) =
     let configUrl = config["BeerTaste:ResultsBaseUrl"]
