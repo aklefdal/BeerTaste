@@ -56,7 +56,7 @@ module Email =
                 else
                     let! body = response.Body.ReadAsStringAsync()
 
-                    return Error $"Failed to send email to {message.To}: {response.StatusCode} - {body}"
+                    return Error $"Failed to send email to {message.To |> maskEmail}: {response.StatusCode} - {body}"
             with ex ->
                 return Error $"Failed to send email to {message.To |> maskEmail}: {ex.Message}"
         }
