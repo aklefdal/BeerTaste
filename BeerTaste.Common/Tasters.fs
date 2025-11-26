@@ -39,9 +39,7 @@ module Tasters =
         }
 
     let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : unit =
-        deleteTastersForPartitionKeyAsync tastersTable beerTasteGuid
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
+        (deleteTastersForPartitionKeyAsync tastersTable beerTasteGuid).GetAwaiter().GetResult()
 
     let addTastersAsync (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : Task =
         task {
@@ -55,16 +53,12 @@ module Tasters =
                     batch
                     |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
 
-                do!
-                    tastersTable.SubmitTransactionAsync(actions)
-                    |> Async.AwaitTask
-                    |> Async.Ignore
+                let! _ = tastersTable.SubmitTransactionAsync(actions)
+                ()
         }
 
     let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : unit =
-        addTastersAsync tastersTable beerTasteGuid tasters
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
+        (addTastersAsync tastersTable beerTasteGuid tasters).GetAwaiter().GetResult()
 
     let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
         try

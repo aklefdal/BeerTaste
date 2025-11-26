@@ -100,9 +100,7 @@ module Beers =
         }
 
     let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : unit =
-        deleteBeersForBeerTasteAsync beersTable beerTasteGuid
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
+        (deleteBeersForBeerTasteAsync beersTable beerTasteGuid).GetAwaiter().GetResult()
 
     let addBeersAsync (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : Task =
         task {
@@ -116,13 +114,9 @@ module Beers =
                     batch
                     |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
 
-                do!
-                    beersTable.SubmitTransactionAsync(actions)
-                    |> Async.AwaitTask
-                    |> Async.Ignore
+                let! _ = beersTable.SubmitTransactionAsync(actions)
+                ()
         }
 
     let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : unit =
-        addBeersAsync beersTable beerTasteGuid beers
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
+        (addBeersAsync beersTable beerTasteGuid beers).GetAwaiter().GetResult()

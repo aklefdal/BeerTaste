@@ -58,9 +58,7 @@ module Scores =
         }
 
     let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : unit =
-        deleteScoresForBeerTasteAsync scoresTable beerTasteGuid
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
+        (deleteScoresForBeerTasteAsync scoresTable beerTasteGuid).GetAwaiter().GetResult()
 
     let addScoresAsync (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : Task =
         task {
@@ -74,16 +72,12 @@ module Scores =
                     batch
                     |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
 
-                do!
-                    scoresTable.SubmitTransactionAsync(actions)
-                    |> Async.AwaitTask
-                    |> Async.Ignore
+                let! _ = scoresTable.SubmitTransactionAsync(actions)
+                ()
         }
 
     let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : unit =
-        addScoresAsync scoresTable beerTasteGuid scores
-        |> Async.AwaitTask
-        |> Async.RunSynchronously
+        (addScoresAsync scoresTable beerTasteGuid scores).GetAwaiter().GetResult()
 
     let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
         try
