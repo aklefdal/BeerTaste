@@ -15,7 +15,12 @@ let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: La
             // Visually hidden label for accessibility (screen readers)
             label (for' = "language-selector", class' = "visually-hidden") { raw t.LanguageLabel }
 
-            select (id = "language-selector", name = "language", style = "padding: 5px; font-size: 1.2em;", class' = "noto-color-emoji-regular") {
+            select (
+                id = "language-selector",
+                name = "language",
+                style = "padding: 5px; font-size: 1.2em;",
+                class' = "noto-color-emoji-regular"
+            ) {
                 option (value = "en", selected = (currentLanguage = English)) { raw "🇬🇧" }
                 option (value = "no", selected = (currentLanguage = Norwegian)) { raw "🇳🇴" }
             }
