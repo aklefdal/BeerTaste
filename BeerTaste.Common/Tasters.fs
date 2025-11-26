@@ -1,5 +1,6 @@
 namespace BeerTaste.Common
 
+open System.Threading.Tasks
 open Azure.Data.Tables
 
 type Taster = {
@@ -21,17 +22,43 @@ module Tasters =
         BirthYear = entity.GetInt32("BirthYear") |> Option.ofNullable
     }
 
+    let deleteTastersForPartitionKeyAsync (tastersTable: TableClient) (beerTasteGuid: string) : Task =
+        task {
+            try
+                let entities =
+                    tastersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+                    |> Seq.toList
+
+                let deleteTasks =
+                    entities
+                    |> List.map (fun e -> tastersTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
+
+                do! Task.WhenAll(deleteTasks)
+            with _ ->
+                ()
+        }
+
     let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : unit =
-        try
-            tastersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.iter (tastersTable.DeleteEntity >> ignore)
-        with _ ->
-            ()
+        (deleteTastersForPartitionKeyAsync tastersTable beerTasteGuid).GetAwaiter().GetResult()
+
+    let addTastersAsync (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : Task =
+        task {
+            let entities = tasters |> List.map (tasterToEntity beerTasteGuid)
+
+            // Azure Table Storage supports up to 100 entities per batch transaction
+            let batches = entities |> List.chunkBySize 100
+
+            for batch in batches do
+                let actions =
+                    batch
+                    |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
+
+                let! _ = tastersTable.SubmitTransactionAsync(actions)
+                ()
+        }
 
     let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : unit =
-        tasters
-        |> List.map (tasterToEntity beerTasteGuid)
-        |> List.iter (tastersTable.AddEntity >> ignore)
+        (addTastersAsync tastersTable beerTasteGuid tasters).GetAwaiter().GetResult()
 
     let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
         try

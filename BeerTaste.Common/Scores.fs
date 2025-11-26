@@ -1,5 +1,6 @@
 namespace BeerTaste.Common
 
+open System.Threading.Tasks
 open Azure.Data.Tables
 
 /// <summary>
@@ -40,17 +41,43 @@ module Scores =
         entity.Add("ScoreValue", score.ScoreValue |> Option.toNullable)
         entity
 
+    let deleteScoresForBeerTasteAsync (scoresTable: TableClient) (beerTasteGuid: string) : Task =
+        task {
+            try
+                let entities =
+                    scoresTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+                    |> Seq.toList
+
+                let deleteTasks =
+                    entities
+                    |> List.map (fun e -> scoresTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
+
+                do! Task.WhenAll(deleteTasks)
+            with _ ->
+                ()
+        }
+
     let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : unit =
-        try
-            scoresTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.iter (scoresTable.DeleteEntity >> ignore)
-        with _ ->
-            ()
+        (deleteScoresForBeerTasteAsync scoresTable beerTasteGuid).GetAwaiter().GetResult()
+
+    let addScoresAsync (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : Task =
+        task {
+            let entities = scores |> List.map (scoreToEntity beerTasteGuid)
+
+            // Azure Table Storage supports up to 100 entities per batch transaction
+            let batches = entities |> List.chunkBySize 100
+
+            for batch in batches do
+                let actions =
+                    batch
+                    |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
+
+                let! _ = scoresTable.SubmitTransactionAsync(actions)
+                ()
+        }
 
     let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : unit =
-        scores
-        |> List.map (scoreToEntity beerTasteGuid)
-        |> List.iter (scoresTable.AddEntity >> ignore)
+        (addScoresAsync scoresTable beerTasteGuid scores).GetAwaiter().GetResult()
 
     let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
         try
