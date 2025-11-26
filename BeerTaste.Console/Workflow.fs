@@ -207,7 +207,7 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
                     match result with
                     | Error err -> Some(msg.To, err)
                     | _ -> None)
-                |> List.iter (fun (email, err) -> AnsiConsole.MarkupLine($"[red]  - {email}: {err}[/]"))
+                |> List.iter (fun (email, err) -> AnsiConsole.MarkupLine($"[red]  - {email |> Email.maskEmail}: {err}[/]"))
         else
             AnsiConsole.MarkupLine("[yellow]Email sending cancelled.[/]")
 
