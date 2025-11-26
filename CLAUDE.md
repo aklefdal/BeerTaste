@@ -8,15 +8,16 @@ BeerTaste is an F# data analysis system for organizing and analyzing beer tastin
 
 ## Tech Stack
 
-- F# with .NET 9.0
+- F# with .NET 10.0
 - F# Script files (.fsx) for analysis logic with inline NuGet references
-- EPPlus 8.2.1 for Excel I/O (licensed for non-commercial personal use)
-- FSharp.Stats 0.4.0 for statistical analysis
+- EPPlus 8.3.0 for Excel I/O (licensed for non-commercial personal use)
+- FSharp.Stats 0.6.0 for statistical analysis
 - Azure.Data.Tables 12.11.0 for Azure Table Storage integration
 - Oxpecker 1.5.0 for web presentation (F# web framework)
-- Spectre.Console 0.53.0 for CLI interactions
+- Spectre.Console 0.54.0 for CLI interactions
 - Fantomas 7.0.3 for code formatting
 - FsToolkit.ErrorHandling 5.1.0 for computation expressions (option workflow)
+- SendGrid 9.29.3 for email notifications
 
 ## Repository Structure
 
@@ -28,6 +29,7 @@ beertaste/
 │   ├── Tasters.fs               # Taster domain types and Azure operations
 │   ├── BeerTaste.fs             # BeerTaste event types and Azure CRUD
 │   ├── Scores.fs                # Score types and Azure operations
+│   ├── Email.fs                 # Email notifications via SendGrid
 │   ├── Results.fs               # Statistical analysis functions
 │   └── BeerTaste.Common.fsproj  # .NET class library project
 ├── BeerTaste.Console/            # Compiled F# console program (modular architecture)
@@ -40,8 +42,9 @@ beertaste/
 │   ├── BeerTaste.Console.fsproj # .NET project file with compilation order
 │   └── BeerTaste.xlsx           # Beer catalog template
 ├── BeerTaste.Web/                # F# web application for results presentation
+│   ├── Localization.fs          # English/Norwegian translations
 │   ├── templates/               # Oxpecker HTML templates
-│   │   ├── Layout.fs           # Shared page layout and styling
+│   │   ├── Layout.fs           # Shared page layout with language selector
 │   │   ├── Navigation.fs       # Navigation between result pages
 │   │   ├── ResultsIndex.fs     # Results hub page
 │   │   ├── BestBeers.fs        # Best beers result page
@@ -49,7 +52,12 @@ beertaste/
 │   │   ├── Deviant.fs          # Most deviant tasters page
 │   │   ├── Similar.fs          # Most similar tasters page
 │   │   ├── StrongBeers.fs      # Strong beer preference page
-│   │   └── CheapAlcohol.fs     # Cheap alcohol preference page
+│   │   ├── CheapAlcohol.fs     # Cheap alcohol preference page
+│   │   ├── OldManBeers.fs      # Age-correlated beers page
+│   │   ├── BeersView.fs        # Beers listing page
+│   │   ├── TastersView.fs      # Tasters listing page
+│   │   ├── ScoresView.fs       # Scores table page
+│   │   └── BeerTasteView.fs    # Event details page
 │   ├── Program.fs               # ASP.NET Core web server with Oxpecker
 │   ├── BeerTaste.Web.fsproj     # .NET web project file
 │   └── README.md                # Web project documentation
@@ -130,9 +138,18 @@ dotnet user-secrets set "BeerTaste:TableStorageConnectionString" "<your-connecti
 # If not set, defaults to ./BeerTastes relative to current directory
 dotnet user-secrets set "BeerTaste:FilesFolder" "C:\path\to\your\folder"
 
+# Set SendGrid API key for email notifications (optional)
+dotnet user-secrets set "BeerTaste:SendGridApiKey" "<your-sendgrid-api-key>"
+
+# Set web application base URL for email links (optional)
+# If not set, defaults to https://beertaste.azurewebsites.net
+dotnet user-secrets set "BeerTaste:ResultsBaseUrl" "https://your-app-url.com"
+
 # Or use environment variables
 $env:BeerTaste__TableStorageConnectionString = "<your-connection-string>"
 $env:BeerTaste__FilesFolder = "C:\path\to\your\folder"
+$env:BeerTaste__SendGridApiKey = "<your-sendgrid-api-key>"
+$env:BeerTaste__ResultsBaseUrl = "https://your-app-url.com"
 ```
 
 ### Presentation
@@ -149,23 +166,26 @@ $env:BeerTaste__FilesFolder = "C:\path\to\your\folder"
 
 ### Shared Library (BeerTaste.Common)
 
-A .NET 9.0 class library for code shared between Console and Web applications:
+A .NET 10.0 class library for code shared between Console and Web applications:
 
-- **Purpose:** Domain models, Azure Table Storage operations, and shared business logic
-- **Current State:** Fully implemented with domain types, storage operations, and statistical analysis
+- **Purpose:** Domain models, Azure Table Storage operations, email notifications, and shared business logic
+- **Current State:** Fully implemented with domain types, storage operations, statistical analysis, and email notifications
 - **Architecture:** Contains modules for all shared functionality:
   - **Storage.fs** - Azure Table Storage client setup (`BeerTasteTableStorage` class)
-  - **Beers.fs** - Beer domain types and Azure storage operations (`Beer`, `entityToScore`, `addBeers`, `deleteBeersForBeerTaste`)
-  - **Tasters.fs** - Taster domain types and Azure storage operations
-  - **BeerTaste.fs** - BeerTaste event types and Azure CRUD operations
-  - **Scores.fs** - Score type with optional int values (`ScoreValue: int option`), entity conversion, and validation (`hasScores`, `isComplete`)
-  - **Results.fs** - Statistical analysis functions (correlations, averages, standard deviations), converts int scores to float for calculations
+  - **Beers.fs** - Beer domain types and Azure storage operations (`Beer`, `beerToEntity`, `entityToBeer`, `addBeers`, `deleteBeersForBeerTaste`, `fetchBeers`)
+  - **Tasters.fs** - Taster domain types and Azure storage operations (`Taster` with optional Email and BirthYear, `tasterToEntity`, `entityToTaster`, `addTasters`, `fetchTasters`)
+  - **BeerTaste.fs** - BeerTaste event types and Azure CRUD operations (`BeerTaste` record, `beertasteToEntity`, `entityToBeerTaste`, `addBeerTaste`, `getBeerTasteGuid`)
+  - **Scores.fs** - Score type with optional int values (`ScoreValue: int option`), entity conversion (`entityToScore`, `scoreToEntity`), validation (`hasScores`, `isComplete`), and CRUD operations
+  - **Email.fs** - Email notifications via SendGrid (`EmailConfiguration`, `EmailMessage`, `sendEmail`, `sendEmails`, `createBeerTasteResultsEmail`, `maskEmail`, `isAdmin`)
+  - **Results.fs** - Statistical analysis functions (correlations, averages, standard deviations, age correlations), converts int scores to float for calculations (`beerAverages`, `beerStandardDeviations`, `correlationToAverages`, `correlationBetweenTasters`, `correlationToAbv`, `correlationToAbvPrice`, `correlationToAge`)
 - **Responsibilities:**
   - All Azure Table Storage entity types and operations
   - Domain model definitions with optional score values
   - Statistical analysis for results computation
+  - Email notifications to tasters (SendGrid integration)
   - Data access layer for both Console and Web
 - **Documentation:** Generates XML documentation file for IntelliSense support
+- **Email Functionality:** SendGrid-based email notifications with admin filtering (only admins receive emails in production)
 
 ### Console Application (BeerTaste.Console)
 
@@ -176,8 +196,10 @@ The console application focuses on **Excel I/O and user interaction**, delegatin
 1. **Configuration.fs** - Configuration and setup layer
    - Loads user secrets and environment variables
    - Sets up folder structure and copies Excel template
-   - Returns `ConsoleSetup` record with all necessary context
+   - Returns `ConsoleSetup` record with all necessary context (includes EmailConfig and ResultsBaseUrl)
    - Function: `getConsoleSetup` returns `Option<ConsoleSetup>`
+   - Function: `getEmailConfig` returns `Option<EmailConfiguration>` for SendGrid
+   - Function: `getResultsBaseUrl` returns base URL (defaults to https://beertaste.azurewebsites.net)
    - References BeerTaste.Common.Storage for table clients
 
 2. **Beers.fs** - Beer Excel I/O module (Console-specific)
@@ -205,6 +227,7 @@ The console application focuses on **Excel I/O and user interaction**, delegatin
    - User prompts: `promptForDescription`, `promptForDate`, `promptDoneEditingBeers`, `promptDoneEditingTasters`
    - Workflow functions: `setupBeerTaste`, `verifyBeers`, `verifyTasters`, `verifyScores`, `createScoreSchema`
    - `showResults` - Opens browser to results page when scores are complete
+   - `sendEmailsToTasters` - Sends result notification emails via SendGrid (admin-only in production)
    - Coordinates between Console modules and Common modules
    - Uses Spectre.Console for all user interaction
    - Handles user interaction and business logic flow
@@ -228,17 +251,27 @@ Separate **layered F# script architecture** for analysis:
 ### Web Application (BeerTaste.Web)
 
 - ASP.NET Core with Oxpecker framework
-- **Fully implemented** results presentation with 6 statistical analysis pages
-- Routes follow `/{beerTasteGuid}/results/...` pattern
-- Black and white theme with responsive layout
-- Features:
+- **Fully implemented** results presentation with 7 statistical analysis pages and 4 data view pages
+- **Localization:** Complete English/Norwegian translations via Localization.fs
+  - Language detection from cookies and Accept-Language header
+  - Language selector in navigation bar
+  - Cookie-based language persistence (beertaste-language)
+- Routes follow `/{beerTasteGuid}/...` pattern
+- Black and white theme with responsive layout and Noto Color Emoji font
+- **Statistical Analysis Pages:**
   - **Results Index** - Hub page with icons for each result type
-  - **Best Beers** - Ranked by average score
-  - **Most Controversial** - Ranked by standard deviation
-  - **Most Deviant Tasters** - Lowest correlation to average
-  - **Most Similar Tasters** - Taster pairs by correlation
-  - **Strong Beer Preference** - Correlation to ABV
-  - **Cheap Alcohol Preference** - Correlation to price per ABV
+  - **Best Beers** - Ranked by average score (★)
+  - **Most Controversial** - Ranked by standard deviation (⚡)
+  - **Most Deviant Tasters** - Lowest correlation to average (😈)
+  - **Most Similar Tasters** - Taster pairs by correlation (❤)
+  - **Strong Beer Preference** - Correlation to ABV (😵)
+  - **Cheap Alcohol Preference** - Correlation to price per ABV (💰)
+  - **Old Man Beers** - Age-correlated beers (👴)
+- **Data View Pages:**
+  - **Beers Listing** - All beers with computed properties
+  - **Tasters Listing** - All tasters with optional email/birth year
+  - **Scores Table** - Complete score matrix
+  - **Event Details** - BeerTaste event information
 - Navigation with previous/next arrows between pages
 - Fetches data from Azure Table Storage via BeerTaste.Common
 
@@ -263,10 +296,10 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 **IMPORTANT:** Strict separation of concerns across projects to maintain clean architecture:
 
 **BeerTaste.Common (Shared Library)**
-- ✅ Can reference: Core .NET libraries (System.*, FSharp.Core), Azure.Data.Tables
+- ✅ Can reference: Core .NET libraries (System.*, FSharp.Core), Azure.Data.Tables, SendGrid
 - ❌ Cannot reference: EPPlus, Spectre.Console, System.Console, ASP.NET Core web libraries
-- **Purpose:** Domain models, Azure Table Storage operations, shared business logic
-- **Principle:** No UI dependencies - only data access and domain logic
+- **Purpose:** Domain models, Azure Table Storage operations, email notifications, shared business logic
+- **Principle:** No UI dependencies - only data access, email, and domain logic
 
 **BeerTaste.Console (Console Application)**
 - ✅ Can reference: BeerTaste.Common, EPPlus, Spectre.Console, System.Console
@@ -295,6 +328,7 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 | Core .NET (System.*, FSharp.Core) | ✅ | ✅ | ✅ |
 | BeerTaste.Common | N/A | ✅ | ✅ |
 | Azure.Data.Tables | ✅ (owns storage) | ❌ | ❌ |
+| SendGrid | ✅ (owns email) | ❌ | ❌ |
 | EPPlus | ❌ | ✅ (exclusive) | ❌ |
 | Spectre.Console | ❌ | ✅ (exclusive) | ❌ |
 | System.Console | ❌ | ✅ (exclusive) | ❌ |
@@ -374,23 +408,24 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 
 ## Key Files
 
-### Shared Library (Azure Table Storage & Domain)
+### Shared Library (Azure Table Storage, Email & Domain)
 
 - `BeerTaste.Common/Storage.fs` - Azure Table Storage client setup (`BeerTasteTableStorage` class)
-- `BeerTaste.Common/Beers.fs` - Beer domain types (`Beer`) and Azure operations (`addBeers`, `deleteBeersForBeerTaste`)
-- `BeerTaste.Common/Tasters.fs` - Taster domain types (`Taster`) and Azure operations (`addTasters`, `deleteTastersForPartitionKey`)
-- `BeerTaste.Common/BeerTaste.fs` - BeerTaste event types (`BeerTasteEntity`) and Azure CRUD operations
-- `BeerTaste.Common/Scores.fs` - Score type with optional values, entity conversion (`entityToScore`, `scoreToEntity`), validation (`hasScores`, `isComplete`)
-- `BeerTaste.Common/Results.fs` - Statistical analysis functions (`beerAverages`, `beerStandardDeviations`, `correlationToAverages`, `correlationBetweenTasters`, `correlationToAbv`, `correlationToAbvPrice`)
+- `BeerTaste.Common/Beers.fs` - Beer domain types (`Beer`) and Azure operations (`beerToEntity`, `entityToBeer`, `addBeers`, `fetchBeers`, `deleteBeersForBeerTaste`)
+- `BeerTaste.Common/Tasters.fs` - Taster domain types (`Taster` with optional Email and BirthYear) and Azure operations (`tasterToEntity`, `entityToTaster`, `addTasters`, `fetchTasters`, `deleteTastersForPartitionKey`)
+- `BeerTaste.Common/BeerTaste.fs` - BeerTaste event types (`BeerTaste` record) and Azure CRUD operations (`beertasteToEntity`, `entityToBeerTaste`, `addBeerTaste`, `getBeerTasteGuid`, `fetchBeerTaste`)
+- `BeerTaste.Common/Scores.fs` - Score type with optional values, entity conversion (`entityToScore`, `scoreToEntity`), validation (`hasScores`, `isComplete`), CRUD operations (`addScores`, `fetchScores`, `deleteScoresForBeerTaste`)
+- `BeerTaste.Common/Email.fs` - Email notifications via SendGrid (`EmailConfiguration`, `EmailMessage`, `sendEmail`, `sendEmails`, `createBeerTasteResultsEmail`, `maskEmail`, `isAdmin`)
+- `BeerTaste.Common/Results.fs` - Statistical analysis functions (`beerAverages`, `beerStandardDeviations`, `correlationToAverages`, `correlationBetweenTasters`, `correlationToAbv`, `correlationToAbvPrice`, `correlationToAge`)
 - `BeerTaste.Common/BeerTaste.Common.fsproj` - Class library project configuration
 
 ### Console Application Modules (Excel I/O & UI)
 
-- `BeerTaste.Console/Configuration.fs` - Config loading, folder setup, references Common.Storage
+- `BeerTaste.Console/Configuration.fs` - Config loading, folder setup, email configuration (`getEmailConfig`, `getResultsBaseUrl`), references Common.Storage
 - `BeerTaste.Console/Beers.fs` - Excel I/O: `readBeers`, `norwegianToFloat`, TastersSchema creation
 - `BeerTaste.Console/Tasters.fs` - Excel I/O: `readTasters`, `rowToTaster`
-- `BeerTaste.Console/Scores.fs` - ScoreSchema state detection and creation with user warnings
-- `BeerTaste.Console/Workflow.fs` - Orchestration with Spectre.Console prompts, calls Common for Azure ops
+- `BeerTaste.Console/Scores.fs` - ScoreSchema state detection and creation with user warnings (`getScoresSchemaState`, `deleteAndCreateScoreSchema`)
+- `BeerTaste.Console/Workflow.fs` - Orchestration with Spectre.Console prompts, calls Common for Azure ops, browser opening (`showResults`), email sending (`sendEmailsToTasters`)
 - `BeerTaste.Console/Program.fs` - Entry point with EPPlus license and pattern matching orchestration
 - `BeerTaste.Console/BeerTaste.Console.fsproj` - Project file with module compilation order
 - `BeerTaste.Console/BeerTaste.xlsx` - Excel template for events
@@ -404,9 +439,10 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 
 ### Web Application
 
+- `BeerTaste.Web/Localization.fs` - English/Norwegian translations (`Language` DU, `Translations` record, `getTranslations`, `getLanguage`, `languageFromCode`)
 - `BeerTaste.Web/Program.fs` - Web application entry point with routing and data fetching
-- `BeerTaste.Web/templates/Layout.fs` - Shared page layout with black and white theme
-- `BeerTaste.Web/templates/Navigation.fs` - Navigation between result pages with prev/next arrows
+- `BeerTaste.Web/templates/Layout.fs` - Shared page layout with black and white theme, language selector, Noto Color Emoji font
+- `BeerTaste.Web/templates/Navigation.fs` - Navigation between result pages with prev/next arrows (`ResultPage` DU, `allPages`, `pageToRoute`, `pageToIcon`)
 - `BeerTaste.Web/templates/ResultsIndex.fs` - Results hub page with icons for each result type
 - `BeerTaste.Web/templates/BestBeers.fs` - Best beers ranked by average score
 - `BeerTaste.Web/templates/Controversial.fs` - Most controversial beers by standard deviation
@@ -414,12 +450,17 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 - `BeerTaste.Web/templates/Similar.fs` - Most similar taster pairs by correlation
 - `BeerTaste.Web/templates/StrongBeers.fs` - Strong beer preference by ABV correlation
 - `BeerTaste.Web/templates/CheapAlcohol.fs` - Cheap alcohol preference by price/ABV correlation
+- `BeerTaste.Web/templates/OldManBeers.fs` - Age-correlated beers by birth year correlation
+- `BeerTaste.Web/templates/BeersView.fs` - Beers listing page
+- `BeerTaste.Web/templates/TastersView.fs` - Tasters listing page
+- `BeerTaste.Web/templates/ScoresView.fs` - Scores table page
+- `BeerTaste.Web/templates/BeerTasteView.fs` - Event details page
 - `BeerTaste.Web/BeerTaste.Web.fsproj` - Web project configuration
 
 ### Configuration
 
 - `.editorconfig` - F# formatting rules (crucial for consistency)
-- User secrets (via `dotnet user-secrets`): `BeerTaste:TableStorageConnectionString`, `BeerTaste:FilesFolder`
+- User secrets (via `dotnet user-secrets`): `BeerTaste:TableStorageConnectionString`, `BeerTaste:FilesFolder`, `BeerTaste:SendGridApiKey`, `BeerTaste:ResultsBaseUrl`
 
 ## Excel Data Schema
 
@@ -461,22 +502,24 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 ### Shared Library (BeerTaste.Common)
 
-- **Purpose:** Data access layer, domain models, and statistical analysis shared between Console and Web applications
-- **Current State:** Fully implemented with all core functionality
+- **Purpose:** Data access layer, domain models, email notifications, and statistical analysis shared between Console and Web applications
+- **Current State:** Fully implemented with all core functionality including email notifications
 - **Architecture:** Contains all shared modules:
-  - **Storage.fs** - Azure Table Storage initialization and client management
-  - **Beers.fs** - Beer domain types and Azure CRUD operations
-  - **Tasters.fs** - Taster domain types and Azure CRUD operations
-  - **BeerTaste.fs** - BeerTaste event types and Azure CRUD operations
-  - **Scores.fs** - Score type with optional values (`int option`), TableEntity conversion, validation
-  - **Results.fs** - Statistical analysis (correlations, averages, standard deviations)
-- **Project Type:** .NET class library targeting net9.0
+  - **Storage.fs** - Azure Table Storage initialization and client management (4 tables: beertaste, beers, tasters, scores)
+  - **Beers.fs** - Beer domain types with computed properties (PricePerLiter, PricePerAbv) and Azure CRUD operations
+  - **Tasters.fs** - Taster domain types with optional Email and BirthYear, and Azure CRUD operations
+  - **BeerTaste.fs** - BeerTaste event types (with GUID, ShortName, Description, Date) and Azure CRUD operations
+  - **Scores.fs** - Score type with optional values (`ScoreValue: int option`), TableEntity conversion, validation
+  - **Email.fs** - SendGrid email notifications with admin filtering (only admins receive emails in production)
+  - **Results.fs** - Statistical analysis (correlations, averages, standard deviations, age correlations)
+- **Project Type:** .NET class library targeting net10.0
 - **XML Documentation:** Enabled for IntelliSense support in consuming projects
-- **Dependencies:** Azure.Data.Tables and FSharp.Stats (no UI dependencies)
-  - ✅ Azure.Data.Tables for all storage operations
-  - ✅ FSharp.Stats for statistical analysis
+- **Dependencies:** Azure.Data.Tables, FSharp.Stats, and SendGrid (no UI dependencies)
+  - ✅ Azure.Data.Tables 12.11.0 for all storage operations
+  - ✅ FSharp.Stats 0.6.0 for statistical analysis
+  - ✅ SendGrid 9.29.3 for email notifications
   - ❌ No EPPlus, Spectre.Console, System.Console, or ASP.NET Core
-  - Keep it focused on data access, domain logic, and analysis
+  - Keep it focused on data access, email, domain logic, and analysis
 
 ### Console Application
 
@@ -516,11 +559,15 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 ### Web Application
 
-- **Fully implemented** results presentation with 6 analysis pages
+- **Fully implemented** results presentation with 7 statistical analysis pages and 4 data view pages
+- **Localization:** Complete English/Norwegian translations
+  - Language detection from cookies (beertaste-language) and Accept-Language header
+  - Language selector in navigation bar with JavaScript cookie persistence
+  - All UI text translated in Localization.fs
 - Oxpecker framework for F#-friendly web development
-- Routes: `/{beerTasteGuid}/results/...` pattern
-- Black and white theme for professional appearance
+- Routes: `/{beerTasteGuid}/...` pattern (results, beers, tasters, scores, event details)
+- Black and white theme with responsive layout and Noto Color Emoji font
 - Navigation with Unicode arrows (← →) between pages
-- Icons for each result type (★, ⚡, 😈, ❤, 😵, 💰)
+- Icons for each result type (★, ⚡, 😈, ❤, 😵, 💰, 👴)
 - Auto-opens in browser when Console detects complete scores
 - Text files need to use CRLF for line endings

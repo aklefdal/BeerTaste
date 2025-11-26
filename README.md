@@ -10,10 +10,13 @@ A comprehensive F# data analysis system for organizing and analyzing beer tastin
   - Most controversial beers by standard deviation
   - Taster similarity analysis using Pearson correlations
   - Preference correlations with ABV and price metrics
-- **Email Notifications**: Send results to tasters automatically when scoring is complete (optional)
+  - Age-correlated beer preferences (old man beers)
+  - Deviant tasters (least similar to group average)
+- **Email Notifications**: Send results to tasters automatically via SendGrid when scoring is complete (optional)
+- **Internationalization**: Complete English and Norwegian translations with language selector
 - **Multiple Interfaces**:
   - Console application for event setup and data management
-  - Web application for results presentation
+  - Web application for results presentation with 7 statistical pages + 4 data views
   - F# scripts for custom analysis
 - **Azure Integration**: Store event data in Azure Table Storage
 - **Excel I/O**: Read and write beer catalogs, taster lists, and scoring matrices
@@ -22,8 +25,9 @@ A comprehensive F# data analysis system for organizing and analyzing beer tastin
 
 ### Prerequisites
 
-- .NET 9.0 SDK or later
+- .NET 10.0 SDK or later
 - Azure Storage Account (for persistence)
+- SendGrid account (optional - for email notifications)
 - Excel for data entry (optional - can use other tools to edit .xlsx files)
 
 ### Setup
@@ -68,10 +72,11 @@ BeerTaste/
 
 ### BeerTaste.Common
 
-Shared .NET class library containing:
+Shared .NET 10.0 class library containing:
 - Domain models (Beer, Taster, Score, BeerTaste event)
-- Azure Table Storage operations
-- Statistical analysis functions
+- Azure Table Storage operations (4 tables: beertaste, beers, tasters, scores)
+- Email notifications via SendGrid
+- Statistical analysis functions (correlations, averages, standard deviations, age analysis)
 - No UI dependencies - pure business logic
 
 ### BeerTaste.Console
@@ -85,9 +90,16 @@ Console application for event management:
 ### BeerTaste.Web
 
 ASP.NET Core web application with Oxpecker framework:
-- Results presentation with 6 analysis pages
-- Black and white responsive theme
+- **Localization**: Complete English/Norwegian translations with language selector
+- **Results presentation**: 7 statistical analysis pages
+  - Best Beers (★), Most Controversial (⚡), Most Deviant Tasters (😈)
+  - Most Similar Tasters (❤), Strong Beer Preference (😵)
+  - Cheap Alcohol Preference (💰), Old Man Beers (👴)
+- **Data views**: 4 pages for viewing event data
+  - Beers listing, Tasters listing, Scores table, Event details
+- Black and white responsive theme with Noto Color Emoji font
 - Real-time data fetching from Azure Table Storage
+- Language detection from cookies and Accept-Language header
 - Auto-opens when scores are complete
 
 ### Scripts
@@ -145,7 +157,7 @@ dotnet fsi BeerTaste.Report.fsx
 
 | Project | Can Reference | Cannot Reference |
 |---------|---------------|------------------|
-| **Common** | Core .NET, Azure.Data.Tables, FSharp.Stats | EPPlus, Spectre.Console, ASP.NET Core |
+| **Common** | Core .NET, Azure.Data.Tables, FSharp.Stats, SendGrid | EPPlus, Spectre.Console, ASP.NET Core |
 | **Console** | Common, EPPlus, Spectre.Console | ASP.NET Core, Oxpecker |
 | **Web** | Common, ASP.NET Core, Oxpecker | EPPlus, Spectre.Console |
 
@@ -165,10 +177,13 @@ dotnet fsi BeerTaste.Report.fsx
 
 - Id, Name, BeerType, Origin, Producer
 - ABV (alcohol by volume), Volume, Price, Packaging
+- Computed properties: PricePerLiter, PricePerAbv
 
 ### Tasters (Excel "Tasters" worksheet)
 
-- Name, Email, BirthYear
+- Name (required)
+- Email (optional - used for result notifications)
+- BirthYear (optional - used for age correlation analysis)
 
 ### Scores (Excel "ScoreSchema" worksheet)
 
@@ -185,6 +200,7 @@ The system computes:
 3. **Deviation Analysis**: Tasters most different from group average
 4. **ABV Preferences**: Correlation between ratings and alcohol content
 5. **Value Analysis**: Correlation between ratings and price per ABV
+6. **Age Correlation**: Correlation between beer ratings and taster age (old man beers)
 
 ## Configuration
 
@@ -194,16 +210,20 @@ Store sensitive configuration using .NET user secrets:
 
 ```bash
 cd BeerTaste.Console
+
+# Required: Azure Table Storage connection string
 dotnet user-secrets set "BeerTaste:TableStorageConnectionString" "<connection-string>"
+
+# Optional: Custom folder path for Excel files (defaults to ./BeerTastes)
 dotnet user-secrets set "BeerTaste:FilesFolder" "C:\path\to\data\folder"
 
-# Results base URL (optional - defaults to http://localhost:5000)
-dotnet user-secrets set "BeerTaste:ResultsBaseUrl" "http://localhost:5000"
+# Optional: Results base URL (defaults to https://beertaste.azurewebsites.net)
+dotnet user-secrets set "BeerTaste:ResultsBaseUrl" "https://your-app.azurewebsites.net"
 
-# Email configuration (optional - for sending results to tasters via SendGrid)
-dotnet user-secrets set "BeerTaste:Email:SendGridApiKey" "<your-sendgrid-api-key>"
-dotnet user-secrets set "BeerTaste:Email:FromEmail" "<your-verified-sender@example.com>"
-dotnet user-secrets set "BeerTaste:Email:FromName" "BeerTaste"
+# Optional: SendGrid email configuration (for sending results to tasters)
+dotnet user-secrets set "BeerTaste:SendGridApiKey" "<your-sendgrid-api-key>"
+dotnet user-secrets set "BeerTaste:SendGridFromEmail" "<your-verified-sender@example.com>"
+dotnet user-secrets set "BeerTaste:SendGridFromName" "BeerTaste Results"
 ```
 
 ### Environment Variables
@@ -214,18 +234,18 @@ Alternatively, use environment variables:
 # PowerShell
 $env:BeerTaste__TableStorageConnectionString = "<connection-string>"
 $env:BeerTaste__FilesFolder = "C:\path\to\data\folder"
-$env:BeerTaste__ResultsBaseUrl = "http://localhost:5000"
-$env:BeerTaste__Email__SendGridApiKey = "<your-sendgrid-api-key>"
-$env:BeerTaste__Email__FromEmail = "<your-verified-sender@example.com>"
-$env:BeerTaste__Email__FromName = "BeerTaste"
+$env:BeerTaste__ResultsBaseUrl = "https://your-app.azurewebsites.net"
+$env:BeerTaste__SendGridApiKey = "<your-sendgrid-api-key>"
+$env:BeerTaste__SendGridFromEmail = "<your-verified-sender@example.com>"
+$env:BeerTaste__SendGridFromName = "BeerTaste Results"
 
 # Bash
 export BeerTaste__TableStorageConnectionString="<connection-string>"
 export BeerTaste__FilesFolder="/path/to/data/folder"
-export BeerTaste__ResultsBaseUrl="http://localhost:5000"
-export BeerTaste__Email__SendGridApiKey="<your-sendgrid-api-key>"
-export BeerTaste__Email__FromEmail="<your-verified-sender@example.com>"
-export BeerTaste__Email__FromName="BeerTaste"
+export BeerTaste__ResultsBaseUrl="https://your-app.azurewebsites.net"
+export BeerTaste__SendGridApiKey="<your-sendgrid-api-key>"
+export BeerTaste__SendGridFromEmail="<your-verified-sender@example.com>"
+export BeerTaste__SendGridFromName="BeerTaste Results"
 ```
 
 ### Default Folder
@@ -234,7 +254,7 @@ If `FilesFolder` is not configured, defaults to `./BeerTastes` relative to the c
 
 ### Email Configuration (Optional)
 
-The email feature allows you to send results to all tasters when scoring is complete. Configuration is optional and the application works without it.
+The email feature allows you to send results notifications to all tasters when scoring is complete. Configuration is optional and the application works without it.
 
 **Email Service: SendGrid**
 
@@ -242,21 +262,24 @@ BeerTaste uses SendGrid for reliable email delivery. SendGrid offers:
 - Free tier: 100 emails/day (plenty for most tasting events)
 - Simple API with just an API key (no SMTP configuration needed)
 - High deliverability rates
-- Email tracking and analytics
 
 **SendGrid Setup:**
 1. Sign up for a free account at [SendGrid](https://sendgrid.com/)
 2. Verify your sender email address (or domain)
 3. Create an API key with "Mail Send" permissions
-4. Configure the API key in user secrets or environment variables
+4. Configure the API key and sender information in user secrets or environment variables
+
+**Security Note:**
+The application includes admin filtering - in production, only emails configured as admin addresses will receive notifications. This prevents accidental email sends to all tasters during testing.
 
 **Usage:**
 When scoring is complete, the console application will:
 1. Prompt: "Do you want to send results emails to all tasters?"
-2. If you select "Yes", emails are sent to all tasters with email addresses
+2. If you select "Yes", emails are sent to all tasters with valid email addresses
 3. Each email contains a personalized link to view the results
+4. Email addresses are masked in log output for privacy
 
-If email configuration is missing or incomplete, the feature is disabled and the application continues normally.
+If email configuration is missing or incomplete, the feature is gracefully disabled and the application continues normally.
 
 ## Development
 
@@ -270,11 +293,28 @@ If email configuration is missing or incomplete, the feature is disabled and the
 ### Module Organization
 
 Each `.fs` file is a module with clear single responsibility:
-- **Storage.fs** - Azure client setup
-- **Beers.fs** - Beer domain and operations
-- **Tasters.fs** - Taster domain and operations
-- **Scores.fs** - Score domain and validation
-- **Results.fs** - Statistical analysis
+
+**BeerTaste.Common:**
+- **Storage.fs** - Azure Table Storage client setup (4 tables)
+- **Beers.fs** - Beer domain types and Azure operations
+- **Tasters.fs** - Taster domain types and Azure operations
+- **BeerTaste.fs** - BeerTaste event types and Azure operations
+- **Scores.fs** - Score domain, validation, and Azure operations
+- **Email.fs** - SendGrid email notifications with admin filtering
+- **Results.fs** - Statistical analysis (correlations, rankings, age analysis)
+
+**BeerTaste.Console:**
+- **Configuration.fs** - Config loading, folder setup, email configuration
+- **Beers.fs** - Beer Excel I/O and TastersSchema creation
+- **Tasters.fs** - Taster Excel I/O
+- **Scores.fs** - ScoreSchema management and score reading
+- **Workflow.fs** - Orchestration, prompts, browser opening, email sending
+- **Program.fs** - Application entry point
+
+**BeerTaste.Web:**
+- **Localization.fs** - English/Norwegian translations
+- **templates/*.fs** - HTML views for all pages
+- **Program.fs** - Web server with routing
 
 ### Testing
 
