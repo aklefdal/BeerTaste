@@ -3,6 +3,7 @@ module BeerTaste.Web.Templates.TastersView
 open Oxpecker.ViewEngine
 open BeerTaste.Common
 open BeerTaste.Web.Templates.Layout
+open BeerTaste.Web.Localization
 
 let maskEmail (email: string) =
     match email.Split '@' with
@@ -24,18 +25,18 @@ let maskEmail (email: string) =
     | _ -> email
 
 
-let view (beerTasteGuid: string) (tasters: Taster list) =
-    layout "Tasters" beerTasteGuid [
-        h1 () { raw "Tasters" }
+let view (beerTasteGuid: string) (language: Language) (tasters: Taster list) =
+    let t = getTranslations language
 
-        p () { a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" } }
+    layout t.Tasters beerTasteGuid language [
+        h1 () { raw t.Tasters }
 
         table () {
             thead () {
                 tr () {
-                    th () { raw "Name" }
-                    th () { raw "Email" }
-                    th (class' = "value") { raw "Birth Year" }
+                    th () { raw t.Name }
+                    th () { raw t.Email }
+                    th (class' = "value") { raw t.BirthYear }
                 }
             }
 

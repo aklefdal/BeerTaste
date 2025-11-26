@@ -2,42 +2,48 @@ module BeerTaste.Web.Templates.ResultsIndex
 
 open Oxpecker.ViewEngine
 open BeerTaste.Web.Templates.Layout
+open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) =
-    layout "Beer Tasting Results" beerTasteGuid [
-        h1 () { raw "Beer Tasting Results" }
+let view (beerTasteGuid: string) (language: Language) =
+    let t = getTranslations language
 
-        h2 () { raw "Available Results" }
+    layout t.BeerTastingResults beerTasteGuid language [
+        h1 () { raw t.BeerTastingResults }
 
         div (class' = "results-list") {
             a (href = $"/{beerTasteGuid}/results/bestbeers") {
                 span (class' = "icon") { raw "★" }
-                raw "Best Beers"
+                raw t.BestBeers
             }
 
             a (href = $"/{beerTasteGuid}/results/controversial") {
                 span (class' = "icon") { raw "⚡" }
-                raw "Most Controversial Beers"
+                raw t.MostControversialBeers
             }
 
             a (href = $"/{beerTasteGuid}/results/deviant") {
                 span (class' = "icon") { raw "😈" }
-                raw "Most Deviant Tasters"
+                raw t.MostDeviantTasters
             }
 
             a (href = $"/{beerTasteGuid}/results/similar") {
                 span (class' = "icon") { raw "❤" }
-                raw "Most Similar Tasters"
+                raw t.MostSimilarTasters
             }
 
             a (href = $"/{beerTasteGuid}/results/strongbeers") {
                 span (class' = "icon") { raw "😵" }
-                raw "Most Fond of Strong Beers"
+                raw t.MostFondOfStrongBeers
             }
 
             a (href = $"/{beerTasteGuid}/results/cheapalcohol") {
                 span (class' = "icon") { raw "💰" }
-                raw "Most Fond of Cheap Alcohol"
+                raw t.MostFondOfCheapAlcohol
+            }
+
+            a (href = $"/{beerTasteGuid}/results/oldmanbeers") {
+                span (class' = "icon") { raw "👴" }
+                raw t.OldManBeers
             }
         }
     ]

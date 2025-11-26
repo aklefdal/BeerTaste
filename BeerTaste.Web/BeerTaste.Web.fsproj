@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="Localization.fs"/>
         <Compile Include="templates/Layout.fs"/>
         <Compile Include="templates/Navigation.fs"/>
         <Compile Include="templates/ResultsIndex.fs"/>
@@ -17,6 +18,7 @@
         <Compile Include="templates/Similar.fs"/>
         <Compile Include="templates/StrongBeers.fs"/>
         <Compile Include="templates/CheapAlcohol.fs"/>
+        <Compile Include="templates/OldManBeers.fs"/>
         <Compile Include="templates/BeersView.fs"/>
         <Compile Include="templates/TastersView.fs"/>
         <Compile Include="templates/ScoresView.fs"/>

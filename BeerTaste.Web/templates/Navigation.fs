@@ -1,6 +1,7 @@
 module BeerTaste.Web.Templates.Navigation
 
 open Oxpecker.ViewEngine
+open BeerTaste.Web.Localization
 
 type ResultPage =
     | BestBeers
@@ -9,6 +10,7 @@ type ResultPage =
     | Similar
     | StrongBeers
     | CheapAlcohol
+    | OldManBeers
 
 let allPages = [
     BestBeers
@@ -17,6 +19,7 @@ let allPages = [
     Similar
     StrongBeers
     CheapAlcohol
+    OldManBeers
 ]
 
 let pageToRoute page =
@@ -27,15 +30,17 @@ let pageToRoute page =
     | Similar -> "similar"
     | StrongBeers -> "strongbeers"
     | CheapAlcohol -> "cheapalcohol"
+    | OldManBeers -> "oldmanbeers"
 
-let pageToTitle page =
+let pageToTitle (t: Translations) page =
     match page with
-    | BestBeers -> "Best Beers"
-    | Controversial -> "Most Controversial Beers"
-    | Deviant -> "Most Deviant Tasters"
-    | Similar -> "Most Similar Tasters"
-    | StrongBeers -> "Most Fond of Strong Beers"
-    | CheapAlcohol -> "Most Fond of Cheap Alcohol"
+    | BestBeers -> t.BestBeers
+    | Controversial -> t.MostControversialBeers
+    | Deviant -> t.MostDeviantTasters
+    | Similar -> t.MostSimilarTasters
+    | StrongBeers -> t.MostFondOfStrongBeers
+    | CheapAlcohol -> t.MostFondOfCheapAlcohol
+    | OldManBeers -> t.OldManBeers
 
 let pageToIcon page =
     match page with
@@ -45,17 +50,19 @@ let pageToIcon page =
     | Similar -> "❤"
     | StrongBeers -> "😵"
     | CheapAlcohol -> "💰"
+    | OldManBeers -> "👴"
 
-let renderNavigation (beerTasteGuid: string) (currentPage: ResultPage) =
+let renderNavigation (beerTasteGuid: string) (t: Translations) (currentPage: ResultPage) =
     div (class' = "results-nav") {
         for page in allPages do
             if page = currentPage then
-                span (class' = "results-nav-button current") {
-                    span (class' = "icon") { raw (pageToIcon page) }
-                    raw (pageToTitle page)
-                }
+                span (class' = "results-nav-button current") { span (class' = "icon") { raw (pageToIcon page) } }
             else
-                a (class' = "results-nav-button", href = $"/{beerTasteGuid}/results/{pageToRoute page}") {
+                a (
+                    class' = "results-nav-button",
+                    href = $"/{beerTasteGuid}/results/{pageToRoute page}",
+                    title = pageToTitle t page
+                ) {
                     span (class' = "icon") { raw (pageToIcon page) }
                 }
     }

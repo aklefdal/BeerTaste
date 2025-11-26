@@ -1,21 +1,47 @@
 module BeerTaste.Web.Templates.Layout
 
 open Oxpecker.ViewEngine
+open BeerTaste.Web.Localization
 
-let topNavigation (beerTasteGuid: string) =
+let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: Language) =
     div (class' = "nav") {
-        a (href = $"/{beerTasteGuid}") { raw "🏠 Home" }
-        a (href = $"/{beerTasteGuid}/beers") { raw "Beers" }
-        a (href = $"/{beerTasteGuid}/tasters") { raw "Tasters" }
-        a (href = $"/{beerTasteGuid}/scores") { raw "Scores" }
-        a (href = $"/{beerTasteGuid}/results") { raw "Results" }
+        a (class' = "nav-button", href = $"/{beerTasteGuid}") {
+            span (class' = "icon") { raw "🏠" }
+            raw t.Home
+        }
+
+        a (class' = "nav-button", href = $"/{beerTasteGuid}/beers") { raw t.Beers }
+        a (class' = "nav-button", href = $"/{beerTasteGuid}/tasters") { raw t.Tasters }
+        a (class' = "nav-button", href = $"/{beerTasteGuid}/scores") { raw t.Scores }
+        a (class' = "nav-button", href = $"/{beerTasteGuid}/results") { raw t.Results }
+
+        div (style = "float: right;") {
+            // Visually hidden label for accessibility (screen readers)
+            label (for' = "language-selector", class' = "visually-hidden") { raw t.LanguageLabel }
+
+            select (
+                id = "language-selector",
+                name = "language",
+                style = "padding: 5px; font-size: 1.2em;",
+                class' = "noto-color-emoji-regular"
+            ) {
+                option (value = "en", selected = (currentLanguage = English)) { raw "🇬🇧" }
+                option (value = "no", selected = (currentLanguage = Norwegian)) { raw "🇳🇴" }
+            }
+        }
     }
 
-let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement list) =
+let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (content: HtmlElement list) =
+    let t = getTranslations language
+
     html () {
         head () {
             meta (charset = "utf-8")
             meta (name = "viewport", content = "width=device-width, initial-scale=1")
+            link (rel = "preconnect", href = "https://fonts.googleapis.com")
+            link (rel = "preconnect", href = "https://fonts.gstatic.com", crossorigin = "true")
+            link (rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap")
+
             title () { raw pageTitle }
 
             style () {
@@ -73,22 +99,28 @@ let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement lis
                 }
                 .nav {
                     margin: 20px 0;
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
                 }
-                .nav a {
+                .nav-button {
                     display: inline-block;
-                    margin-right: 15px;
-                    padding: 10px 20px;
+                    padding: 10px 15px;
                     background-color: #ffffff;
                     color: #000000;
                     text-decoration: none;
                     border: 1px solid #000000;
                     border-radius: 3px;
                     transition: all 0.2s;
+                    flex: 1 1 auto;
+                    min-width: 50px;
+                    text-align: center;
                 }
-                .nav a:hover {
+                .nav-button:hover {
                     background-color: #000000;
                     color: #ffffff;
                 }
+
                 .results-list {
                     margin: 20px 0;
                 }
@@ -106,6 +138,9 @@ let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement lis
                 .results-list a:hover {
                     background-color: #000000;
                     color: #ffffff;
+                }
+                .icon {
+                    font-family: 'Noto Color Emoji', sans-serif;
                 }
                 .results-list .icon {
                     display: inline-block;
@@ -148,14 +183,44 @@ let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement lis
                     margin-right: 8px;
                     font-size: 1.1em;
                 }
+                .visually-hidden {
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    padding: 0;
+                    margin: -1px;
+                    overflow: hidden;
+                    clip: rect(0, 0, 0, 0);
+                    white-space: nowrap;
+                    border: 0;
+                }
+                .noto-color-emoji-regular {
+                  font-family: "Noto Color Emoji", sans-serif;
+                  font-weight: 400;
+                  font-style: normal;
+                }
                 """
             }
         }
 
         body () {
-            topNavigation beerTasteGuid
+            topNavigation beerTasteGuid t language
 
             for element in content do
                 element
+
+            // JavaScript for language switching
+            script () {
+                raw
+                    """
+                    document.getElementById('language-selector').addEventListener('change', function() {
+                        const selectedLanguage = this.value;
+                        const expiryDate = new Date();
+                        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                        document.cookie = 'beertaste-language=' + selectedLanguage + '; expires=' + expiryDate.toUTCString() + '; path=/; SameSite=Lax';
+                        location.reload();
+                    });
+                    """
+            }
         }
     }

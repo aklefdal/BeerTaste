@@ -1,25 +1,25 @@
-module BeerTaste.Web.Templates.BestBeers
+module BeerTaste.Web.Templates.OldManBeers
 
+open BeerTaste.Web.Localization
 open Oxpecker.ViewEngine
 open BeerTaste.Common.Results
 open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
-open BeerTaste.Web.Localization
 
 let view (beerTasteGuid: string) (language: Language) (results: BeerResult list) =
     let t = getTranslations language
 
-    layout t.BestBeers beerTasteGuid language [
-        h1 () { raw t.BestBeers }
+    layout t.OldManBeers beerTasteGuid language [
+        h1 () { raw t.OldManBeers }
 
-        renderNavigation beerTasteGuid t ResultPage.BestBeers
+        renderNavigation beerTasteGuid t ResultPage.OldManBeers
 
         table () {
             thead () {
                 tr () {
                     th () { raw t.Rank }
                     th () { raw t.Beer }
-                    th (class' = "value") { raw t.AverageScore }
+                    th (class' = "value") { raw t.AgeCorrelation }
                 }
             }
 
