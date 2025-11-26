@@ -1,6 +1,6 @@
 namespace BeerTaste.Common
 
-open System
+open System.Threading.Tasks
 open SendGrid
 open SendGrid.Helpers.Mail
 
@@ -12,20 +12,39 @@ type EmailConfiguration = {
 
 type EmailMessage = {
     To: string
-    ToName: string option
+    ToName: string
     Subject: string
     Body: string
 }
 
 module Email =
-    let sendEmail (config: EmailConfiguration) (message: EmailMessage) : Async<Result<unit, string>> =
-        async {
-            try
-                let client = new SendGridClient(config.SendGridApiKey)
+    let maskEmail (email: string) =
+        match email.Split '@' with
+        | [| local; domain |] ->
+            let maskedLocal =
+                if local.Length <= 2 then
+                    local + "**"
+                else
+                    local.Substring(0, 2) + "**"
 
-                let from = new EmailAddress(config.FromEmail, config.FromName)
-                let toName = message.ToName |> Option.defaultValue message.To
-                let toAddress = new EmailAddress(message.To, toName)
+            let keepDomain =
+                if domain.Length <= 5 then
+                    domain
+                else
+                    domain.Substring(domain.Length - 5)
+
+            $"%s{maskedLocal}@**%s{keepDomain}"
+
+        | _ -> email
+
+    let sendEmail (config: EmailConfiguration) (message: EmailMessage) : Task<Result<unit, string>> =
+        task {
+            try
+                let client = SendGridClient(config.SendGridApiKey)
+
+                let from = EmailAddress(config.FromEmail, config.FromName)
+                let toName = message.ToName
+                let toAddress = EmailAddress(message.To, toName)
 
                 // SendGrid API: plainTextContent, htmlContent (we only use plain text)
                 let msg = MailHelper.CreateSingleEmail(from, toAddress, message.Subject, message.Body, null)
@@ -35,47 +54,62 @@ module Email =
                 if response.IsSuccessStatusCode then
                     return Ok()
                 else
-                    let! body =
-                        response.Body.ReadAsStringAsync()
-                        |> Async.AwaitTask
+                    let! body = response.Body.ReadAsStringAsync()
 
                     return Error $"Failed to send email to {message.To}: {response.StatusCode} - {body}"
             with ex ->
-                return Error $"Failed to send email to {message.To}: {ex.Message}"
+                return Error $"Failed to send email to {message.To |> maskEmail}: {ex.Message}"
         }
+
+    let isAdmin (message: EmailMessage) : bool =
+        [
+            "alf.kare@lefdal.cc"
+            "aklefdal@gmail.com"
+            "alf.kare.lefdal@aurum.no"
+            "alf.lefdal@sikri.no"
+        ]
+        |> List.contains (message.To.ToLower())
 
     let sendEmails
         (config: EmailConfiguration)
         (messages: EmailMessage list)
-        : Async<(EmailMessage * Result<unit, string>) list> =
-        async {
+        : Task<(EmailMessage * Result<unit, string>) list> =
+        task {
             let! results =
                 messages
                 |> List.map (fun message ->
-                    async {
+                    task {
                         let! result = sendEmail config message
                         return (message, result)
                     })
-                |> Async.Parallel
+                |> Task.WhenAll
 
             return results |> Array.toList
         }
 
-    let createBeerTasteResultsEmail (tasterName: string) (beerTasteName: string) (resultsUrl: string) : EmailMessage = {
-        To = "" // Will be set by caller
-        ToName = Some tasterName
-        Subject = $"Beer Tasting Results: {beerTasteName}"
-        Body =
-            $"""Hi {tasterName},
+    let createBeerTasteResultsEmail
+        (beerTasteName: string)
+        (resultsUrl: string)
+        (taster: Taster)
+        : EmailMessage option =
+        match taster.Email with
+        | None -> None
+        | Some email ->
+            Some {
+                To = email
+                ToName = taster.Name
+                Subject = $"Beer Tasting Results: {beerTasteName}"
+                Body =
+                    $"""Hi {taster.Name},
 
-The results for the beer tasting event "{beerTasteName}" are now available!
+                    The results for the beer tasting event "{beerTasteName}" are now available!
 
-You can view the results at:
-{resultsUrl}
+                    You can view the results at:
+                    {resultsUrl}
 
-Thank you for participating!
+                    Thank you for participating!
 
-Best regards,
-BeerTaste System
-"""
-    }
+                    Best regards,
+                    BeerTaste System
+                    """
+            }

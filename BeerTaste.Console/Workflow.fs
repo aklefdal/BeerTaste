@@ -173,61 +173,41 @@ let sendEmailsToTasters (setup: ConsoleSetup) (beerTasteGuid: string) (tasters: 
     match setup.EmailConfig with
     | None -> AnsiConsole.MarkupLine("[grey]Email configuration not available. Skipping email sending.[/]")
     | Some emailConfig ->
+        let resultsUrl = $"{setup.ResultsBaseUrl}/{beerTasteGuid}/results"
+
+        let messages =
+            tasters
+            |> List.choose (Email.createBeerTasteResultsEmail setup.ShortName resultsUrl)
+            |> List.filter Email.isAdmin
+
         let confirm =
-            AnsiConsole.Confirm("[yellow]Do you want to send results emails to all tasters?[/]", false)
+            AnsiConsole.Confirm($"[yellow]Do you want to send results emails to {messages.Length}  tasters?[/]", false)
 
         if confirm then
             AnsiConsole.MarkupLine("[cyan]Sending emails to tasters...[/]")
 
-            let resultsUrl = $"{setup.ResultsBaseUrl}/{beerTasteGuid}/results"
+            let results = (Email.sendEmails emailConfig messages).Result
 
-            // Filter tasters who have email addresses
-            let tastersWithEmail =
-                tasters
-                |> List.choose (fun t ->
-                    match t.Email with
-                    | Some email when not (String.IsNullOrWhiteSpace(email)) -> Some(t, email)
+            let successes, failures =
+                results
+                |> List.partition (fun (_, result) -> result.IsOk)
+
+            let successCount = successes |> List.length
+            let failCount = failures |> List.length
+
+            if successCount > 0 then
+                AnsiConsole.MarkupLine($"[green]Successfully sent {successCount} email(s).[/]")
+
+            if failCount > 0 then
+                AnsiConsole.MarkupLine($"[red]Failed to send {failCount} email(s).[/]")
+
+                // Show details of failures
+                failures
+                |> List.choose (fun (msg, result) ->
+                    match result with
+                    | Error err -> Some(msg.To, err)
                     | _ -> None)
-
-            if tastersWithEmail.IsEmpty then
-                AnsiConsole.MarkupLine("[yellow]No tasters with email addresses found.[/]")
-            else
-                // Create email messages for each taster
-                let messages =
-                    tastersWithEmail
-                    |> List.map (fun (taster, email) ->
-                        let baseMessage = Email.createBeerTasteResultsEmail taster.Name setup.ShortName resultsUrl
-                        { baseMessage with To = email })
-
-                // Send emails (F# idiomatic way to block on async in console apps)
-                let results =
-                    Email.sendEmails emailConfig messages
-                    |> Async.RunSynchronously
-
-                // Partition results into successes and failures
-                let (successes, failures) =
-                    results
-                    |> List.partition (fun (_, result) ->
-                        match result with
-                        | Ok _ -> true
-                        | Error _ -> false)
-
-                let successCount = successes |> List.length
-                let failCount = failures |> List.length
-
-                if successCount > 0 then
-                    AnsiConsole.MarkupLine($"[green]Successfully sent {successCount} email(s).[/]")
-
-                if failCount > 0 then
-                    AnsiConsole.MarkupLine($"[red]Failed to send {failCount} email(s).[/]")
-
-                    // Show details of failures
-                    failures
-                    |> List.choose (fun (msg, result) ->
-                        match result with
-                        | Error err -> Some(msg.To, err)
-                        | _ -> None)
-                    |> List.iter (fun (email, err) -> AnsiConsole.MarkupLine($"[red]  - {email}: {err}[/]"))
+                |> List.iter (fun (email, err) -> AnsiConsole.MarkupLine($"[red]  - {email}: {err}[/]"))
         else
             AnsiConsole.MarkupLine("[yellow]Email sending cancelled.[/]")
 
