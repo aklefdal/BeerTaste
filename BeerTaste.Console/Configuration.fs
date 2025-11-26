@@ -21,11 +21,10 @@ type ConsoleSetup = {
 let setupBeerTasteFolder (filesFolder: string) (shortName: string) : unit =
     if not (Directory.Exists(filesFolder)) then
         AnsiConsole.MarkupLine($"[yellow]Warning: Files folder does not exist. Creating: {filesFolder}[/]")
-
         Directory.CreateDirectory(filesFolder) |> ignore
+
     // Display configured files folder
     AnsiConsole.MarkupLine($"[grey]Files folder: {filesFolder}[/]")
-
 
     // Create a subfolder for this BeerTaste
     let eventFolder = Path.Combine(filesFolder, shortName)
