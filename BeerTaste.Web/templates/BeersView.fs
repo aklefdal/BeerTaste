@@ -11,8 +11,6 @@ let view (beerTasteGuid: string) (language: Language) (beers: Beer list) =
     layout t.Beers beerTasteGuid language [
         h1 () { raw t.Beers }
 
-        p () { a (href = $"/{beerTasteGuid}/results") { raw t.BackToResults } }
-
         table () {
             thead () {
                 tr () {

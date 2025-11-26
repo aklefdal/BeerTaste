@@ -16,11 +16,9 @@ type Translations = {
     Tasters: string
     Scores: string
     Results: string
-    BackToResults: string
 
     // Page titles
     BeerTastingResults: string
-    AvailableResults: string
     BestBeers: string
     MostControversialBeers: string
     MostDeviantTasters: string
@@ -79,12 +77,10 @@ let englishTranslations: Translations = {
     Beers = "Beers"
     Tasters = "Tasters"
     Scores = "Scores"
-    BackToResults = "Back to Results"
     Results = "Results"
 
     // Page titles
     BeerTastingResults = "Beer Tasting Results"
-    AvailableResults = "Available Results"
     BestBeers = "Best Beers"
     MostControversialBeers = "Most Controversial Beers"
     MostDeviantTasters = "Most Deviant Tasters"
@@ -144,11 +140,9 @@ let norwegianTranslations: Translations = {
     Tasters = "Smakere"
     Scores = "Poeng"
     Results = "Resultater"
-    BackToResults = "Tilbake til resultater"
 
     // Page titles
     BeerTastingResults = "Ølsmaking resultater"
-    AvailableResults = "Tilgjengelige resultater"
     BestBeers = "Beste øl"
     MostControversialBeers = "Mest kontroversielle øl"
     MostDeviantTasters = "Mest avvikende smakere"
