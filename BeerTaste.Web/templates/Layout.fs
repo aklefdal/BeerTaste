@@ -12,11 +12,12 @@ let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: La
         a (href = $"/{beerTasteGuid}/results") { raw t.Results }
 
         div (style = "float: right;") {
-            label (for' = "language-selector", style = "margin-right: 5px;") { raw t.LanguageLabel }
+            // Visually hidden label for accessibility (screen readers)
+            label (for' = "language-selector", class' = "visually-hidden") { raw t.LanguageLabel }
 
-            select (id = "language-selector", name = "language", style = "padding: 5px;") {
-                option (value = "en", selected = (currentLanguage = English)) { raw "English" }
-                option (value = "no", selected = (currentLanguage = Norwegian)) { raw "Norsk" }
+            select (id = "language-selector", name = "language", style = "padding: 5px; font-size: 1.2em;") {
+                option (value = "en", selected = (currentLanguage = English)) { raw "🇬🇧" }
+                option (value = "no", selected = (currentLanguage = Norwegian)) { raw "🇳🇴" }
             }
         }
     }
@@ -159,6 +160,17 @@ let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (con
                     display: inline-block;
                     margin-right: 8px;
                     font-size: 1.1em;
+                }
+                .visually-hidden {
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    padding: 0;
+                    margin: -1px;
+                    overflow: hidden;
+                    clip: rect(0, 0, 0, 0);
+                    white-space: nowrap;
+                    border: 0;
                 }
                 """
             }

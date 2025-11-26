@@ -99,6 +99,7 @@ let oldManBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Endpo
         let tasters = Tasters.fetchTasters storage beerTasteGuid
         let scores = Scores.fetchScores storage beerTasteGuid
         let results = Results.correlationToAge beers tasters scores
+
         OldManBeers.view beerTasteGuid language results
         |> htmlView
         <| ctx

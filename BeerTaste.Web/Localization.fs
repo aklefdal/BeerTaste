@@ -238,16 +238,17 @@ let getLanguageFromHeader (ctx: HttpContext) : Language option =
     | true, values ->
         let acceptLanguage = values.ToString().ToLowerInvariant()
 
-        let languages = acceptLanguage.Split([| ','; ';' |], StringSplitOptions.RemoveEmptyEntries)
+        // Split by comma first (language entries), then extract language code before semicolon (quality value)
+        let languages =
+            acceptLanguage.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            |> Array.map (fun lang -> lang.Split(';').[0].Trim())
 
         if
             languages
             |> Array.exists (fun lang ->
-                let trimmed = lang.Trim()
-
-                trimmed.StartsWith("no")
-                || trimmed.StartsWith("nb")
-                || trimmed.StartsWith("nn"))
+                lang.StartsWith("no")
+                || lang.StartsWith("nb")
+                || lang.StartsWith("nn"))
         then
             Some Norwegian
         else
