@@ -3,25 +3,28 @@ module BeerTaste.Web.Templates.ScoresView
 open Oxpecker.ViewEngine
 open BeerTaste.Common
 open BeerTaste.Web.Templates.Layout
+open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (beers: Beer list) (tasters: Taster list) (scores: Score list) =
+let view (beerTasteGuid: string) (language: Language) (beers: Beer list) (tasters: Taster list) (scores: Score list) =
+    let t = getTranslations language
+
     // Create a lookup for scores by (beerId, tasterName)
     let scoreLookup =
         scores
         |> List.map (fun s -> (s.BeerId, s.TasterName), s.ScoreValue)
         |> Map.ofList
 
-    layout "Scores" beerTasteGuid [
-        h1 () { raw "Scores" }
+    layout t.Scores beerTasteGuid language [
+        h1 () { raw t.Scores }
 
-        p () { a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" } }
+        p () { a (href = $"/{beerTasteGuid}/results") { raw t.BackToResults } }
 
         table () {
             thead () {
                 tr () {
-                    th () { raw "Id" }
-                    th () { raw "Producer" }
-                    th () { raw "Name" }
+                    th () { raw t.Id }
+                    th () { raw t.Producer }
+                    th () { raw t.Name }
 
                     for taster in tasters do
                         th (class' = "value") { raw taster.Name }

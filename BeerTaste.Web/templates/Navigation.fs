@@ -1,6 +1,7 @@
 module BeerTaste.Web.Templates.Navigation
 
 open Oxpecker.ViewEngine
+open BeerTaste.Web.Localization
 
 type ResultPage =
     | BestBeers
@@ -31,15 +32,15 @@ let pageToRoute page =
     | CheapAlcohol -> "cheapalcohol"
     | OldManBeers -> "oldmanbeers"
 
-let pageToTitle page =
+let pageToTitle (t: Translations) page =
     match page with
-    | BestBeers -> "Best Beers"
-    | Controversial -> "Most Controversial Beers"
-    | Deviant -> "Most Deviant Tasters"
-    | Similar -> "Most Similar Tasters"
-    | StrongBeers -> "Most Fond of Strong Beers"
-    | CheapAlcohol -> "Most Fond of Cheap Alcohol"
-    | OldManBeers -> "Beers Preferred by Older Tasters"
+    | BestBeers -> t.BestBeers
+    | Controversial -> t.MostControversialBeers
+    | Deviant -> t.MostDeviantTasters
+    | Similar -> t.MostSimilarTasters
+    | StrongBeers -> t.MostFondOfStrongBeers
+    | CheapAlcohol -> t.MostFondOfCheapAlcohol
+    | OldManBeers -> t.OldManBeers
 
 let pageToIcon page =
     match page with
@@ -51,13 +52,13 @@ let pageToIcon page =
     | CheapAlcohol -> "💰"
     | OldManBeers -> "👴"
 
-let renderNavigation (beerTasteGuid: string) (currentPage: ResultPage) =
+let renderNavigation (beerTasteGuid: string) (t: Translations) (currentPage: ResultPage) =
     div (class' = "results-nav") {
         for page in allPages do
             if page = currentPage then
                 span (class' = "results-nav-button current") {
                     span (class' = "icon") { raw (pageToIcon page) }
-                    raw (pageToTitle page)
+                    raw (pageToTitle t page)
                 }
             else
                 a (class' = "results-nav-button", href = $"/{beerTasteGuid}/results/{pageToRoute page}") {

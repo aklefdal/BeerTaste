@@ -4,8 +4,11 @@ open Oxpecker.ViewEngine
 open BeerTaste.Common.Results
 open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
+open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (results: TasterPairResult list) =
+let view (beerTasteGuid: string) (language: Language) (results: TasterPairResult list) =
+    let t = getTranslations language
+
     // Extract unique taster names from results
     let tasterNames =
         results
@@ -13,17 +16,17 @@ let view (beerTasteGuid: string) (results: TasterPairResult list) =
         |> List.distinct
         |> List.sort
 
-    layout "Most Similar Tasters" beerTasteGuid [
-        h1 () { raw "Most Similar Tasters" }
+    layout t.MostSimilarTasters beerTasteGuid language [
+        h1 () { raw t.MostSimilarTasters }
 
-        renderNavigation beerTasteGuid ResultPage.Similar
+        renderNavigation beerTasteGuid t ResultPage.Similar
 
         // Dropdown for highlighting taster
         div (class' = "highlight-controls") {
-            label (for' = "taster-highlight") { raw "Highlight: " }
+            label (for' = "taster-highlight") { raw $"{t.Highlight}: " }
 
             select (id = "taster-highlight") {
-                option (value = "") { raw "None" }
+                option (value = "") { raw t.None }
 
                 for taster in tasterNames do
                     option (value = taster) { raw taster }
@@ -33,10 +36,10 @@ let view (beerTasteGuid: string) (results: TasterPairResult list) =
         table (id = "similar-tasters-table") {
             thead () {
                 tr () {
-                    th () { raw "Rank" }
-                    th () { raw "Taster 1" }
-                    th () { raw "Taster 2" }
-                    th (class' = "value") { raw "Correlation" }
+                    th () { raw t.Rank }
+                    th () { raw t.Taster1 }
+                    th () { raw t.Taster2 }
+                    th (class' = "value") { raw t.Correlation }
                 }
             }
 

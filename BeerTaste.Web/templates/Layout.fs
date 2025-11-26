@@ -1,17 +1,30 @@
 module BeerTaste.Web.Templates.Layout
 
 open Oxpecker.ViewEngine
+open BeerTaste.Web.Localization
 
-let topNavigation (beerTasteGuid: string) =
+let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: Language) =
     div (class' = "nav") {
-        a (href = $"/{beerTasteGuid}") { raw "🏠 Home" }
-        a (href = $"/{beerTasteGuid}/beers") { raw "Beers" }
-        a (href = $"/{beerTasteGuid}/tasters") { raw "Tasters" }
-        a (href = $"/{beerTasteGuid}/scores") { raw "Scores" }
-        a (href = $"/{beerTasteGuid}/results") { raw "Results" }
+        a (href = $"/{beerTasteGuid}") { raw $"🏠 {t.Home}" }
+        a (href = $"/{beerTasteGuid}/beers") { raw t.Beers }
+        a (href = $"/{beerTasteGuid}/tasters") { raw t.Tasters }
+        a (href = $"/{beerTasteGuid}/scores") { raw t.Scores }
+        a (href = $"/{beerTasteGuid}/results") { raw t.Results }
+
+        div (style = "float: right;") {
+            // Visually hidden label for accessibility (screen readers)
+            label (for' = "language-selector", class' = "visually-hidden") { raw t.LanguageLabel }
+
+            select (id = "language-selector", name = "language", style = "padding: 5px; font-size: 1.2em;") {
+                option (value = "en", selected = (currentLanguage = English)) { raw "🇬🇧" }
+                option (value = "no", selected = (currentLanguage = Norwegian)) { raw "🇳🇴" }
+            }
+        }
     }
 
-let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement list) =
+let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (content: HtmlElement list) =
+    let t = getTranslations language
+
     html () {
         head () {
             meta (charset = "utf-8")
@@ -148,14 +161,39 @@ let layout (pageTitle: string) (beerTasteGuid: string) (content: HtmlElement lis
                     margin-right: 8px;
                     font-size: 1.1em;
                 }
+                .visually-hidden {
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    padding: 0;
+                    margin: -1px;
+                    overflow: hidden;
+                    clip: rect(0, 0, 0, 0);
+                    white-space: nowrap;
+                    border: 0;
+                }
                 """
             }
         }
 
         body () {
-            topNavigation beerTasteGuid
+            topNavigation beerTasteGuid t language
 
             for element in content do
                 element
+
+            // JavaScript for language switching
+            script () {
+                raw
+                    """
+                    document.getElementById('language-selector').addEventListener('change', function() {
+                        const selectedLanguage = this.value;
+                        const expiryDate = new Date();
+                        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+                        document.cookie = 'beertaste-language=' + selectedLanguage + '; expires=' + expiryDate.toUTCString() + '; path=/; SameSite=Lax';
+                        location.reload();
+                    });
+                    """
+            }
         }
     }

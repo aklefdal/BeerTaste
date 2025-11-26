@@ -3,25 +3,28 @@ module BeerTaste.Web.Templates.BeersView
 open Oxpecker.ViewEngine
 open BeerTaste.Common
 open BeerTaste.Web.Templates.Layout
+open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (beers: Beer list) =
-    layout "Beers" beerTasteGuid [
-        h1 () { raw "Beers" }
+let view (beerTasteGuid: string) (language: Language) (beers: Beer list) =
+    let t = getTranslations language
 
-        p () { a (href = $"/{beerTasteGuid}/results") { raw "Back to Results" } }
+    layout t.Beers beerTasteGuid language [
+        h1 () { raw t.Beers }
+
+        p () { a (href = $"/{beerTasteGuid}/results") { raw t.BackToResults } }
 
         table () {
             thead () {
                 tr () {
-                    th () { raw "Id" }
-                    th () { raw "Name" }
-                    th () { raw "Type" }
-                    th () { raw "Origin" }
-                    th () { raw "Producer" }
-                    th (class' = "value") { raw "ABV" }
-                    th (class' = "value") { raw "Volume" }
-                    th (class' = "value") { raw "Price" }
-                    th () { raw "Packaging" }
+                    th () { raw t.Id }
+                    th () { raw t.Name }
+                    th () { raw t.Type }
+                    th () { raw t.Origin }
+                    th () { raw t.Producer }
+                    th (class' = "value") { raw t.ABV }
+                    th (class' = "value") { raw t.Volume }
+                    th (class' = "value") { raw t.Price }
+                    th () { raw t.Packaging }
                 }
             }
 
