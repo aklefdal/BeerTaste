@@ -241,7 +241,7 @@ let getLanguageFromHeader (ctx: HttpContext) : Language option =
         // Split by comma first (language entries), then extract language code before semicolon (quality value)
         let languages =
             acceptLanguage.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            |> Array.map (fun lang -> lang.Split(';').[0].Trim())
+            |> Array.map _.Split(';').[0].Trim()
 
         if
             languages
