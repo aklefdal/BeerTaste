@@ -10,8 +10,6 @@ let view (beerTasteGuid: string) (language: Language) =
     layout t.BeerTastingResults beerTasteGuid language [
         h1 () { raw t.BeerTastingResults }
 
-        h2 () { raw t.AvailableResults }
-
         div (class' = "results-list") {
             a (href = $"/{beerTasteGuid}/results/bestbeers") {
                 span (class' = "icon") { raw "★" }
