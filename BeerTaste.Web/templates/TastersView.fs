@@ -5,26 +5,6 @@ open BeerTaste.Common
 open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Localization
 
-let maskEmail (email: string) =
-    match email.Split '@' with
-    | [| local; domain |] ->
-        let maskedLocal =
-            if local.Length <= 2 then
-                local + "**"
-            else
-                local.Substring(0, 2) + "**"
-
-        let keepDomain =
-            if domain.Length <= 5 then
-                domain
-            else
-                domain.Substring(domain.Length - 5)
-
-        $"%s{maskedLocal}@**%s{keepDomain}"
-
-    | _ -> email
-
-
 let view (beerTasteGuid: string) (language: Language) (tasters: Taster list) =
     let t = getTranslations language
 
@@ -48,7 +28,7 @@ let view (beerTasteGuid: string) (language: Language) (tasters: Taster list) =
                         td () {
                             raw (
                                 taster.Email
-                                |> Option.map maskEmail
+                                |> Option.map Email.maskEmail
                                 |> Option.defaultValue ""
                             )
                         }

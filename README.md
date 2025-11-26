@@ -10,6 +10,7 @@ A comprehensive F# data analysis system for organizing and analyzing beer tastin
   - Most controversial beers by standard deviation
   - Taster similarity analysis using Pearson correlations
   - Preference correlations with ABV and price metrics
+- **Email Notifications**: Send results to tasters automatically when scoring is complete (optional)
 - **Multiple Interfaces**:
   - Console application for event setup and data management
   - Web application for results presentation
@@ -195,6 +196,14 @@ Store sensitive configuration using .NET user secrets:
 cd BeerTaste.Console
 dotnet user-secrets set "BeerTaste:TableStorageConnectionString" "<connection-string>"
 dotnet user-secrets set "BeerTaste:FilesFolder" "C:\path\to\data\folder"
+
+# Results base URL (optional - defaults to http://localhost:5000)
+dotnet user-secrets set "BeerTaste:ResultsBaseUrl" "http://localhost:5000"
+
+# Email configuration (optional - for sending results to tasters via SendGrid)
+dotnet user-secrets set "BeerTaste:Email:SendGridApiKey" "<your-sendgrid-api-key>"
+dotnet user-secrets set "BeerTaste:Email:FromEmail" "<your-verified-sender@example.com>"
+dotnet user-secrets set "BeerTaste:Email:FromName" "BeerTaste"
 ```
 
 ### Environment Variables
@@ -205,15 +214,49 @@ Alternatively, use environment variables:
 # PowerShell
 $env:BeerTaste__TableStorageConnectionString = "<connection-string>"
 $env:BeerTaste__FilesFolder = "C:\path\to\data\folder"
+$env:BeerTaste__ResultsBaseUrl = "http://localhost:5000"
+$env:BeerTaste__Email__SendGridApiKey = "<your-sendgrid-api-key>"
+$env:BeerTaste__Email__FromEmail = "<your-verified-sender@example.com>"
+$env:BeerTaste__Email__FromName = "BeerTaste"
 
 # Bash
 export BeerTaste__TableStorageConnectionString="<connection-string>"
 export BeerTaste__FilesFolder="/path/to/data/folder"
+export BeerTaste__ResultsBaseUrl="http://localhost:5000"
+export BeerTaste__Email__SendGridApiKey="<your-sendgrid-api-key>"
+export BeerTaste__Email__FromEmail="<your-verified-sender@example.com>"
+export BeerTaste__Email__FromName="BeerTaste"
 ```
 
 ### Default Folder
 
 If `FilesFolder` is not configured, defaults to `./BeerTastes` relative to the current directory.
+
+### Email Configuration (Optional)
+
+The email feature allows you to send results to all tasters when scoring is complete. Configuration is optional and the application works without it.
+
+**Email Service: SendGrid**
+
+BeerTaste uses SendGrid for reliable email delivery. SendGrid offers:
+- Free tier: 100 emails/day (plenty for most tasting events)
+- Simple API with just an API key (no SMTP configuration needed)
+- High deliverability rates
+- Email tracking and analytics
+
+**SendGrid Setup:**
+1. Sign up for a free account at [SendGrid](https://sendgrid.com/)
+2. Verify your sender email address (or domain)
+3. Create an API key with "Mail Send" permissions
+4. Configure the API key in user secrets or environment variables
+
+**Usage:**
+When scoring is complete, the console application will:
+1. Prompt: "Do you want to send results emails to all tasters?"
+2. If you select "Yes", emails are sent to all tasters with email addresses
+3. Each email contains a personalized link to view the results
+
+If email configuration is missing or incomplete, the feature is disabled and the application continues normally.
 
 ## Development
 

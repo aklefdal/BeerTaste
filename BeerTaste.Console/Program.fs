@@ -14,9 +14,9 @@ let workflow (args: string[]) =
         let! setup = args |> getConsoleSetup
         let beerTasteGuid = setupBeerTaste setup
         let! beers = verifyBeers setup beerTasteGuid
-        let! _ = verifyTasters setup beerTasteGuid beers
+        let! tasters = verifyTasters setup beerTasteGuid beers
         let! scores = verifyScores setup beerTasteGuid
-        showResults beerTasteGuid scores
+        showResults setup beerTasteGuid scores tasters
     }
 
 [<EntryPoint>]
