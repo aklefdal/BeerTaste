@@ -45,7 +45,7 @@ let view (beerTasteGuid: string) (language: Language) =
 
             a (href = $"/{beerTasteGuid}/results/oldmanbeers") {
                 span (class' = "icon") { raw "👴" }
-                raw "Beers Preferred by Older Tasters"
+                raw t.OldManBeers
             }
         }
     ]
