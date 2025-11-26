@@ -1,11 +1,15 @@
 namespace BeerTaste.Common
 
 open System.Threading.Tasks
-open SendGrid
-open SendGrid.Helpers.Mail
+open MailKit.Net.Smtp
+open MailKit.Security
+open MimeKit
 
 type EmailConfiguration = {
-    SendGridApiKey: string
+    SmtpServer: string
+    SmtpPort: int
+    SmtpUsername: string
+    SmtpPassword: string
     FromEmail: string
     FromName: string
 }
@@ -40,23 +44,31 @@ module Email =
     let sendEmail (config: EmailConfiguration) (message: EmailMessage) : Task<Result<unit, string>> =
         task {
             try
-                let client = SendGridClient(config.SendGridApiKey)
+                use client = new SmtpClient()
 
-                let from = EmailAddress(config.FromEmail, config.FromName)
-                let toName = message.ToName
-                let toAddress = EmailAddress(message.To, toName)
+                // Connect to SMTP server
+                do! client.ConnectAsync(config.SmtpServer, config.SmtpPort, SecureSocketOptions.Auto)
 
-                // SendGrid API: plainTextContent, htmlContent (we only use plain text)
-                let msg = MailHelper.CreateSingleEmail(from, toAddress, message.Subject, message.Body, null)
+                // Authenticate
+                do! client.AuthenticateAsync(config.SmtpUsername, config.SmtpPassword)
 
-                let! response = client.SendEmailAsync(msg)
+                // Create email message
+                let mimeMessage = new MimeMessage()
+                mimeMessage.From.Add(new MailboxAddress(config.FromName, config.FromEmail))
+                mimeMessage.To.Add(new MailboxAddress(message.ToName, message.To))
+                mimeMessage.Subject <- message.Subject
 
-                if response.IsSuccessStatusCode then
-                    return Ok()
-                else
-                    let! body = response.Body.ReadAsStringAsync()
+                let bodyPart = new TextPart("plain")
+                bodyPart.Text <- message.Body
+                mimeMessage.Body <- bodyPart
 
-                    return Error $"Failed to send email to {message.To |> maskEmail}: {response.StatusCode} - {body}"
+                // Send email
+                let! _ = client.SendAsync(mimeMessage)
+
+                // Disconnect
+                do! client.DisconnectAsync(true)
+
+                return Ok()
             with ex ->
                 return Error $"Failed to send email to {message.To |> maskEmail}: {ex.Message}"
         }

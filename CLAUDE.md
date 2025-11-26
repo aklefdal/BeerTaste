@@ -17,7 +17,7 @@ BeerTaste is an F# data analysis system for organizing and analyzing beer tastin
 - Spectre.Console 0.54.0 for CLI interactions
 - Fantomas 7.0.3 for code formatting
 - FsToolkit.ErrorHandling 5.1.0 for computation expressions (option workflow)
-- SendGrid 9.29.3 for email notifications
+- MailKit 4.9.0 for email notifications
 
 ## Repository Structure
 
@@ -29,7 +29,7 @@ beertaste/
 │   ├── Tasters.fs               # Taster domain types and Azure operations
 │   ├── BeerTaste.fs             # BeerTaste event types and Azure CRUD
 │   ├── Scores.fs                # Score types and Azure operations
-│   ├── Email.fs                 # Email notifications via SendGrid
+│   ├── Email.fs                 # Email notifications via SMTP (MailKit)
 │   ├── Results.fs               # Statistical analysis functions
 │   └── BeerTaste.Common.fsproj  # .NET class library project
 ├── BeerTaste.Console/            # Compiled F# console program (modular architecture)
@@ -138,8 +138,13 @@ dotnet user-secrets set "BeerTaste:TableStorageConnectionString" "<your-connecti
 # If not set, defaults to ./BeerTastes relative to current directory
 dotnet user-secrets set "BeerTaste:FilesFolder" "C:\path\to\your\folder"
 
-# Set SendGrid API key for email notifications (optional)
-dotnet user-secrets set "BeerTaste:SendGridApiKey" "<your-sendgrid-api-key>"
+# Set SMTP email configuration for email notifications (optional)
+dotnet user-secrets set "BeerTaste:Smtp:Server" "smtp.gmail.com"
+dotnet user-secrets set "BeerTaste:Smtp:Port" "587"
+dotnet user-secrets set "BeerTaste:Smtp:Username" "your-email@gmail.com"
+dotnet user-secrets set "BeerTaste:Smtp:Password" "your-app-password"
+dotnet user-secrets set "BeerTaste:Smtp:FromEmail" "your-email@gmail.com"
+dotnet user-secrets set "BeerTaste:Smtp:FromName" "BeerTaste System"
 
 # Set web application base URL for email links (optional)
 # If not set, defaults to https://beertaste.azurewebsites.net
@@ -148,7 +153,12 @@ dotnet user-secrets set "BeerTaste:ResultsBaseUrl" "https://your-app-url.com"
 # Or use environment variables
 $env:BeerTaste__TableStorageConnectionString = "<your-connection-string>"
 $env:BeerTaste__FilesFolder = "C:\path\to\your\folder"
-$env:BeerTaste__SendGridApiKey = "<your-sendgrid-api-key>"
+$env:BeerTaste__Smtp__Server = "smtp.gmail.com"
+$env:BeerTaste__Smtp__Port = "587"
+$env:BeerTaste__Smtp__Username = "your-email@gmail.com"
+$env:BeerTaste__Smtp__Password = "your-app-password"
+$env:BeerTaste__Smtp__FromEmail = "your-email@gmail.com"
+$env:BeerTaste__Smtp__FromName = "BeerTaste System"
 $env:BeerTaste__ResultsBaseUrl = "https://your-app-url.com"
 ```
 
@@ -176,16 +186,16 @@ A .NET 10.0 class library for code shared between Console and Web applications:
   - **Tasters.fs** - Taster domain types and Azure storage operations (`Taster` with optional Email and BirthYear, `tasterToEntity`, `entityToTaster`, `addTasters`, `fetchTasters`)
   - **BeerTaste.fs** - BeerTaste event types and Azure CRUD operations (`BeerTaste` record, `beertasteToEntity`, `entityToBeerTaste`, `addBeerTaste`, `getBeerTasteGuid`)
   - **Scores.fs** - Score type with optional int values (`ScoreValue: int option`), entity conversion (`entityToScore`, `scoreToEntity`), validation (`hasScores`, `isComplete`), and CRUD operations
-  - **Email.fs** - Email notifications via SendGrid (`EmailConfiguration`, `EmailMessage`, `sendEmail`, `sendEmails`, `createBeerTasteResultsEmail`, `maskEmail`, `isAdmin`)
+  - **Email.fs** - Email notifications via SMTP/MailKit (`EmailConfiguration`, `EmailMessage`, `sendEmail`, `sendEmails`, `createBeerTasteResultsEmail`, `maskEmail`, `isAdmin`)
   - **Results.fs** - Statistical analysis functions (correlations, averages, standard deviations, age correlations), converts int scores to float for calculations (`beerAverages`, `beerStandardDeviations`, `correlationToAverages`, `correlationBetweenTasters`, `correlationToAbv`, `correlationToAbvPrice`, `correlationToAge`)
 - **Responsibilities:**
   - All Azure Table Storage entity types and operations
   - Domain model definitions with optional score values
   - Statistical analysis for results computation
-  - Email notifications to tasters (SendGrid integration)
+  - Email notifications to tasters (SMTP/MailKit integration)
   - Data access layer for both Console and Web
 - **Documentation:** Generates XML documentation file for IntelliSense support
-- **Email Functionality:** SendGrid-based email notifications with admin filtering (only admins receive emails in production)
+- **Email Functionality:** SMTP-based email notifications with admin filtering (only admins receive emails in production)
 
 ### Console Application (BeerTaste.Console)
 
@@ -198,7 +208,7 @@ The console application focuses on **Excel I/O and user interaction**, delegatin
    - Sets up folder structure and copies Excel template
    - Returns `ConsoleSetup` record with all necessary context (includes EmailConfig and ResultsBaseUrl)
    - Function: `getConsoleSetup` returns `Option<ConsoleSetup>`
-   - Function: `getEmailConfig` returns `Option<EmailConfiguration>` for SendGrid
+   - Function: `getEmailConfig` returns `Option<EmailConfiguration>` for SMTP
    - Function: `getResultsBaseUrl` returns base URL (defaults to https://beertaste.azurewebsites.net)
    - References BeerTaste.Common.Storage for table clients
 
@@ -227,7 +237,7 @@ The console application focuses on **Excel I/O and user interaction**, delegatin
    - User prompts: `promptForDescription`, `promptForDate`, `promptDoneEditingBeers`, `promptDoneEditingTasters`
    - Workflow functions: `setupBeerTaste`, `verifyBeers`, `verifyTasters`, `verifyScores`, `createScoreSchema`
    - `showResults` - Opens browser to results page when scores are complete
-   - `sendEmailsToTasters` - Sends result notification emails via SendGrid (admin-only in production)
+   - `sendEmailsToTasters` - Sends result notification emails via SMTP (admin-only in production)
    - Coordinates between Console modules and Common modules
    - Uses Spectre.Console for all user interaction
    - Handles user interaction and business logic flow
@@ -296,7 +306,7 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 **IMPORTANT:** Strict separation of concerns across projects to maintain clean architecture:
 
 **BeerTaste.Common (Shared Library)**
-- ✅ Can reference: Core .NET libraries (System.*, FSharp.Core), Azure.Data.Tables, SendGrid
+- ✅ Can reference: Core .NET libraries (System.*, FSharp.Core), Azure.Data.Tables, MailKit
 - ❌ Cannot reference: EPPlus, Spectre.Console, System.Console, ASP.NET Core web libraries
 - **Purpose:** Domain models, Azure Table Storage operations, email notifications, shared business logic
 - **Principle:** No UI dependencies - only data access, email, and domain logic
@@ -328,7 +338,7 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 | Core .NET (System.*, FSharp.Core) | ✅ | ✅ | ✅ |
 | BeerTaste.Common | N/A | ✅ | ✅ |
 | Azure.Data.Tables | ✅ (owns storage) | ❌ | ❌ |
-| SendGrid | ✅ (owns email) | ❌ | ❌ |
+| MailKit | ✅ (owns email) | ❌ | ❌ |
 | EPPlus | ❌ | ✅ (exclusive) | ❌ |
 | Spectre.Console | ❌ | ✅ (exclusive) | ❌ |
 | System.Console | ❌ | ✅ (exclusive) | ❌ |
@@ -415,7 +425,7 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 - `BeerTaste.Common/Tasters.fs` - Taster domain types (`Taster` with optional Email and BirthYear) and Azure operations (`tasterToEntity`, `entityToTaster`, `addTasters`, `fetchTasters`, `deleteTastersForPartitionKey`)
 - `BeerTaste.Common/BeerTaste.fs` - BeerTaste event types (`BeerTaste` record) and Azure CRUD operations (`beertasteToEntity`, `entityToBeerTaste`, `addBeerTaste`, `getBeerTasteGuid`, `fetchBeerTaste`)
 - `BeerTaste.Common/Scores.fs` - Score type with optional values, entity conversion (`entityToScore`, `scoreToEntity`), validation (`hasScores`, `isComplete`), CRUD operations (`addScores`, `fetchScores`, `deleteScoresForBeerTaste`)
-- `BeerTaste.Common/Email.fs` - Email notifications via SendGrid (`EmailConfiguration`, `EmailMessage`, `sendEmail`, `sendEmails`, `createBeerTasteResultsEmail`, `maskEmail`, `isAdmin`)
+- `BeerTaste.Common/Email.fs` - Email notifications via SMTP/MailKit (`EmailConfiguration`, `EmailMessage`, `sendEmail`, `sendEmails`, `createBeerTasteResultsEmail`, `maskEmail`, `isAdmin`)
 - `BeerTaste.Common/Results.fs` - Statistical analysis functions (`beerAverages`, `beerStandardDeviations`, `correlationToAverages`, `correlationBetweenTasters`, `correlationToAbv`, `correlationToAbvPrice`, `correlationToAge`)
 - `BeerTaste.Common/BeerTaste.Common.fsproj` - Class library project configuration
 
@@ -460,7 +470,7 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 ### Configuration
 
 - `.editorconfig` - F# formatting rules (crucial for consistency)
-- User secrets (via `dotnet user-secrets`): `BeerTaste:TableStorageConnectionString`, `BeerTaste:FilesFolder`, `BeerTaste:SendGridApiKey`, `BeerTaste:ResultsBaseUrl`
+- User secrets (via `dotnet user-secrets`): `BeerTaste:TableStorageConnectionString`, `BeerTaste:FilesFolder`, `BeerTaste:Smtp:*`, `BeerTaste:ResultsBaseUrl`
 
 ## Excel Data Schema
 
@@ -510,14 +520,14 @@ Where the administrator (me) adds all the scores given by the tasters. These are
   - **Tasters.fs** - Taster domain types with optional Email and BirthYear, and Azure CRUD operations
   - **BeerTaste.fs** - BeerTaste event types (with GUID, ShortName, Description, Date) and Azure CRUD operations
   - **Scores.fs** - Score type with optional values (`ScoreValue: int option`), TableEntity conversion, validation
-  - **Email.fs** - SendGrid email notifications with admin filtering (only admins receive emails in production)
+  - **Email.fs** - SMTP email notifications with admin filtering (only admins receive emails in production)
   - **Results.fs** - Statistical analysis (correlations, averages, standard deviations, age correlations)
 - **Project Type:** .NET class library targeting net10.0
 - **XML Documentation:** Enabled for IntelliSense support in consuming projects
-- **Dependencies:** Azure.Data.Tables, FSharp.Stats, and SendGrid (no UI dependencies)
+- **Dependencies:** Azure.Data.Tables, FSharp.Stats, and MailKit (no UI dependencies)
   - ✅ Azure.Data.Tables 12.11.0 for all storage operations
   - ✅ FSharp.Stats 0.6.0 for statistical analysis
-  - ✅ SendGrid 9.29.3 for email notifications
+  - ✅ MailKit 4.9.0 for email notifications
   - ❌ No EPPlus, Spectre.Console, System.Console, or ASP.NET Core
   - Keep it focused on data access, email, domain logic, and analysis
 
