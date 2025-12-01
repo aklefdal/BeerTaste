@@ -86,11 +86,10 @@ let deleteAndCreateScoreSchema
     (tasters: Taster list)
     : unit =
     // Delete scores from Azure Table Storage
-    Scores.deleteScoresForBeerTaste scoresTableClient beerTasteGuid
-
+    (Scores.deleteScoresForBeerTaste scoresTableClient beerTasteGuid).GetAwaiter().GetResult()
     use package = new ExcelPackage(fileName)
 
-    // Delete existing ScoreSchema worksheet if it exists
+    // Delete the existing ScoreSchema worksheet if it exists
     let existingWorksheet = package.Workbook.Worksheets[sheetName]
 
     if existingWorksheet <> null then

@@ -52,7 +52,7 @@ module Email =
                 // Authenticate
                 do! client.AuthenticateAsync(config.SmtpUsername, config.SmtpPassword)
 
-                // Create email message
+                // Create the email message
                 let mimeMessage = new MimeMessage()
                 mimeMessage.From.Add(new MailboxAddress(config.FromName, config.FromEmail))
                 mimeMessage.To.Add(new MailboxAddress(message.ToName, message.To))

@@ -1,5 +1,6 @@
 namespace BeerTaste.Common
 
+open System.Threading.Tasks
 open Azure.Data.Tables
 
 /// <summary>
@@ -40,24 +41,25 @@ module Scores =
         entity.Add("ScoreValue", score.ScoreValue |> Option.toNullable)
         entity
 
-    let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : unit =
-        try
-            scoresTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.iter (scoresTable.DeleteEntity >> ignore)
-        with _ ->
-            ()
+    let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : Task =
+        task {
+            let deleteTasks =
+                scoresTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+                |> Seq.map (fun e -> scoresTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
+                |> Seq.toArray
 
-    let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : unit =
+            do! Task.WhenAll(deleteTasks)
+        }
+
+    let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : Task =
         scores
         |> List.map (scoreToEntity beerTasteGuid)
-        |> List.iter (scoresTable.AddEntity >> ignore)
+        |> Storage.addEntitiesBatch scoresTable
 
     let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
-        try
-            storage.ScoresTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.map entityToScore
-            |> Seq.toList
-        with _ -> []
+        storage.ScoresTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+        |> Seq.map entityToScore
+        |> Seq.toList
 
     let hasScores (scores: Score list) : bool =
         scores

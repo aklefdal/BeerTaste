@@ -1,5 +1,6 @@
 namespace BeerTaste.Common
 
+open System.Threading.Tasks
 open Azure.Data.Tables
 
 /// <summary>
@@ -75,21 +76,22 @@ module Beers =
     }
 
     let fetchBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Beer list =
-        try
-            storage.BeersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.map entityToBeer
-            |> Seq.toList
-            |> List.sortBy _.Id
-        with _ -> []
+        storage.BeersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+        |> Seq.map entityToBeer
+        |> Seq.toList
+        |> List.sortBy _.Id
 
-    let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : unit =
-        try
-            beersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.iter (beersTable.DeleteEntity >> ignore)
-        with _ ->
-            ()
+    let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : Task =
+        task {
+            let deleteTasks =
+                beersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+                |> Seq.map (fun e -> beersTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
+                |> Seq.toArray
 
-    let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : unit =
+            do! Task.WhenAll(deleteTasks)
+        }
+
+    let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : Task =
         beers
         |> List.map (beerToEntity beerTasteGuid)
-        |> List.iter (beersTable.AddEntity >> ignore)
+        |> Storage.addEntitiesBatch beersTable

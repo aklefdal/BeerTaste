@@ -1,5 +1,6 @@
 namespace BeerTaste.Common
 
+open System.Threading.Tasks
 open Azure.Data.Tables
 
 type Taster = {
@@ -21,22 +22,23 @@ module Tasters =
         BirthYear = entity.GetInt32("BirthYear") |> Option.ofNullable
     }
 
-    let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : unit =
-        try
-            tastersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.iter (tastersTable.DeleteEntity >> ignore)
-        with _ ->
-            ()
+    let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : Task =
+        task {
+            let deleteTasks =
+                tastersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+                |> Seq.map (fun e -> tastersTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
+                |> Seq.toArray
 
-    let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : unit =
+            do! Task.WhenAll(deleteTasks)
+        }
+
+    let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : Task =
         tasters
         |> List.map (tasterToEntity beerTasteGuid)
-        |> List.iter (tastersTable.AddEntity >> ignore)
+        |> Storage.addEntitiesBatch tastersTable
 
     let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
-        try
-            storage.TastersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.map entityToTaster
-            |> Seq.toList
-            |> List.sortBy _.Name
-        with _ -> []
+        storage.TastersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+        |> Seq.map entityToTaster
+        |> Seq.toList
+        |> List.sortBy _.Name

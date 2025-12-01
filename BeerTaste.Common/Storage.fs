@@ -1,5 +1,6 @@
 namespace BeerTaste.Common
 
+open System.Threading.Tasks
 open Azure.Data.Tables
 
 /// <summary>
@@ -29,3 +30,17 @@ type BeerTasteTableStorage(connectionString: string) =
     member this.BeersTableClient = beersTableClient
     member this.TastersTableClient = tastersTableClient
     member this.ScoresTableClient = scoresTableClient
+
+module Storage =
+    let addEntitiesBatch (table: TableClient) (entities: TableEntity list) : Task =
+        task {
+            let batches = entities |> List.chunkBySize 100
+
+            for batch in batches do
+                let actions =
+                    batch
+                    |> List.map (fun e -> TableTransactionAction(TableTransactionActionType.Add, e))
+
+                let! _ = table.SubmitTransactionAsync(actions)
+                ()
+        }
