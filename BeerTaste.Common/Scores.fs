@@ -68,11 +68,9 @@ module Scores =
         }
 
     let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
-        try
-            storage.ScoresTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.map entityToScore
-            |> Seq.toList
-        with _ -> []
+        storage.ScoresTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+        |> Seq.map entityToScore
+        |> Seq.toList
 
     let hasScores (scores: Score list) : bool =
         scores

@@ -76,12 +76,10 @@ module Beers =
     }
 
     let fetchBeers (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Beer list =
-        try
-            storage.BeersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.map entityToBeer
-            |> Seq.toList
-            |> List.sortBy _.Id
-        with _ -> []
+        storage.BeersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+        |> Seq.map entityToBeer
+        |> Seq.toList
+        |> List.sortBy _.Id
 
     let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : Task =
         task {

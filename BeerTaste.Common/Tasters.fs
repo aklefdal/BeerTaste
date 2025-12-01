@@ -49,9 +49,7 @@ module Tasters =
         }
 
     let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
-        try
-            storage.TastersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-            |> Seq.map entityToTaster
-            |> Seq.toList
-            |> List.sortBy _.Name
-        with _ -> []
+        storage.TastersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+        |> Seq.map entityToTaster
+        |> Seq.toList
+        |> List.sortBy _.Name
