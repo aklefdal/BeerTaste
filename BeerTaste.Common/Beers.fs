@@ -83,7 +83,7 @@ module Beers =
             |> List.sortBy _.Id
         with _ -> []
 
-    let deleteBeersForBeerTasteAsync (beersTable: TableClient) (beerTasteGuid: string) : Task =
+    let deleteBeersForBeerTaste (beersTable: TableClient) (beerTasteGuid: string) : Task =
         task {
             let deleteTasks =
                 beersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
@@ -93,7 +93,7 @@ module Beers =
             do! Task.WhenAll(deleteTasks)
         }
 
-    let addBeersAsync (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : Task =
+    let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : Task =
         task {
             let entities = beers |> List.map (beerToEntity beerTasteGuid)
 

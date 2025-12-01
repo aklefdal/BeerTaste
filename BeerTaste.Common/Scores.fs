@@ -41,7 +41,7 @@ module Scores =
         entity.Add("ScoreValue", score.ScoreValue |> Option.toNullable)
         entity
 
-    let deleteScoresForBeerTasteAsync (scoresTable: TableClient) (beerTasteGuid: string) : Task =
+    let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : Task =
         task {
             let deleteTasks =
                 scoresTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
@@ -51,7 +51,7 @@ module Scores =
             do! Task.WhenAll(deleteTasks)
         }
 
-    let addScoresAsync (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : Task =
+    let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : Task =
         task {
             let entities = scores |> List.map (scoreToEntity beerTasteGuid)
 

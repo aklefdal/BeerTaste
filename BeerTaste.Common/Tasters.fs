@@ -22,7 +22,7 @@ module Tasters =
         BirthYear = entity.GetInt32("BirthYear") |> Option.ofNullable
     }
 
-    let deleteTastersForPartitionKeyAsync (tastersTable: TableClient) (beerTasteGuid: string) : Task =
+    let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : Task =
         task {
             let deleteTasks =
                 tastersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
@@ -32,7 +32,7 @@ module Tasters =
             do! Task.WhenAll(deleteTasks)
         }
 
-    let addTastersAsync (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : Task =
+    let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : Task =
         task {
             let entities = tasters |> List.map (tasterToEntity beerTasteGuid)
 
