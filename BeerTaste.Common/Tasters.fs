@@ -32,9 +32,6 @@ module Tasters =
             do! Task.WhenAll(deleteTasks)
         }
 
-    let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : unit =
-        (deleteTastersForPartitionKeyAsync tastersTable beerTasteGuid).GetAwaiter().GetResult()
-
     let addTastersAsync (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : Task =
         task {
             let entities = tasters |> List.map (tasterToEntity beerTasteGuid)
@@ -50,9 +47,6 @@ module Tasters =
                 let! _ = tastersTable.SubmitTransactionAsync(actions)
                 ()
         }
-
-    let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : unit =
-        (addTastersAsync tastersTable beerTasteGuid tasters).GetAwaiter().GetResult()
 
     let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
         try

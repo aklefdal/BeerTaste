@@ -54,8 +54,8 @@ let verifyBeers (setup: ConsoleSetup) (beerTasteGuid: string) : Beer list option
 
             try
                 AnsiConsole.MarkupLine("[cyan]Saving beers to Azure Table Storage...[/]")
-                deleteBeersForBeerTaste setup.TableStorage.BeersTableClient beerTasteGuid
-                addBeers setup.TableStorage.BeersTableClient beerTasteGuid beers
+                (deleteBeersForBeerTasteAsync setup.TableStorage.BeersTableClient beerTasteGuid).GetAwaiter().GetResult()
+                (addBeersAsync setup.TableStorage.BeersTableClient beerTasteGuid beers).GetAwaiter().GetResult()
                 AnsiConsole.MarkupLine($"[green]Successfully saved {beers.Length} beer(s) to Azure Table Storage.[/]")
                 Some beers
             with ex ->
@@ -129,8 +129,8 @@ let verifyTasters (setup: ConsoleSetup) (beerTasteGuid: string) (beers: Beer lis
         elif promptDoneEditingTasters () then
             try
                 AnsiConsole.MarkupLine("[cyan]Saving tasters to Azure Table Storage...[/]")
-                deleteTastersForPartitionKey setup.TableStorage.TastersTableClient beerTasteGuid
-                addTasters setup.TableStorage.TastersTableClient beerTasteGuid tasters
+                (deleteTastersForPartitionKeyAsync setup.TableStorage.TastersTableClient beerTasteGuid).GetAwaiter().GetResult()
+                (addTastersAsync setup.TableStorage.TastersTableClient beerTasteGuid tasters).GetAwaiter().GetResult()
 
                 AnsiConsole.MarkupLine(
                     $"[green]Successfully saved {tasters.Length} taster(s) to Azure Table Storage.[/]"
@@ -157,8 +157,8 @@ let verifyScores (setup: ConsoleSetup) (beerTasteGuid: string) =
 
         if scores.Length > 0 then
             AnsiConsole.MarkupLine("[cyan]Saving scores to Azure Table Storage...[/]")
-            deleteScoresForBeerTaste setup.TableStorage.ScoresTableClient beerTasteGuid
-            addScores setup.TableStorage.ScoresTableClient beerTasteGuid scores
+            (deleteScoresForBeerTasteAsync setup.TableStorage.ScoresTableClient beerTasteGuid).GetAwaiter().GetResult()
+            (addScoresAsync setup.TableStorage.ScoresTableClient beerTasteGuid scores).GetAwaiter().GetResult()
 
             AnsiConsole.MarkupLine($"[green]Successfully saved {scores.Length} score(s) to Azure Table Storage.[/]")
             Some scores

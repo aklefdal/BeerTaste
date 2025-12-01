@@ -51,9 +51,6 @@ module Scores =
             do! Task.WhenAll(deleteTasks)
         }
 
-    let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : unit =
-        (deleteScoresForBeerTasteAsync scoresTable beerTasteGuid).GetAwaiter().GetResult()
-
     let addScoresAsync (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : Task =
         task {
             let entities = scores |> List.map (scoreToEntity beerTasteGuid)
@@ -69,9 +66,6 @@ module Scores =
                 let! _ = scoresTable.SubmitTransactionAsync(actions)
                 ()
         }
-
-    let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : unit =
-        (addScoresAsync scoresTable beerTasteGuid scores).GetAwaiter().GetResult()
 
     let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
         try
