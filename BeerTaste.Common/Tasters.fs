@@ -24,18 +24,12 @@ module Tasters =
 
     let deleteTastersForPartitionKeyAsync (tastersTable: TableClient) (beerTasteGuid: string) : Task =
         task {
-            try
-                let entities =
-                    tastersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-                    |> Seq.toList
+            let deleteTasks =
+                tastersTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+                |> Seq.map (fun e -> tastersTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
+                |> Seq.toArray
 
-                let deleteTasks =
-                    entities
-                    |> List.map (fun e -> tastersTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
-
-                do! Task.WhenAll(deleteTasks)
-            with _ ->
-                ()
+            do! Task.WhenAll(deleteTasks)
         }
 
     let deleteTastersForPartitionKey (tastersTable: TableClient) (beerTasteGuid: string) : unit =

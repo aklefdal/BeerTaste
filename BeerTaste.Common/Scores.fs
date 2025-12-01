@@ -43,18 +43,12 @@ module Scores =
 
     let deleteScoresForBeerTasteAsync (scoresTable: TableClient) (beerTasteGuid: string) : Task =
         task {
-            try
-                let entities =
-                    scoresTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
-                    |> Seq.toList
+            let deleteTasks =
+                scoresTable.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
+                |> Seq.map (fun e -> scoresTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
+                |> Seq.toArray
 
-                let deleteTasks =
-                    entities
-                    |> List.map (fun e -> scoresTable.DeleteEntityAsync(e.PartitionKey, e.RowKey) :> Task)
-
-                do! Task.WhenAll(deleteTasks)
-            with _ ->
-                ()
+            do! Task.WhenAll(deleteTasks)
         }
 
     let deleteScoresForBeerTaste (scoresTable: TableClient) (beerTasteGuid: string) : unit =
