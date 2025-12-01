@@ -58,9 +58,7 @@ module Email =
                 mimeMessage.To.Add(new MailboxAddress(message.ToName, message.To))
                 mimeMessage.Subject <- message.Subject
 
-                let bodyPart = new TextPart("plain")
-                bodyPart.Text <- message.Body
-                mimeMessage.Body <- bodyPart
+                mimeMessage.Body <- new TextPart("plain", Text = message.Body)
 
                 // Send email
                 let! _ = client.SendAsync(mimeMessage)
