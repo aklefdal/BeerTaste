@@ -33,20 +33,9 @@ module Tasters =
         }
 
     let addTasters (tastersTable: TableClient) (beerTasteGuid: string) (tasters: Taster list) : Task =
-        task {
-            let entities = tasters |> List.map (tasterToEntity beerTasteGuid)
-
-            // Azure Table Storage supports up to 100 entities per batch transaction
-            let batches = entities |> List.chunkBySize 100
-
-            for batch in batches do
-                let actions =
-                    batch
-                    |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
-
-                let! _ = tastersTable.SubmitTransactionAsync(actions)
-                ()
-        }
+        tasters
+        |> List.map (tasterToEntity beerTasteGuid)
+        |> Storage.addEntitiesBatch tastersTable
 
     let fetchTasters (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Taster list =
         storage.TastersTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")

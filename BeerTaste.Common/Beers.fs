@@ -92,17 +92,6 @@ module Beers =
         }
 
     let addBeers (beersTable: TableClient) (beerTasteGuid: string) (beers: Beer list) : Task =
-        task {
-            let entities = beers |> List.map (beerToEntity beerTasteGuid)
-
-            // Azure Table Storage supports up to 100 entities per batch transaction
-            let batches = entities |> List.chunkBySize 100
-
-            for batch in batches do
-                let actions =
-                    batch
-                    |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
-
-                let! _ = beersTable.SubmitTransactionAsync(actions)
-                ()
-        }
+        beers
+        |> List.map (beerToEntity beerTasteGuid)
+        |> Storage.addEntitiesBatch beersTable

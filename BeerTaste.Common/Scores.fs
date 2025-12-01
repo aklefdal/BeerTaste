@@ -52,20 +52,9 @@ module Scores =
         }
 
     let addScores (scoresTable: TableClient) (beerTasteGuid: string) (scores: Score list) : Task =
-        task {
-            let entities = scores |> List.map (scoreToEntity beerTasteGuid)
-
-            // Azure Table Storage supports up to 100 entities per batch transaction
-            let batches = entities |> List.chunkBySize 100
-
-            for batch in batches do
-                let actions =
-                    batch
-                    |> List.map (fun entity -> TableTransactionAction(TableTransactionActionType.Add, entity))
-
-                let! _ = scoresTable.SubmitTransactionAsync(actions)
-                ()
-        }
+        scores
+        |> List.map (scoreToEntity beerTasteGuid)
+        |> Storage.addEntitiesBatch scoresTable
 
     let fetchScores (storage: BeerTasteTableStorage) (beerTasteGuid: string) : Score list =
         storage.ScoresTableClient.Query<TableEntity>(filter = $"PartitionKey eq '{beerTasteGuid}'")
