@@ -1,6 +1,6 @@
 #load "BeerTaste.Common.fsx"
 
-#r "nuget: FSharp.Stats, 0.4.0"
+#r "nuget: FSharp.Stats, 0.6.0"
 
 open System
 open OfficeOpenXml
