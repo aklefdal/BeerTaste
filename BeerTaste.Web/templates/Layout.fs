@@ -3,7 +3,61 @@ module BeerTaste.Web.Templates.Layout
 open Oxpecker.ViewEngine
 open BeerTaste.Web.Localization
 
-let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: Language) =
+// Generate the Firebase SDK scripts and configuration
+let firebaseScripts (firebaseConfig: FirebaseConfig option) (t: Translations) =
+    match firebaseConfig with
+    | Some config when isFirebaseConfigured (Some config) ->
+        Fragment() {
+            // Firebase SDK scripts
+            script (src = "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js") { () }
+            script (src = "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js") { () }
+
+            // Firebase initialization and auth handling
+            script () {
+                raw
+                    $"""
+                    const firebaseConfig = {{
+                        apiKey: "{config.ApiKey}",
+                        authDomain: "{config.AuthDomain}",
+                        projectId: "{config.ProjectId}"
+                    }};
+                    firebase.initializeApp(firebaseConfig);
+
+                    firebase.auth().onAuthStateChanged(function(user) {{
+                        const loginWidget = document.getElementById('login-widget');
+                        if (user) {{
+                            loginWidget.innerHTML = '<span class="user-name">' + (user.displayName || user.email) + '</span> <a href="#" id="logout-link">{t.Logout}</a>';
+                            document.getElementById('logout-link').addEventListener('click', function(e) {{
+                                e.preventDefault();
+                                firebase.auth().signOut();
+                            }});
+                        }} else {{
+                            loginWidget.innerHTML = '<a href="#" id="login-link">{t.Login}</a>';
+                            document.getElementById('login-link').addEventListener('click', function(e) {{
+                                e.preventDefault();
+                                const provider = new firebase.auth.GoogleAuthProvider();
+                                firebase.auth().signInWithPopup(provider);
+                            }});
+                        }}
+                    }});
+                    """
+            }
+        }
+    | _ -> Fragment() { () }
+
+// Login widget placeholder (filled by JavaScript when Firebase is configured)
+let loginWidget (firebaseConfig: FirebaseConfig option) (t: Translations) : HtmlElement =
+    match firebaseConfig with
+    | Some config when isFirebaseConfigured (Some config) ->
+        span (id = "login-widget", class' = "login-widget") { raw t.Login }
+    | _ -> span (id = "login-widget", style = "display: none;") { () }
+
+let topNavigation
+    (beerTasteGuid: string)
+    (t: Translations)
+    (currentLanguage: Language)
+    (firebaseConfig: FirebaseConfig option)
+    =
     div (class' = "nav") {
         a (class' = "nav-button", href = $"/{beerTasteGuid}") {
             span (class' = "icon") { raw "🏠" }
@@ -15,7 +69,9 @@ let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: La
         a (class' = "nav-button", href = $"/{beerTasteGuid}/scores") { raw t.Scores }
         a (class' = "nav-button", href = $"/{beerTasteGuid}/results") { raw t.Results }
 
-        div (style = "float: right;") {
+        div (style = "float: right; display: flex; align-items: center; gap: 15px;") {
+            loginWidget firebaseConfig t
+
             // Visually hidden label for accessibility (screen readers)
             label (for' = "language-selector", class' = "visually-hidden") { raw t.LanguageLabel }
 
@@ -31,7 +87,13 @@ let topNavigation (beerTasteGuid: string) (t: Translations) (currentLanguage: La
         }
     }
 
-let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (content: HtmlElement list) =
+let layout
+    (pageTitle: string)
+    (beerTasteGuid: string)
+    (language: Language)
+    (firebaseConfig: FirebaseConfig option)
+    (content: HtmlElement list)
+    =
     let t = getTranslations language
 
     html () {
@@ -47,7 +109,7 @@ let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (con
         }
 
         body () {
-            topNavigation beerTasteGuid t language
+            topNavigation beerTasteGuid t language firebaseConfig
 
             for element in content do
                 element
@@ -65,5 +127,8 @@ let layout (pageTitle: string) (beerTasteGuid: string) (language: Language) (con
                     });
                     """
             }
+
+            // Firebase scripts (if configured)
+            firebaseScripts firebaseConfig t
         }
     }

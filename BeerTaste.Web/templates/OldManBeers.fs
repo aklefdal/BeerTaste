@@ -6,10 +6,15 @@ open BeerTaste.Common.Results
 open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
 
-let view (beerTasteGuid: string) (language: Language) (results: BeerResult list) =
+let view
+    (beerTasteGuid: string)
+    (language: Language)
+    (firebaseConfig: FirebaseConfig option)
+    (results: BeerResult list)
+    =
     let t = getTranslations language
 
-    layout t.OldManBeers beerTasteGuid language [
+    layout t.OldManBeers beerTasteGuid language firebaseConfig [
         h1 () { raw t.OldManBeers }
 
         renderNavigation beerTasteGuid t ResultPage.OldManBeers

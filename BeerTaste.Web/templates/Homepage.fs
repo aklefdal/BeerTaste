@@ -3,7 +3,7 @@ module BeerTaste.Web.Templates.Homepage
 open Oxpecker.ViewEngine
 open BeerTaste.Web.Localization
 
-let view (language: Language) =
+let view (language: Language) (firebaseConfig: FirebaseConfig option) =
     let t = getTranslations language
 
     html () {
@@ -23,8 +23,11 @@ let view (language: Language) =
                 h1 {
                     text-align: center;
                 }
-                .language-selector-container {
-                    text-align: right;
+                .top-bar {
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: center;
+                    gap: 15px;
                     margin-bottom: 20px;
                 }
                 .welcome-content {
@@ -48,7 +51,13 @@ let view (language: Language) =
         }
 
         body () {
-            div (class' = "language-selector-container") {
+            div (class' = "top-bar") {
+                // Login widget (filled by JavaScript when Firebase is configured)
+                match firebaseConfig with
+                | Some config when isFirebaseConfigured (Some config) ->
+                    span (id = "login-widget", class' = "login-widget") { raw t.Login }
+                | _ -> ()
+
                 // Visually hidden label for accessibility (screen readers)
                 label (for' = "language-selector", class' = "visually-hidden") { raw t.LanguageLabel }
 
@@ -88,5 +97,42 @@ let view (language: Language) =
                     });
                     """
             }
+
+            // Firebase scripts (if configured)
+            match firebaseConfig with
+            | Some config when isFirebaseConfigured (Some config) ->
+                script (src = "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js") { () }
+                script (src = "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js") { () }
+
+                script () {
+                    raw
+                        $"""
+                        const firebaseConfig = {{
+                            apiKey: "{config.ApiKey}",
+                            authDomain: "{config.AuthDomain}",
+                            projectId: "{config.ProjectId}"
+                        }};
+                        firebase.initializeApp(firebaseConfig);
+
+                        firebase.auth().onAuthStateChanged(function(user) {{
+                            const loginWidget = document.getElementById('login-widget');
+                            if (user) {{
+                                loginWidget.innerHTML = '<span class="user-name">' + (user.displayName || user.email) + '</span> <a href="#" id="logout-link">{t.Logout}</a>';
+                                document.getElementById('logout-link').addEventListener('click', function(e) {{
+                                    e.preventDefault();
+                                    firebase.auth().signOut();
+                                }});
+                            }} else {{
+                                loginWidget.innerHTML = '<a href="#" id="login-link">{t.Login}</a>';
+                                document.getElementById('login-link').addEventListener('click', function(e) {{
+                                    e.preventDefault();
+                                    const provider = new firebase.auth.GoogleAuthProvider();
+                                    firebase.auth().signInWithPopup(provider);
+                                }});
+                            }}
+                        }});
+                        """
+                }
+            | _ -> ()
         }
     }
