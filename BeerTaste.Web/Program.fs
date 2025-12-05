@@ -15,6 +15,12 @@ type SecretsAnchor = class end
 
 let notFound (s: string) : EndpointHandler = setStatusCode 404 >=> text s
 
+let homepage: EndpointHandler =
+    fun ctx ->
+        let language = getLanguage ctx
+
+        Homepage.view language |> htmlView <| ctx
+
 let resultsIndex (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
@@ -146,8 +152,7 @@ let beerTasteView (storage: BeerTasteTableStorage) (beerTasteGuid: string) : End
 
 let endpoints storage = [
     GET [
-        route "/"
-        <| text "Beer Tasting Results - Navigate to /results/{beerTasteGuid}"
+        route "/" <| homepage
         routef "/{%s}/results" resultsIndex
         routef "/{%s}/results/bestbeers" (bestBeers storage)
         routef "/{%s}/results/controversial" (controversial storage)

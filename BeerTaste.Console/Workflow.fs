@@ -129,7 +129,11 @@ let verifyTasters (setup: ConsoleSetup) (beerTasteGuid: string) (beers: Beer lis
         elif promptDoneEditingTasters () then
             try
                 AnsiConsole.MarkupLine("[cyan]Saving tasters to Azure Table Storage...[/]")
-                (deleteTastersForPartitionKey setup.TableStorage.TastersTableClient beerTasteGuid).GetAwaiter().GetResult()
+
+                (deleteTastersForPartitionKey setup.TableStorage.TastersTableClient beerTasteGuid)
+                    .GetAwaiter()
+                    .GetResult()
+
                 (addTasters setup.TableStorage.TastersTableClient beerTasteGuid tasters).GetAwaiter().GetResult()
 
                 AnsiConsole.MarkupLine(
