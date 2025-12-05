@@ -6,10 +6,15 @@ open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
 open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (language: Language) (results: BeerResultWithAverage list) =
+let view
+    (beerTasteGuid: string)
+    (language: Language)
+    (firebaseConfig: FirebaseConfig option)
+    (results: BeerResultWithAverage list)
+    =
     let t = getTranslations language
 
-    layout t.MostControversialBeers beerTasteGuid language [
+    layout t.MostControversialBeers beerTasteGuid language firebaseConfig [
         h1 () { raw t.MostControversialBeers }
 
         renderNavigation beerTasteGuid t ResultPage.Controversial

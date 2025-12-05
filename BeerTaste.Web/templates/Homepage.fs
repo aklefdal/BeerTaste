@@ -2,8 +2,9 @@ module BeerTaste.Web.Templates.Homepage
 
 open Oxpecker.ViewEngine
 open BeerTaste.Web.Localization
+open BeerTaste.Web.Templates.Layout
 
-let view (language: Language) =
+let view (language: Language) (firebaseConfig: FirebaseConfig option) =
     let t = getTranslations language
 
     html () {
@@ -23,8 +24,11 @@ let view (language: Language) =
                 h1 {
                     text-align: center;
                 }
-                .language-selector-container {
-                    text-align: right;
+                .top-bar {
+                    display: flex;
+                    justify-content: flex-end;
+                    align-items: center;
+                    gap: 15px;
                     margin-bottom: 20px;
                 }
                 .welcome-content {
@@ -48,7 +52,10 @@ let view (language: Language) =
         }
 
         body () {
-            div (class' = "language-selector-container") {
+            div (class' = "top-bar") {
+                // Login widget (reuse from Layout module)
+                loginWidget firebaseConfig t
+
                 // Visually hidden label for accessibility (screen readers)
                 label (for' = "language-selector", class' = "visually-hidden") { raw t.LanguageLabel }
 
@@ -88,5 +95,8 @@ let view (language: Language) =
                     });
                     """
             }
+
+            // Firebase scripts (reuse from Layout module)
+            firebaseScripts firebaseConfig t
         }
     }

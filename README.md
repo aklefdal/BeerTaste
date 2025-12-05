@@ -226,6 +226,20 @@ dotnet user-secrets set "BeerTaste:SendGridFromEmail" "<your-verified-sender@exa
 dotnet user-secrets set "BeerTaste:SendGridFromName" "BeerTaste Results"
 ```
 
+For the web application:
+
+```bash
+cd BeerTaste.Web
+
+# Required: Azure Table Storage connection string
+dotnet user-secrets set "BeerTaste:TableStorageConnectionString" "<connection-string>"
+
+# Optional: Firebase authentication (for user login)
+dotnet user-secrets set "BeerTaste:Firebase:ApiKey" "<your-firebase-api-key>"
+dotnet user-secrets set "BeerTaste:Firebase:AuthDomain" "<your-project-id>.firebaseapp.com"
+dotnet user-secrets set "BeerTaste:Firebase:ProjectId" "<your-project-id>"
+```
+
 ### Environment Variables
 
 Alternatively, use environment variables:
@@ -238,6 +252,9 @@ $env:BeerTaste__ResultsBaseUrl = "https://your-app.azurewebsites.net"
 $env:BeerTaste__SendGridApiKey = "<your-sendgrid-api-key>"
 $env:BeerTaste__SendGridFromEmail = "<your-verified-sender@example.com>"
 $env:BeerTaste__SendGridFromName = "BeerTaste Results"
+$env:BeerTaste__Firebase__ApiKey = "<your-firebase-api-key>"
+$env:BeerTaste__Firebase__AuthDomain = "<your-project-id>.firebaseapp.com"
+$env:BeerTaste__Firebase__ProjectId = "<your-project-id>"
 
 # Bash
 export BeerTaste__TableStorageConnectionString="<connection-string>"
@@ -246,6 +263,9 @@ export BeerTaste__ResultsBaseUrl="https://your-app.azurewebsites.net"
 export BeerTaste__SendGridApiKey="<your-sendgrid-api-key>"
 export BeerTaste__SendGridFromEmail="<your-verified-sender@example.com>"
 export BeerTaste__SendGridFromName="BeerTaste Results"
+export BeerTaste__Firebase__ApiKey="<your-firebase-api-key>"
+export BeerTaste__Firebase__AuthDomain="<your-project-id>.firebaseapp.com"
+export BeerTaste__Firebase__ProjectId="<your-project-id>"
 ```
 
 ### Default Folder
@@ -280,6 +300,63 @@ When scoring is complete, the console application will:
 4. Email addresses are masked in log output for privacy
 
 If email configuration is missing or incomplete, the feature is gracefully disabled and the application continues normally.
+
+### Firebase Authentication (Optional)
+
+The web application supports Firebase Authentication for user login. When configured, users can sign in with their Google account.
+
+**Firebase Setup:**
+
+1. Go to the [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project (or use an existing one)
+3. In the Firebase Console, go to **Project Settings** → **General**
+4. Scroll down to **Your apps** and click **Add app** → **Web** (</> icon)
+5. Register your app and copy the configuration values:
+   - `apiKey`
+   - `authDomain` (typically `your-project-id.firebaseapp.com`)
+   - `projectId`
+6. Enable Google Sign-In:
+   - Go to **Authentication** → **Sign-in method**
+   - Click on **Google** and enable it
+   - Add your authorized domains (localhost for development, your production domain)
+
+**Local Development Configuration (User Secrets):**
+
+```bash
+cd BeerTaste.Web
+
+# Firebase configuration
+dotnet user-secrets set "BeerTaste:Firebase:ApiKey" "<your-firebase-api-key>"
+dotnet user-secrets set "BeerTaste:Firebase:AuthDomain" "<your-project-id>.firebaseapp.com"
+dotnet user-secrets set "BeerTaste:Firebase:ProjectId" "<your-project-id>"
+```
+
+**Production Configuration (Environment Variables):**
+
+```bash
+# PowerShell
+$env:BeerTaste__Firebase__ApiKey = "<your-firebase-api-key>"
+$env:BeerTaste__Firebase__AuthDomain = "<your-project-id>.firebaseapp.com"
+$env:BeerTaste__Firebase__ProjectId = "<your-project-id>"
+
+# Bash
+export BeerTaste__Firebase__ApiKey="<your-firebase-api-key>"
+export BeerTaste__Firebase__AuthDomain="<your-project-id>.firebaseapp.com"
+export BeerTaste__Firebase__ProjectId="<your-project-id>"
+```
+
+**How it Works:**
+- When Firebase is configured, a "Login" link appears in the navigation bar
+- Clicking "Login" opens a Google sign-in popup
+- After successful login, the user's name is displayed instead of the login link
+- Users can click "Logout" to sign out
+
+**Security Notes:**
+- Firebase API keys are safe to expose in client-side code (they identify your project, not authenticate)
+- Actual security is enforced by Firebase Security Rules and authorized domains
+- The authentication is client-side only; future features can use the Firebase ID token for server-side validation
+
+If Firebase configuration is missing or incomplete, the login feature is gracefully hidden and the application continues normally.
 
 ## Development
 

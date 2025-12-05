@@ -73,6 +73,10 @@ type Translations = {
     // Error messages
     PageNotFound: string
     Error: string
+
+    // Authentication
+    Login: string
+    Logout: string
 }
 
 // English translations
@@ -140,6 +144,10 @@ let englishTranslations: Translations = {
     // Error messages
     PageNotFound = "Page not found!"
     Error = "Error"
+
+    // Authentication
+    Login = "Login"
+    Logout = "Logout"
 }
 
 // Norwegian translations
@@ -207,6 +215,10 @@ let norwegianTranslations: Translations = {
     // Error messages
     PageNotFound = "Siden ble ikke funnet!"
     Error = "Feil"
+
+    // Authentication
+    Login = "Logg inn"
+    Logout = "Logg ut"
 }
 
 // Get translations for a given language
@@ -272,3 +284,19 @@ let getLanguage (ctx: HttpContext) : Language =
         match getLanguageFromHeader ctx with
         | Some lang -> lang
         | None -> English // Default to English
+
+// Firebase configuration for client-side authentication
+type FirebaseConfig = {
+    ApiKey: string
+    AuthDomain: string
+    ProjectId: string
+}
+
+// Check if Firebase config is complete (all required fields present)
+let isFirebaseConfigured (config: FirebaseConfig option) : bool =
+    match config with
+    | Some c ->
+        not (String.IsNullOrWhiteSpace(c.ApiKey))
+        && not (String.IsNullOrWhiteSpace(c.AuthDomain))
+        && not (String.IsNullOrWhiteSpace(c.ProjectId))
+    | None -> false
