@@ -11,6 +11,7 @@
         <Compile Include="Localization.fs"/>
         <Compile Include="templates/Layout.fs"/>
         <Compile Include="templates/Navigation.fs"/>
+        <Compile Include="templates/Homepage.fs"/>
         <Compile Include="templates/ResultsIndex.fs"/>
         <Compile Include="templates/BestBeers.fs"/>
         <Compile Include="templates/Controversial.fs"/>

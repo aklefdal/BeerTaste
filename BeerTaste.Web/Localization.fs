@@ -65,6 +65,11 @@ type Translations = {
     None: string
     LanguageLabel: string
 
+    // Homepage
+    WelcomeMessage: string
+    NavigateToEvent: string
+    EventGuidPlaceholder: string
+
     // Error messages
     PageNotFound: string
     Error: string
@@ -127,6 +132,11 @@ let englishTranslations: Translations = {
     None = "None"
     LanguageLabel = "Language"
 
+    // Homepage
+    WelcomeMessage = "Welcome to the beer tasting results!"
+    NavigateToEvent = "To view results from an event, navigate to:"
+    EventGuidPlaceholder = "/{{beerTasteGuid}}"
+
     // Error messages
     PageNotFound = "Page not found!"
     Error = "Error"
@@ -188,6 +198,11 @@ let norwegianTranslations: Translations = {
     Highlight = "Fremhev"
     None = "Ingen"
     LanguageLabel = "Språk"
+
+    // Homepage
+    WelcomeMessage = "Velkommen til resultatene fra ølsmakingen!"
+    NavigateToEvent = "For å se resultatene fra et arrangement, naviger til:"
+    EventGuidPlaceholder = "/{{beerTasteGuid}}"
 
     // Error messages
     PageNotFound = "Siden ble ikke funnet!"
