@@ -6,7 +6,7 @@ open BeerTaste.Web.Localization
 // Generate the Firebase SDK scripts and configuration
 let firebaseScripts (firebaseConfig: FirebaseConfig option) (t: Translations) =
     match firebaseConfig with
-    | Some config when isFirebaseConfigured (Some config) ->
+    | Some config when isFirebaseConfigured firebaseConfig ->
         Fragment() {
             // Firebase SDK scripts
             script (src = "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js") { () }
@@ -47,10 +47,10 @@ let firebaseScripts (firebaseConfig: FirebaseConfig option) (t: Translations) =
 
 // Login widget placeholder (filled by JavaScript when Firebase is configured)
 let loginWidget (firebaseConfig: FirebaseConfig option) (t: Translations) : HtmlElement =
-    match firebaseConfig with
-    | Some config when isFirebaseConfigured (Some config) ->
+    if isFirebaseConfigured firebaseConfig then
         span (id = "login-widget", class' = "login-widget") { raw t.Login }
-    | _ -> span (id = "login-widget", style = "display: none;") { () }
+    else
+        span (id = "login-widget", style = "display: none;") { () }
 
 let topNavigation
     (beerTasteGuid: string)
