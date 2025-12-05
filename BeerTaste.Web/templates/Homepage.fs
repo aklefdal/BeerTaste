@@ -71,7 +71,7 @@ let view (language: Language) =
                 div (class' = "welcome-text") {
                     p () { raw t.WelcomeMessage }
                     p () { raw t.NavigateToEvent }
-                    p () { raw $"<strong>{t.EventGuidPlaceholder}</strong>" }
+                    p () { strong () { raw t.EventGuidPlaceholder } }
                 }
             }
 
