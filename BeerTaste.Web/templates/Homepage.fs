@@ -13,45 +13,19 @@ let view (language: Language) =
             link (rel = "preconnect", href = "https://fonts.googleapis.com")
             link (rel = "preconnect", href = "https://fonts.gstatic.com", crossorigin = "true")
             link (rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap")
+            link (rel = "stylesheet", href = "/main.css")
 
             title () { raw t.BeerTastingResults }
 
             style () {
                 raw
                     """
-                body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    padding: 20px;
-                    background-color: #ffffff;
-                    color: #000000;
-                }
                 h1 {
-                    color: #000000;
-                    border-bottom: 2px solid #000000;
-                    padding-bottom: 10px;
                     text-align: center;
                 }
                 .language-selector-container {
                     text-align: right;
                     margin-bottom: 20px;
-                }
-                .visually-hidden {
-                    position: absolute;
-                    width: 1px;
-                    height: 1px;
-                    padding: 0;
-                    margin: -1px;
-                    overflow: hidden;
-                    clip: rect(0, 0, 0, 0);
-                    white-space: nowrap;
-                    border: 0;
-                }
-                .noto-color-emoji-regular {
-                    font-family: "Noto Color Emoji", sans-serif;
-                    font-weight: 400;
-                    font-style: normal;
                 }
                 .welcome-content {
                     text-align: center;

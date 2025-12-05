@@ -207,7 +207,7 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
     }
 
 let configureApp (appBuilder: WebApplication) storage =
-    appBuilder.Use(errorHandler).UseRouting().UseOxpecker(endpoints storage)
+    appBuilder.Use(errorHandler).UseStaticFiles().UseRouting().UseOxpecker(endpoints storage)
     |> ignore
 
 [<EntryPoint>]
