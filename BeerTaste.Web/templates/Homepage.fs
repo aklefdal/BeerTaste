@@ -69,14 +69,9 @@ let view (language: Language) =
                 div (class' = "welcome-icon") { raw "🍺" }
 
                 div (class' = "welcome-text") {
-                    if language = Norwegian then
-                        p () { raw "Velkommen til resultatene fra ølsmakingen!" }
-                        p () { raw "For å se resultatene fra et arrangement, naviger til:" }
-                        p () { raw "<strong>/{{beerTasteGuid}}</strong>" }
-                    else
-                        p () { raw "Welcome to the beer tasting results!" }
-                        p () { raw "To view results from an event, navigate to:" }
-                        p () { raw "<strong>/{{beerTasteGuid}}</strong>" }
+                    p () { raw t.WelcomeMessage }
+                    p () { raw t.NavigateToEvent }
+                    p () { raw $"<strong>{t.EventGuidPlaceholder}</strong>" }
                 }
             }
 
