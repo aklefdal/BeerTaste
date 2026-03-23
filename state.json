@@ -1,0 +1,8 @@
+{
+  "last_run": "2026-03-23",
+  "run_id": "23457958611",
+  "labels_applied": [{"issue": 24, "labels": ["enhancement"]}],
+  "prs_created": ["fix-hasscores-and-improve-scores"],
+  "monthly_issue": "2026-03",
+  "notes": "Issue #24 open (Login/Firebase, labelled enhancement). PR #25 open (Copilot draft). No other open issues."
+}
