@@ -42,8 +42,7 @@ module Results =
         scores
         |> List.filter (fun s -> s.BeerId = beerId)
         |> List.sortBy _.TasterName
-        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0)
-        |> List.map float
+        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0 |> float)
         |> List.toArray
 
     let getAverageScoreForBeer (scores: Score list) (beerId: int) : float =
@@ -102,17 +101,11 @@ module Results =
         |> List.sortBy _.Value
 
     // Generate all unique taster pairs
-    let combineAllTasters (tasters: Taster list) : (string * string) list =
-        seq {
-            for taster in tasters do
-                for taster2 in tasters do
-                    if taster.Name < taster2.Name then
-                        yield taster.Name, taster2.Name
-                    elif taster.Name > taster2.Name then
-                        yield taster2.Name, taster.Name
-        }
-        |> Seq.distinct
-        |> Seq.toList
+    let combineAllTasters (tasters: Taster list) : (string * string) list = [
+        for i in 0 .. tasters.Length - 2 do
+            for j in i + 1 .. tasters.Length - 1 do
+                yield tasters[i].Name, tasters[j].Name
+    ]
 
     // Correlation between tasters (most similar tasters)
     let correlationBetweenTasters (tasters: Taster list) (scores: Score list) : TasterPairResult list =
