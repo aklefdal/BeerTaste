@@ -33,8 +33,7 @@ module Results =
         scores
         |> List.filter (fun s -> s.TasterName = tasterName)
         |> List.sortBy _.BeerId
-        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0)
-        |> List.map float
+        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0 |> float)
         |> List.toArray
 
     // Get all scores for a specific beer
@@ -42,8 +41,7 @@ module Results =
         scores
         |> List.filter (fun s -> s.BeerId = beerId)
         |> List.sortBy _.TasterName
-        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0)
-        |> List.map float
+        |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0 |> float)
         |> List.toArray
 
     let getAverageScoreForBeer (scores: Score list) (beerId: int) : float =
@@ -56,11 +54,10 @@ module Results =
 
     let beerAverages (beers: Beer list) (scores: Score list) : BeerResult list =
         beers
-        |> List.map (fun b -> b, getAverageScoreForBeer scores b.Id)
-        |> List.map (fun (b, avg) ->
+        |> List.map (fun b ->
             {
                 Name = $"{b.Producer} - {b.Name}"
-                Value = avg
+                Value = getAverageScoreForBeer scores b.Id
             }
             : BeerResult)
         |> List.sortByDescending _.Value
