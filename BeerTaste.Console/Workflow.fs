@@ -149,7 +149,8 @@ let verifyTasters (setup: ConsoleSetup) (beerTasteGuid: string) (beers: Beer lis
                 AnsiConsole.MarkupLine($"[red]Warning: Could not save scores to Azure Table Storage: {ex.Message}[/]")
                 None
         else
-            Some tasters
+            AnsiConsole.MarkupLine("[yellow]Please continue editing the tasters in the Excel file.[/]")
+            None
     with ex ->
         AnsiConsole.MarkupLine($"[red]Warning: Could not read tasters from Excel file: {ex.Message}[/]")
         None
