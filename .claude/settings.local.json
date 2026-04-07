@@ -10,7 +10,9 @@
       "Bash(dotnet clean:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File convert-to-crlf.ps1)",
       "Bash(powershell:*)",
-      "Bash(dotnet fantomas:*)"
+      "Bash(dotnet fantomas:*)",
+      "Bash(gh pr:*)",
+      "Bash(dotnet test:*)"
     ],
     "deny": [],
     "ask": []

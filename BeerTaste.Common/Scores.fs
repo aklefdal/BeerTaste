@@ -63,12 +63,8 @@ module Scores =
 
     let hasScores (scores: Score list) : bool =
         scores
-        |> List.filter (fun s -> s.ScoreValue |> Option.isSome)
-        |> List.length
-        |> (>) 0
+        |> List.exists (fun s -> s.ScoreValue |> Option.isSome)
 
     let isComplete (scores: Score list) : bool =
         scores
-        |> List.filter (fun s -> s.ScoreValue |> Option.isNone)
-        |> List.length
-        |> (=) 0
+        |> List.forall (fun s -> s.ScoreValue |> Option.isSome)

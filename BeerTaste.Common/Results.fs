@@ -101,18 +101,15 @@ module Results =
             ({ Name = t.Name; Value = correlation }: TasterResult))
         |> List.sortBy _.Value
 
-    // Generate all unique taster pairs
+    // Generate all unique taster pairs, always with the alphabetically smaller name first
     let combineAllTasters (tasters: Taster list) : (string * string) list =
-        seq {
-            for taster in tasters do
-                for taster2 in tasters do
-                    if taster.Name < taster2.Name then
-                        yield taster.Name, taster2.Name
-                    elif taster.Name > taster2.Name then
-                        yield taster2.Name, taster.Name
-        }
-        |> Seq.distinct
-        |> Seq.toList
+        let names = tasters |> List.map _.Name |> List.sort
+
+        [
+            for i in 0 .. names.Length - 2 do
+                for j in i + 1 .. names.Length - 1 do
+                    yield names[i], names[j]
+        ]
 
     // Correlation between tasters (most similar tasters)
     let correlationBetweenTasters (tasters: Taster list) (scores: Score list) : TasterPairResult list =

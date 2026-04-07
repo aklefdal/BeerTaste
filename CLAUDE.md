@@ -506,7 +506,7 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 
 ### General
 
-- No formal unit tests - validation is done through script execution and report inspection
+- Unit tests in `BeerTaste.Tests/` (xUnit) cover domain logic in `BeerTaste.Common` (Scores, Results); run with `dotnet test BeerTaste.Tests/BeerTaste.Tests.fsproj`
 - Norwegian language context throughout (field names, output text)
 - User secrets ID: `beertaste-5f8f1d6d-b9a5-4e4a-b0d0-3c3c52e6c6c2`
 

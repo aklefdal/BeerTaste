@@ -33,8 +33,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Oxpecker" Version="1.5.0" />
-        <PackageReference Update="FSharp.Core" Version="10.0.100" />
+        <PackageReference Include="Oxpecker" Version="2.0.0" />
+        <PackageReference Update="FSharp.Core" Version="10.1.201" />
     </ItemGroup>
 
 </Project>
