@@ -13,7 +13,7 @@ BeerTaste is an F# data analysis system for organizing and analyzing beer tastin
 - EPPlus 8.3.0 for Excel I/O (licensed for non-commercial personal use)
 - FSharp.Stats 0.6.0 for statistical analysis
 - Azure.Data.Tables 12.11.0 for Azure Table Storage integration
-- Oxpecker 1.5.0 for web presentation (F# web framework)
+- Oxpecker 2.0.0 for web presentation (F# web framework)
 - Spectre.Console 0.54.0 for CLI interactions
 - Fantomas 7.0.3 for code formatting
 - FsToolkit.ErrorHandling 5.1.0 for computation expressions (option workflow)
@@ -262,6 +262,7 @@ Separate **layered F# script architecture** for analysis:
 
 - ASP.NET Core with Oxpecker framework
 - **Fully implemented** results presentation with 7 statistical analysis pages and 4 data view pages
+- **Caching:** `DataCache` class wraps `BeerTasteTableStorage` with `IMemoryCache` (10-minute TTL) to avoid redundant Azure round-trips when users navigate between result pages
 - **Localization:** Complete English/Norwegian translations via Localization.fs
   - Language detection from cookies and Accept-Language header
   - Language selector in navigation bar
@@ -283,7 +284,7 @@ Separate **layered F# script architecture** for analysis:
   - **Scores Table** - Complete score matrix
   - **Event Details** - BeerTaste event information
 - Navigation with previous/next arrows between pages
-- Fetches data from Azure Table Storage via BeerTaste.Common
+- Fetches data from Azure Table Storage via BeerTaste.Common, cached by `DataCache` using `IMemoryCache`
 
 **Project Dependencies:**
 
@@ -450,7 +451,7 @@ Console → Excel Files → Scripts (analysis) → Reports/Slides
 ### Web Application
 
 - `BeerTaste.Web/Localization.fs` - English/Norwegian translations (`Language` DU, `Translations` record, `getTranslations`, `getLanguage`, `languageFromCode`)
-- `BeerTaste.Web/Program.fs` - Web application entry point with routing and data fetching
+- `BeerTaste.Web/Program.fs` - Web application entry point with routing, `DataCache` (in-memory caching layer), and data fetching
 - `BeerTaste.Web/templates/Layout.fs` - Shared page layout with black and white theme, language selector, Noto Color Emoji font
 - `BeerTaste.Web/templates/Navigation.fs` - Navigation between result pages with prev/next arrows (`ResultPage` DU, `allPages`, `pageToRoute`, `pageToIcon`)
 - `BeerTaste.Web/templates/ResultsIndex.fs` - Results hub page with icons for each result type
@@ -579,5 +580,6 @@ Where the administrator (me) adds all the scores given by the tasters. These are
 - Black and white theme with responsive layout and Noto Color Emoji font
 - Navigation with Unicode arrows (← →) between pages
 - Icons for each result type (★, ⚡, 😈, ❤, 😵, 💰, 👴)
+- **Caching:** `DataCache` class uses `IMemoryCache` with 10-minute TTL to cache Azure data per `beerTasteGuid`, registered via `AddMemoryCache()` in DI
 - Auto-opens in browser when Console detects complete scores
 - Text files need to use CRLF for line endings
