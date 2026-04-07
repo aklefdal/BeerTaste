@@ -2,30 +2,7 @@ module BeerTaste.Tests.ResultsTests
 
 open Xunit
 open BeerTaste.Common
-
-let private makeBeer id name producer abv price : Beer = {
-    Id = id
-    Name = name
-    BeerType = "Lager"
-    Origin = "Norway"
-    Producer = producer
-    ABV = abv
-    Volume = 0.5
-    Price = price
-    Packaging = "Can"
-}
-
-let private makeScore beerId tasterName scoreValue : Score = {
-    BeerId = beerId
-    TasterName = tasterName
-    ScoreValue = scoreValue
-}
-
-let private makeTaster name birthYear : Taster = {
-    Name = name
-    Email = None
-    BirthYear = birthYear
-}
+open BeerTaste.Tests.TestHelpers
 
 module CombineAllTastersTests =
     [<Fact>]
@@ -84,6 +61,17 @@ module CombineAllTastersTests =
         let result = Results.combineAllTasters tasters
         let unique = result |> List.distinct
         Assert.Equal(result.Length, unique.Length)
+
+    [<Fact>]
+    let ``combineAllTasters always puts alphabetically smaller name first`` () =
+        let tasters = [
+            makeTaster "Bob" None
+            makeTaster "Alice" None
+        ]
+
+        let result = Results.combineAllTasters tasters
+        Assert.Equal(1, result.Length)
+        Assert.Contains(("Alice", "Bob"), result)
 
 module BeerAveragesTests =
     [<Fact>]

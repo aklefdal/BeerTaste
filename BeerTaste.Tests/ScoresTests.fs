@@ -2,12 +2,7 @@ module BeerTaste.Tests.ScoresTests
 
 open Xunit
 open BeerTaste.Common
-
-let private makeScore beerId tasterName scoreValue : Score = {
-    BeerId = beerId
-    TasterName = tasterName
-    ScoreValue = scoreValue
-}
+open BeerTaste.Tests.TestHelpers
 
 module HasScoresTests =
     [<Fact>]

@@ -101,9 +101,9 @@ module Results =
             ({ Name = t.Name; Value = correlation }: TasterResult))
         |> List.sortBy _.Value
 
-    // Generate all unique taster pairs
+    // Generate all unique taster pairs, always with the alphabetically smaller name first
     let combineAllTasters (tasters: Taster list) : (string * string) list =
-        let names = tasters |> List.map _.Name
+        let names = tasters |> List.map _.Name |> List.sort
 
         [
             for i in 0 .. names.Length - 2 do
