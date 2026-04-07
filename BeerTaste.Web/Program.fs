@@ -41,7 +41,15 @@ type DataCache(storage: BeerTasteTableStorage, cache: IMemoryCache) =
         getOrCreate $"scores:{beerTasteGuid}" (fun () -> Scores.fetchScores storage beerTasteGuid)
 
     member _.FetchBeerTaste(beerTasteGuid: string) =
-        BeerTasteStorage.fetchBeerTaste storage beerTasteGuid
+        let key = $"beertaste:{beerTasteGuid}"
+        match cache.TryGetValue(key) with
+        | true, (:? BeerTaste as beerTaste) -> Some beerTaste
+        | _ ->
+             let result = BeerTasteStorage.fetchBeerTaste storage beerTasteGuid
+             match result with
+             | Some beerTaste ->
+                 cache.Set(key, beerTaste, ttl) |> Some
+             | None -> None
 
 let notFound (s: string) : EndpointHandler = setStatusCode 404 >=> text s
 

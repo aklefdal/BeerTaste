@@ -12,7 +12,8 @@
       "Bash(powershell:*)",
       "Bash(dotnet fantomas:*)",
       "Bash(gh pr:*)",
-      "Bash(dotnet test:*)"
+      "Bash(dotnet test:*)",
+      "Bash(gh api:*)"
     ],
     "deny": [],
     "ask": []
