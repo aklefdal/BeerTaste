@@ -246,7 +246,7 @@ let beerTasteView
         | None -> "BeerTaste not found" |> notFound <| ctx
 
 
-let endpoints storage firebaseConfig = [
+let endpoints dc firebaseConfig = [
     GET [
         route "/" <| homepage firebaseConfig
         routef "/{%s}/results" (resultsIndex firebaseConfig)
@@ -303,7 +303,7 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
     }
 
 let configureApp (appBuilder: WebApplication) (dc: DataCache) firebaseConfig =
-    appBuilder.Use(errorHandler).UseStaticFiles().UseRouting().UseOxpecker(endpoints storage firebaseConfig)
+    appBuilder.Use(errorHandler).UseStaticFiles().UseRouting().UseOxpecker(endpoints dc firebaseConfig)
     |> ignore
 
 [<EntryPoint>]
