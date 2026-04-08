@@ -71,13 +71,11 @@ module Results =
         |> List.map (fun b ->
             let beerScores = getScoresForBeer scores b.Id
 
-            let stdDev =
+            let stdDev, avg =
                 if beerScores.Length > 0 then
-                    Seq.stDevPopulation beerScores
+                    Seq.stDevPopulation beerScores, Array.average beerScores
                 else
-                    0.0
-
-            let avg = getAverageScoreForBeer scores b.Id
+                    0.0, 0.0
 
             ({
                 Name = $"{b.Producer} - {b.Name}"

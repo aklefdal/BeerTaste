@@ -169,3 +169,29 @@ module BeerStandardDeviationsTests =
             |> List.find (fun r -> r.Name.Contains("Consistent"))
 
         Assert.True(controversialStdDev.Value > consistentStdDev.Value)
+
+    [<Fact>]
+    let ``beerStandardDeviations includes correct average in result`` () =
+        let beers = [
+            makeBeer 1 "Pilsner" "BrewCo" 4.7 35.0
+        ]
+
+        let scores = [
+            makeScore 1 "Alice" (Some 6)
+            makeScore 1 "Bob" (Some 8)
+            makeScore 1 "Carol" (Some 10)
+        ]
+
+        let result = Results.beerStandardDeviations beers scores
+        Assert.Equal(1, result.Length)
+        Assert.Equal(8.0, result[0].Average, 6)
+
+    [<Fact>]
+    let ``beerStandardDeviations returns 0 average for beer with no scores`` () =
+        let beers = [
+            makeBeer 1 "Pilsner" "BrewCo" 4.7 35.0
+        ]
+
+        let result = Results.beerStandardDeviations beers []
+        Assert.Equal(1, result.Length)
+        Assert.Equal(0.0, result[0].Average)
