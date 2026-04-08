@@ -4,10 +4,10 @@ open Oxpecker.ViewEngine
 open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (language: Language) =
+let view (beerTasteGuid: string) (language: Language) (firebaseConfig: FirebaseConfig option) =
     let t = getTranslations language
 
-    layout t.BeerTastingResults beerTasteGuid language [
+    layout t.BeerTastingResults beerTasteGuid language firebaseConfig [
         h1 () { raw t.BeerTastingResults }
 
         div (class' = "results-list") {

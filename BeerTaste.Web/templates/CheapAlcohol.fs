@@ -6,10 +6,15 @@ open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
 open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (language: Language) (results: TasterResult list) =
+let view
+    (beerTasteGuid: string)
+    (language: Language)
+    (firebaseConfig: FirebaseConfig option)
+    (results: TasterResult list)
+    =
     let t = getTranslations language
 
-    layout t.MostFondOfCheapAlcohol beerTasteGuid language [
+    layout t.MostFondOfCheapAlcohol beerTasteGuid language firebaseConfig [
         h1 () { raw t.MostFondOfCheapAlcohol }
 
         renderNavigation beerTasteGuid t ResultPage.CheapAlcohol

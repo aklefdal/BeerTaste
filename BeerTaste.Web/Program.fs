@@ -42,43 +42,79 @@ type DataCache(storage: BeerTasteTableStorage, cache: IMemoryCache) =
 
 let notFound (s: string) : EndpointHandler = setStatusCode 404 >=> text s
 
-let homepage: EndpointHandler =
+// Read Firebase configuration from IConfiguration
+let getFirebaseConfig (config: IConfiguration) : FirebaseConfig option =
+    let apiKey =
+        config["BeerTaste:Firebase:ApiKey"]
+        |> Option.ofObj
+
+    let authDomain =
+        config["BeerTaste:Firebase:AuthDomain"]
+        |> Option.ofObj
+
+    let projectId =
+        config["BeerTaste:Firebase:ProjectId"]
+        |> Option.ofObj
+
+    match apiKey, authDomain, projectId with
+    | Some ak, Some ad, Some pid ->
+        Some {
+            ApiKey = ak
+            AuthDomain = ad
+            ProjectId = pid
+        }
+    | _ -> None
+
+let homepage (firebaseConfig: FirebaseConfig option) : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
 
-        Homepage.view language |> htmlView <| ctx
+        Homepage.view language firebaseConfig |> htmlView
+        <| ctx
 
-let resultsIndex (beerTasteGuid: string) : EndpointHandler =
+let resultsIndex (firebaseConfig: FirebaseConfig option) (beerTasteGuid: string) : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
 
-        ResultsIndex.view beerTasteGuid language
+        ResultsIndex.view beerTasteGuid language firebaseConfig
         |> htmlView
         <| ctx
 
-let bestBeers (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let bestBeers 
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let beers = dc.FetchBeers beerTasteGuid
         let scores = dc.FetchScores beerTasteGuid
         let results = Results.beerAverages beers scores
 
-        BestBeers.view beerTasteGuid language results
+        BestBeers.view beerTasteGuid language firebaseConfig results
         |> htmlView
         <| ctx
 
-let controversial (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let controversial
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let beers = dc.FetchBeers beerTasteGuid
         let scores = dc.FetchScores beerTasteGuid
         let results = Results.beerStandardDeviations beers scores
 
-        Controversial.view beerTasteGuid language results
+        Controversial.view beerTasteGuid language firebaseConfig results
         |> htmlView
         <| ctx
 
-let deviant (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let deviant
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let beers = dc.FetchBeers beerTasteGuid
@@ -86,22 +122,30 @@ let deviant (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
         let scores = dc.FetchScores beerTasteGuid
         let results = Results.correlationToAverages beers tasters scores
 
-        Deviant.view beerTasteGuid language results
+        Deviant.view beerTasteGuid language firebaseConfig results
         |> htmlView
         <| ctx
 
-let similar (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let similar
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let tasters = dc.FetchTasters beerTasteGuid
         let scores = dc.FetchScores beerTasteGuid
         let results = Results.correlationBetweenTasters tasters scores
 
-        Similar.view beerTasteGuid language results
+        Similar.view beerTasteGuid language firebaseConfig results
         |> htmlView
         <| ctx
 
-let strongBeers (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let strongBeers
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let beers = dc.FetchBeers beerTasteGuid
@@ -109,11 +153,15 @@ let strongBeers (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
         let scores = dc.FetchScores beerTasteGuid
         let results = Results.correlationToAbv beers tasters scores
 
-        StrongBeers.view beerTasteGuid language results
+        StrongBeers.view beerTasteGuid language firebaseConfig results
         |> htmlView
         <| ctx
 
-let cheapAlcohol (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let cheapAlcohol
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let beers = dc.FetchBeers beerTasteGuid
@@ -121,11 +169,15 @@ let cheapAlcohol (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
         let scores = dc.FetchScores beerTasteGuid
         let results = Results.correlationToAbvPrice beers tasters scores
 
-        CheapAlcohol.view beerTasteGuid language results
+        CheapAlcohol.view beerTasteGuid language firebaseConfig results
         |> htmlView
         <| ctx
 
-let oldManBeers (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let oldManBeers
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let beers = dc.FetchBeers beerTasteGuid
@@ -133,65 +185,82 @@ let oldManBeers (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
         let scores = dc.FetchScores beerTasteGuid
         let results = Results.correlationToAge beers tasters scores
 
-        OldManBeers.view beerTasteGuid language results
+        OldManBeers.view beerTasteGuid language firebaseConfig results
         |> htmlView
         <| ctx
 
-let beersView (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let beersView
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let beers = dc.FetchBeers beerTasteGuid
 
-        BeersView.view beerTasteGuid language beers
+        BeersView.view beerTasteGuid language firebaseConfig beers
         |> htmlView
         <| ctx
 
-let tastersView (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let tastersView
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let tasters = dc.FetchTasters beerTasteGuid
 
-        TastersView.view beerTasteGuid language tasters
+        TastersView.view beerTasteGuid language firebaseConfig tasters
         |> htmlView
         <| ctx
 
-let scoresView (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let scoresView
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
         let beers = dc.FetchBeers beerTasteGuid
         let tasters = dc.FetchTasters beerTasteGuid
         let scores = dc.FetchScores beerTasteGuid
 
-        ScoresView.view beerTasteGuid language beers tasters scores
+        ScoresView.view beerTasteGuid language firebaseConfig beers tasters scores
         |> htmlView
         <| ctx
 
-let beerTasteView (dc: DataCache) (beerTasteGuid: string) : EndpointHandler =
+let beerTasteView
+    (dc: DataCache)
+    (firebaseConfig: FirebaseConfig option)
+    (beerTasteGuid: string)
+    : EndpointHandler =
     fun ctx ->
         let language = getLanguage ctx
 
         match dc.FetchBeerTaste beerTasteGuid with
         | Some beerTaste ->
-            BeerTasteView.view beerTaste language |> htmlView
+            BeerTasteView.view beerTaste language firebaseConfig
+            |> htmlView
             <| ctx
         | None -> "BeerTaste not found" |> notFound <| ctx
 
 
-let endpoints (dc: DataCache) = [
+let endpoints dc firebaseConfig = [
     GET [
-        route "/" <| homepage
-        routef "/{%s}/results" resultsIndex
-        routef "/{%s}/results/bestbeers" (bestBeers dc)
-        routef "/{%s}/results/controversial" (controversial dc)
-        routef "/{%s}/results/deviant" (deviant dc)
-        routef "/{%s}/results/strongbeers" (strongBeers dc)
-        routef "/{%s}/results/similar" (similar dc)
-        routef "/{%s}/results/cheapalcohol" (cheapAlcohol dc)
-        routef "/{%s}/results/oldmanbeers" (oldManBeers dc)
-        routef "/{%s}/beers" (beersView dc)
-        routef "/{%s}/tasters" (tastersView dc)
-        routef "/{%s}/scores" (scoresView dc)
-        routef "/{%s}" (beerTasteView dc)
+        route "/" <| homepage firebaseConfig
+        routef "/{%s}/results" (resultsIndex firebaseConfig)
+        routef "/{%s}/results/bestbeers" (bestBeers dc firebaseConfig)
+        routef "/{%s}/results/controversial" (controversial dc firebaseConfig)
+        routef "/{%s}/results/deviant" (deviant dc firebaseConfig)
+        routef "/{%s}/results/strongbeers" (strongBeers dc firebaseConfig)
+        routef "/{%s}/results/similar" (similar dc firebaseConfig)
+        routef "/{%s}/results/cheapalcohol" (cheapAlcohol dc firebaseConfig)
+        routef "/{%s}/results/oldmanbeers" (oldManBeers dc firebaseConfig)
+        routef "/{%s}/beers" (beersView dc firebaseConfig)
+        routef "/{%s}/tasters" (tastersView dc firebaseConfig)
+        routef "/{%s}/scores" (scoresView dc firebaseConfig)
+        routef "/{%s}" (beerTasteView dc firebaseConfig)
     ]
 ]
 
@@ -233,8 +302,8 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
             return! ctx.WriteHtmlView(errorView 500 (string ex) language)
     }
 
-let configureApp (appBuilder: WebApplication) (dc: DataCache) =
-    appBuilder.Use(errorHandler).UseStaticFiles().UseRouting().UseOxpecker(endpoints dc)
+let configureApp (appBuilder: WebApplication) (dc: DataCache) firebaseConfig =
+    appBuilder.Use(errorHandler).UseStaticFiles().UseRouting().UseOxpecker(endpoints dc firebaseConfig)
     |> ignore
 
 [<EntryPoint>]
@@ -263,6 +332,7 @@ let main args =
         let storage = BeerTasteTableStorage(connStr)
         let cache = app.Services.GetRequiredService<IMemoryCache>()
         let dc = DataCache(storage, cache)
-        configureApp app dc
+        let firebaseConfig = getFirebaseConfig config
+        configureApp app dc firebaseConfig
         app.Run()
         0

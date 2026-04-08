@@ -5,7 +5,14 @@ open BeerTaste.Common
 open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (language: Language) (beers: Beer list) (tasters: Taster list) (scores: Score list) =
+let view
+    (beerTasteGuid: string)
+    (language: Language)
+    (firebaseConfig: FirebaseConfig option)
+    (beers: Beer list)
+    (tasters: Taster list)
+    (scores: Score list)
+    =
     let t = getTranslations language
 
     // Create a lookup for scores by (beerId, tasterName)
@@ -14,7 +21,7 @@ let view (beerTasteGuid: string) (language: Language) (beers: Beer list) (taster
         |> List.map (fun s -> (s.BeerId, s.TasterName), s.ScoreValue)
         |> Map.ofList
 
-    layout t.Scores beerTasteGuid language [
+    layout t.Scores beerTasteGuid language firebaseConfig [
         h1 () { raw t.Scores }
 
         table () {

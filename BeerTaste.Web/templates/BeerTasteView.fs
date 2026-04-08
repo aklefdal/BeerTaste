@@ -5,10 +5,10 @@ open BeerTaste.Common
 open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Localization
 
-let view (beerTaste: BeerTaste) (language: Language) =
+let view (beerTaste: BeerTaste) (language: Language) (firebaseConfig: FirebaseConfig option) =
     let t = getTranslations language
 
-    layout beerTaste.ShortName beerTaste.BeerTasteGuid language [
+    layout beerTaste.ShortName beerTaste.BeerTasteGuid language firebaseConfig [
         h1 () { raw beerTaste.ShortName }
 
         table () {

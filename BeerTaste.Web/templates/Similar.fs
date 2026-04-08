@@ -6,7 +6,12 @@ open BeerTaste.Web.Templates.Layout
 open BeerTaste.Web.Templates.Navigation
 open BeerTaste.Web.Localization
 
-let view (beerTasteGuid: string) (language: Language) (results: TasterPairResult list) =
+let view
+    (beerTasteGuid: string)
+    (language: Language)
+    (firebaseConfig: FirebaseConfig option)
+    (results: TasterPairResult list)
+    =
     let t = getTranslations language
 
     // Extract unique taster names from results
@@ -16,7 +21,7 @@ let view (beerTasteGuid: string) (language: Language) (results: TasterPairResult
         |> List.distinct
         |> List.sort
 
-    layout t.MostSimilarTasters beerTasteGuid language [
+    layout t.MostSimilarTasters beerTasteGuid language firebaseConfig [
         h1 () { raw t.MostSimilarTasters }
 
         renderNavigation beerTasteGuid t ResultPage.Similar

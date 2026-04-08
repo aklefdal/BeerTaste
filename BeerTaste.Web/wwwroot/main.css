@@ -173,3 +173,31 @@ tr:nth-child(even) {
     font-weight: 400;
     font-style: normal;
 }
+
+/* Login widget styles */
+.login-widget {
+    font-size: 0.9em;
+}
+
+.login-widget a {
+    color: #000000;
+    text-decoration: none;
+    padding: 5px 10px;
+    border: 1px solid #000000;
+    border-radius: 3px;
+    transition: all 0.2s;
+}
+
+.login-widget a:hover {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.login-widget .user-name {
+    margin-right: 10px;
+    font-weight: 500;
+}
+
+.login-widget #logout-link {
+    margin-left: 5px;
+}
