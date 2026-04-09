@@ -75,6 +75,20 @@ module CombineAllTastersTests =
 
 module BeerAveragesTests =
     [<Fact>]
+    let ``beerAverages returns empty list for empty beers`` () =
+        let result = Results.beerAverages [] []
+        Assert.Empty(result)
+
+    [<Fact>]
+    let ``beerAverages formats name as Producer dash Name`` () =
+        let beers = [
+            makeBeer 1 "Pilsner" "BrewCo" 4.7 35.0
+        ]
+
+        let result = Results.beerAverages beers []
+        Assert.Equal("BrewCo - Pilsner", result[0].Name)
+
+    [<Fact>]
     let ``beerAverages returns 0 for beer with no scores`` () =
         let beers = [
             makeBeer 1 "Pilsner" "BrewCo" 4.7 35.0
