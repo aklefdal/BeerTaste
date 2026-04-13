@@ -14,7 +14,7 @@ type User = {
 module Users =
     let userToEntity (user: User) : TableEntity =
         let entity = TableEntity(user.AuthenticationScheme, user.AccountId)
-        entity.Add("UserId", user.UserId)
+        entity.Add("UserId", user.UserId.ToString("D"))
         entity.Add("Name", user.Name)
         entity
 
