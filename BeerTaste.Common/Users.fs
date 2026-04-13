@@ -55,6 +55,12 @@ module Users =
                     Name = name
                 }
 
-                do! addUser usersTable user
-                return user
+                try
+                    let entity = userToEntity user
+                    let! _ = usersTable.AddEntityAsync(entity)
+                    return user
+                with :? Azure.RequestFailedException as ex when ex.Status = 409 ->
+                    // Lost the race — fetch the winner's record
+                    let! existing = fetchUser usersTable authScheme accountId
+                    return existing.Value
         }
