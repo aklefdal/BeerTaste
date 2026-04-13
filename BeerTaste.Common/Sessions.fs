@@ -26,24 +26,24 @@ module Sessions =
     let shouldUpdateLastActive (now: DateTimeOffset) (session: Session) =
         session.LastActiveAt < now.AddHours(-LastActiveThresholdHours)
 
-    let private partitionKey (sessionId: Guid) = sessionId.ToString("N").Substring(0, 8)
+    let private partitionKey (sessionId: Guid) = sessionId.ToString("D").Substring(0, 8)
 
     let sessionToEntity (session: Session) : TableEntity =
         let entity = TableEntity(partitionKey session.SessionId, session.SessionId.ToString())
-        entity.Add("UserId", session.UserId)
+        entity.Add("UserId", session.UserId.ToString("D")) // Guid as string
         entity.Add("AccountId", session.AccountId)
         entity.Add("AuthScheme", session.AuthScheme)
         entity.Add("Name", session.Name)
-        entity.Add("LastActiveAt", session.LastActiveAt)
+        entity.Add("LastActiveAt", session.LastActiveAt.ToString("o")) // ISO 8601 format
         entity
 
     let entityToSession (entity: TableEntity) : Session = {
         SessionId = entity.RowKey |> Guid.Parse
-        UserId = entity.GetGuid("UserId").Value
+        UserId = entity.GetString("UserId") |> Guid.Parse
         AccountId = entity.GetString("AccountId")
         AuthScheme = entity.GetString("AuthScheme")
         Name = entity.GetString("Name")
-        LastActiveAt = entity.GetDateTimeOffset("LastActiveAt").Value
+        LastActiveAt = entity.GetString("LastActiveAt") |> DateTimeOffset.Parse
     }
 
     let addSession (sessionsTable: TableClient) (session: Session) : Task =
