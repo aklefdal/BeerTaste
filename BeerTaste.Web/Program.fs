@@ -280,15 +280,14 @@ let main args =
 
         1
     | Some connStr ->
+        let storage = BeerTasteTableStorage(connStr)
         builder.Services
             .AddRouting()
             .AddOxpecker()
             .AddMemoryCache()
-            .AddSingleton<BeerTasteTableStorage>(BeerTasteTableStorage(connStr))
+            .AddSingleton(storage)
         |> ignore
-
         let app = builder.Build()
-        let storage = app.Services.GetRequiredService<BeerTasteTableStorage>()
         let cache = app.Services.GetRequiredService<IMemoryCache>()
         let dc = DataCache(storage, cache)
         let firebaseConfig = getFirebaseConfig config
