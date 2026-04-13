@@ -300,7 +300,7 @@ let postAuthLogout: EndpointHandler =
                 | false, _ -> ()
             | false, _ -> ()
 
-            ctx.Response.Cookies.Delete(SessionCookieName)
+            ctx.Response.Cookies.Delete(SessionCookieName, CookieOptions(Path = "/"))
             return! ctx.WriteJsonChunked({| success = true |})
         }
 
