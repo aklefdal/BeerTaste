@@ -379,7 +379,6 @@ let main args =
     let builder = WebApplication.CreateBuilder(args)
 
     let config = builder.Configuration.AddUserSecrets<SecretsAnchor>().AddEnvironmentVariables().Build()
-
     match
         config["BeerTaste:TableStorageConnectionString"]
         |> Option.ofObj
@@ -392,17 +391,17 @@ let main args =
 
         1
     | Some connStr ->
+        let storage = BeerTasteTableStorage(connStr)
         builder.Services
             .AddRouting()
             .AddOxpecker()
             .AddMemoryCache()
-            .AddSingleton<BeerTasteTableStorage>(BeerTasteTableStorage(connStr))
+            .AddSingleton(storage)
         |> ignore
 
         FirebaseAuth.initialize config
 
         let app = builder.Build()
-        let storage = app.Services.GetRequiredService<BeerTasteTableStorage>()
         let cache = app.Services.GetRequiredService<IMemoryCache>()
         let dc = DataCache(storage, cache)
         let firebaseConfig = getFirebaseConfig config
