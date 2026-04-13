@@ -39,9 +39,9 @@ Register `BeerTasteTableStorage` as a DI singleton so that auth middleware (Task
 
 No user-visible changes.
 
-### Task 2: Add Users, Sessions tables and server-side auth middleware
+### Task 2: Add Sessions table, server-side auth middleware, and auth endpoints
 
-Follow the HabitTeller pattern: Firebase ID tokens are exchanged for server-side sessions stored in Azure Table Storage.
+Firebase ID tokens are exchanged for server-side sessions stored in Azure Table Storage. Browser-only — no Bearer token support (add later if needed).
 
 **Add `FirebaseAdmin` NuGet package** to `BeerTaste.Web/BeerTaste.Web.fsproj`
 
@@ -53,29 +53,31 @@ Follow the HabitTeller pattern: Firebase ID tokens are exchanged for server-side
 **Create `BeerTaste.Common/Sessions.fs`** (new file, after Users.fs):
 - `Session` record: `SessionId: Guid`, `UserId: Guid`, `AccountId: string`, `AuthScheme: string`, `Name: string`, `LastActiveAt: DateTimeOffset`
 - Entity conversion: PartitionKey = first 8 chars of SessionId, RowKey = full SessionId
-- `addSession`, `fetchSession`, `deleteSession`, `updateLastActiveAt`
-- Session expiry: 90 days, update `LastActiveAt` only if >1 hour old
+- `addSession`, `fetchSession`, `deleteSession`
+- Pure expiry functions: `isExpired` (90 days), `shouldUpdateLastActive` (>1 hour since last update)
+- `authenticateSession`: fetch → check expiry (delete if expired) → update LastActiveAt if stale → return `User option`
 
 **Modify `BeerTaste.Common/Storage.fs`:**
 - ~~Add `UsersTableClient`~~ ✅ Done
 - Add `SessionsTableClient` (table: `"sessions"`)
 
 **Create `BeerTaste.Web/FirebaseAuth.fs`** (before Program.fs in compilation):
-- `FirebaseServerConfig` type: `ProjectId`, optional `ServiceAccountKeyPath`
-- `initialize()`: sets up FirebaseAdmin SDK
-- `verifyIdToken(token)`: validates Firebase ID token, returns claims
+- `VerifiedToken` record: `Uid: string`, `Email: string option`, `Name: string option`, `EmailVerified: bool`
+- `initialize(projectId)`: sets up FirebaseAdmin SDK, fail fast if not configured
+- `verifyIdToken(token) -> Task<Result<VerifiedToken, string>>`
 
 **Create `BeerTaste.Web/AuthMiddleware.fs`** (after FirebaseAuth.fs):
-- Custom middleware following HabitTeller pattern:
-  - Path 1: `Authorization: Bearer <token>` → verify with Firebase → get/create user → set in `HttpContext.Items`
-  - Path 2: `session` cookie → lookup in sessions table → validate expiry → set user in `HttpContext.Items`
-- Helper: `getCurrentUser(ctx)` returns `User option`
+- Session-cookie-only middleware:
+  - Read `session` cookie → call `Sessions.authenticateSession` → set `User` in `HttpContext.Items`
+- `getCurrentUser(ctx) -> User option` helper
 
 **Modify `BeerTaste.Web/Program.fs`:**
-- Add auth middleware to pipeline
-- Add `POST /auth/session` endpoint: accepts Firebase ID token, creates session, sets HttpOnly cookie
-- Add `POST /auth/logout` endpoint: deletes session, clears cookie
+- Fail fast if Firebase config (`ProjectId`) is missing
 - Initialize Firebase Admin SDK on startup
+- Add auth middleware to pipeline (before routing)
+- Add `POST /auth/session`: accepts Firebase ID token, verifies via FirebaseAdmin, gets/creates user, creates session, sets HttpOnly cookie (`Secure = not isDevelopment`, `SameSite = Strict`, 90-day expiry)
+- Add `POST /auth/logout`: reads session cookie, deletes session, clears cookie
+- Add `GET /auth/me`: returns authenticated user info or 401
 
 ### Task 3: Add POST infrastructure and anti-forgery
 

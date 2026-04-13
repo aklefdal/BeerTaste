@@ -14,14 +14,14 @@ type User = {
 module Users =
     let userToEntity (user: User) : TableEntity =
         let entity = TableEntity(user.AuthenticationScheme, user.AccountId)
-        entity.Add("UserId", user.UserId)
+        entity.Add("UserId", user.UserId.ToString())
         entity.Add("Name", user.Name)
         entity
 
     let entityToUser (entity: TableEntity) : User = {
         AuthenticationScheme = entity.PartitionKey
         AccountId = entity.RowKey
-        UserId = entity.GetGuid("UserId").Value
+        UserId = entity.GetString("UserId") |> Guid.Parse
         Name = entity.GetString("Name")
     }
 

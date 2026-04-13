@@ -11,6 +11,7 @@
     <Compile Include="Tasters.fs" />
     <Compile Include="BeerTaste.fs" />
     <Compile Include="Users.fs" />
+    <Compile Include="Sessions.fs" />
     <Compile Include="Scores.fs" />
     <Compile Include="Email.fs" />
     <Compile Include="Results.fs" />

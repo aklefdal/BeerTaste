@@ -5,11 +5,15 @@ open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.Caching.Memory
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Configuration
+open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
 open Oxpecker
 open Oxpecker.ViewEngine
 open Oxpecker.ViewEngine.Aria
 open BeerTaste.Common
+open BeerTaste.Common.Sessions
+open BeerTaste.Web
+open BeerTaste.Web.AuthMiddleware
 open BeerTaste.Web.Templates
 open BeerTaste.Web.Localization
 
@@ -202,9 +206,105 @@ let beerTasteView (dc: DataCache) (firebaseConfig: FirebaseConfig option) (beerT
         | None -> "BeerTaste not found" |> notFound <| ctx
 
 
+type SessionRequest = { idToken: string }
+
+let getAuthMe: EndpointHandler =
+    fun ctx ->
+        task {
+            match getCurrentUser ctx with
+            | Some user ->
+                return!
+                    ctx.WriteJsonChunked(
+                        {|
+                            userId = user.UserId
+                            name = user.Name
+                            authScheme = user.AuthenticationScheme
+                        |}
+                    )
+            | None ->
+                ctx.SetStatusCode 401
+                return! ctx.WriteJsonChunked({| error = "Not authenticated" |})
+        }
+
+let postAuthSession: EndpointHandler =
+    fun ctx ->
+        task {
+            let! bodyResult =
+                task {
+                    try
+                        match! ctx.Request.ReadFromJsonAsync<SessionRequest>() with
+                        | null -> return Error "Invalid request"
+                        | body -> return Ok body
+                    with _ ->
+                        return Error "Invalid request"
+                }
+
+            match bodyResult with
+            | Error msg ->
+                ctx.SetStatusCode 400
+                return! ctx.WriteJsonChunked({| error = msg |})
+            | Ok body ->
+                match! FirebaseAuth.verifyIdToken body.idToken with
+                | Error msg ->
+                    ctx.SetStatusCode 401
+                    return! ctx.WriteJsonChunked({| error = msg |})
+                | Ok verifiedToken ->
+                    let storage = ctx.RequestServices.GetRequiredService<BeerTasteTableStorage>()
+                    let isDevelopment = ctx.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
+
+                    let name =
+                        verifiedToken.Name
+                        |> Option.defaultValue (verifiedToken.Email |> Option.defaultValue "User")
+
+                    let! user = Users.getOrCreateUser storage.UsersTableClient AuthSchemeFirebase verifiedToken.Uid name
+
+                    let sessionId = Guid.NewGuid()
+                    let now = DateTimeOffset.UtcNow
+
+                    let session = {
+                        SessionId = sessionId
+                        UserId = user.UserId
+                        AccountId = verifiedToken.Uid
+                        AuthScheme = AuthSchemeFirebase
+                        Name = user.Name
+                        LastActiveAt = now
+                    }
+
+                    do! addSession storage.SessionsTableClient session
+
+                    let cookieOptions =
+                        CookieOptions(
+                            HttpOnly = true,
+                            Secure = not isDevelopment,
+                            SameSite = SameSiteMode.Strict,
+                            Path = "/",
+                            Expires = now.AddDays(SessionExpiryDays)
+                        )
+
+                    ctx.Response.Cookies.Append(SessionCookieName, sessionId.ToString(), cookieOptions)
+                    return! ctx.WriteJsonChunked({| success = true |})
+        }
+
+let postAuthLogout: EndpointHandler =
+    fun ctx ->
+        task {
+            match ctx.Request.Cookies.TryGetValue(SessionCookieName) with
+            | true, cookieValue ->
+                match Guid.TryParse(cookieValue) with
+                | true, sessionId ->
+                    let storage = ctx.RequestServices.GetRequiredService<BeerTasteTableStorage>()
+                    do! deleteSession storage.SessionsTableClient sessionId
+                | false, _ -> ()
+            | false, _ -> ()
+
+            ctx.Response.Cookies.Delete(SessionCookieName, CookieOptions(Path = "/"))
+            return! ctx.WriteJsonChunked({| success = true |})
+        }
+
 let endpoints dc firebaseConfig = [
     GET [
         route "/" <| homepage firebaseConfig
+        route "/auth/me" getAuthMe
         routef "/{%s}/results" (resultsIndex firebaseConfig)
         routef "/{%s}/results/bestbeers" (bestBeers dc firebaseConfig)
         routef "/{%s}/results/controversial" (controversial dc firebaseConfig)
@@ -217,6 +317,10 @@ let endpoints dc firebaseConfig = [
         routef "/{%s}/tasters" (tastersView dc firebaseConfig)
         routef "/{%s}/scores" (scoresView dc firebaseConfig)
         routef "/{%s}" (beerTasteView dc firebaseConfig)
+    ]
+    POST [
+        route "/auth/session" postAuthSession
+        route "/auth/logout" postAuthLogout
     ]
 ]
 
@@ -259,7 +363,12 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
     }
 
 let configureApp (appBuilder: WebApplication) (dc: DataCache) firebaseConfig =
-    appBuilder.Use(errorHandler).UseStaticFiles().UseRouting().UseOxpecker(endpoints dc firebaseConfig)
+    appBuilder
+        .Use(errorHandler)
+        .UseStaticFiles()
+        .Use(Func<HttpContext, RequestDelegate, Task>(fun ctx next -> sessionAuthMiddleware next ctx))
+        .UseRouting()
+        .UseOxpecker(endpoints dc firebaseConfig)
     |> ignore
 
 [<EntryPoint>]
@@ -281,12 +390,12 @@ let main args =
         1
     | Some connStr ->
         let storage = BeerTasteTableStorage(connStr)
-        builder.Services
-            .AddRouting()
-            .AddOxpecker()
-            .AddMemoryCache()
-            .AddSingleton(storage)
+
+        builder.Services.AddRouting().AddOxpecker().AddMemoryCache().AddSingleton(storage)
         |> ignore
+
+        FirebaseAuth.initialize config
+
         let app = builder.Build()
         let cache = app.Services.GetRequiredService<IMemoryCache>()
         let dc = DataCache(storage, cache)
