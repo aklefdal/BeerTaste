@@ -42,6 +42,23 @@ module Results =
         |> List.map (fun s -> s.ScoreValue |> Option.defaultValue 0 |> float)
         |> List.toArray
 
+    // Look up scores for a beer from a pre-grouped map, returning a normalized float array
+    let private lookupBeerScores (scoresByBeer: Map<int, Score list>) (beerId: int) : float array =
+        scoresByBeer
+        |> Map.tryFind beerId
+        |> Option.defaultValue []
+        |> toFloatArrayByTasterName
+
+    // Look up scores for a taster from a pre-grouped map, returning a normalized float array
+    let private lookupTasterScores (scoresByTaster: Map<string, Score list>) (tasterName: string) : float array =
+        scoresByTaster
+        |> Map.tryFind tasterName
+        |> Option.defaultValue []
+        |> toFloatArrayByBeerId
+
+    let private averageOrZero (scores: float array) : float =
+        if scores.Length > 0 then Array.average scores else 0.0
+
     // Get all scores for a specific taster, sorted by beer ID
     let getScoresForTaster (tasterName: string) (scores: Score list) : float array =
         scores
@@ -55,12 +72,7 @@ module Results =
         |> toFloatArrayByTasterName
 
     let getAverageScoreForBeer (scores: Score list) (beerId: int) : float =
-        let beerScores = getScoresForBeer scores beerId
-
-        if beerScores.Length > 0 then
-            Array.average beerScores
-        else
-            0.0
+        getScoresForBeer scores beerId |> averageOrZero
 
     let beerAverages (beers: Beer list) (scores: Score list) : BeerResult list =
         // Pre-group scores by beer ID to avoid a repeated full-list scan per beer
@@ -68,17 +80,9 @@ module Results =
 
         beers
         |> List.map (fun b ->
-            let beerScores =
-                scoresByBeer
-                |> Map.tryFind b.Id
-                |> Option.defaultValue []
-                |> toFloatArrayByTasterName
-
             let avg =
-                if beerScores.Length > 0 then
-                    Array.average beerScores
-                else
-                    0.0
+                lookupBeerScores scoresByBeer b.Id
+                |> averageOrZero
 
             {
                 Name = $"{b.Producer} - {b.Name}"
@@ -94,11 +98,7 @@ module Results =
 
         beers
         |> List.map (fun b ->
-            let beerScores =
-                scoresByBeer
-                |> Map.tryFind b.Id
-                |> Option.defaultValue []
-                |> toFloatArrayByTasterName
+            let beerScores = lookupBeerScores scoresByBeer b.Id
 
             let stdDev, avg =
                 if beerScores.Length > 0 then
@@ -123,24 +123,12 @@ module Results =
             beers
             |> List.sortBy _.Id
             |> List.map (fun b ->
-                let beerScores =
-                    scoresByBeer
-                    |> Map.tryFind b.Id
-                    |> Option.defaultValue []
-                    |> toFloatArrayByTasterName
-
-                if beerScores.Length > 0 then
-                    Array.average beerScores
-                else
-                    0.0)
+                lookupBeerScores scoresByBeer b.Id
+                |> averageOrZero)
 
         tasters
         |> List.map (fun t ->
-            let tasterScores =
-                scoresByTaster
-                |> Map.tryFind t.Name
-                |> Option.defaultValue []
-                |> toFloatArrayByBeerId
+            let tasterScores = lookupTasterScores scoresByTaster t.Name
 
             let correlation = Seq.pearson tasterScores avgScoresByBeer
             ({ Name = t.Name; Value = correlation }: TasterResult))
@@ -181,12 +169,7 @@ module Results =
 
         tasters
         |> List.map (fun t ->
-            let tasterScores =
-                scoresByTaster
-                |> Map.tryFind t.Name
-                |> Option.defaultValue []
-                |> toFloatArrayByBeerId
-
+            let tasterScores = lookupTasterScores scoresByTaster t.Name
             let correlation = Seq.pearson tasterScores beerAbv
             ({ Name = t.Name; Value = correlation }: TasterResult))
         |> List.sortByDescending _.Value
@@ -203,12 +186,7 @@ module Results =
 
         tasters
         |> List.map (fun t ->
-            let tasterScores =
-                scoresByTaster
-                |> Map.tryFind t.Name
-                |> Option.defaultValue []
-                |> toFloatArrayByBeerId
-
+            let tasterScores = lookupTasterScores scoresByTaster t.Name
             let correlation = Seq.pearson tasterScores beerAbvPrice
             ({ Name = t.Name; Value = correlation }: TasterResult))
         |> List.sortByDescending _.Value
