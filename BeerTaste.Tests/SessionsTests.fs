@@ -77,10 +77,10 @@ module EntityRoundTripTests =
         Assert.Equal(session.LastActiveAt, roundTripped.LastActiveAt)
 
     [<Fact>]
-    let ``partition key uses first 8 chars of session id`` () =
+    let ``partition key uses session id`` () =
         let session = makeSession ()
         let entity = sessionToEntity session
-        let expected = session.SessionId.ToString("N").Substring(0, 8)
+        let expected = session.SessionId.ToString()
         Assert.Equal(expected, entity.PartitionKey)
 
     [<Fact>]

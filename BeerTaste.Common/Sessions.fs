@@ -26,11 +26,9 @@ module Sessions =
     let shouldUpdateLastActive (now: DateTimeOffset) (session: Session) =
         session.LastActiveAt < now.AddHours(-LastActiveThresholdHours)
 
-    let private partitionKey (sessionId: Guid) = sessionId.ToString("D").Substring(0, 8)
-
     let sessionToEntity (session: Session) : TableEntity =
-        let entity = TableEntity(partitionKey session.SessionId, session.SessionId.ToString())
-        entity.Add("UserId", session.UserId.ToString("D")) // Guid as string
+        let entity = TableEntity(session.SessionId.ToString(), session.SessionId.ToString())
+        entity.Add("UserId", session.UserId.ToString()) // Guid as string
         entity.Add("AccountId", session.AccountId)
         entity.Add("AuthScheme", session.AuthScheme)
         entity.Add("Name", session.Name)
