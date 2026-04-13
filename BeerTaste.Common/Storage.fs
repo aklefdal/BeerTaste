@@ -26,10 +26,15 @@ type BeerTasteTableStorage(connectionString: string) =
     let scoresTableClient = service.GetTableClient(scoresTableName)
     do scoresTableClient.CreateIfNotExists() |> ignore
 
+    let usersTableName = "users"
+    let usersTableClient = service.GetTableClient(usersTableName)
+    do usersTableClient.CreateIfNotExists() |> ignore
+
     member this.BeerTasteTableClient = beerTasteTableClient
     member this.BeersTableClient = beersTableClient
     member this.TastersTableClient = tastersTableClient
     member this.ScoresTableClient = scoresTableClient
+    member this.UsersTableClient = usersTableClient
 
 module Storage =
     let addEntitiesBatch (table: TableClient) (entities: TableEntity list) : Task =
