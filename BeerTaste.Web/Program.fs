@@ -268,11 +268,6 @@ let main args =
 
     let config = builder.Configuration.AddUserSecrets<SecretsAnchor>().AddEnvironmentVariables().Build()
 
-    builder.Services.AddRouting().AddOxpecker().AddMemoryCache()
-    |> ignore
-
-    let app = builder.Build()
-
     match
         config["BeerTaste:TableStorageConnectionString"]
         |> Option.ofObj
@@ -286,6 +281,13 @@ let main args =
         1
     | Some connStr ->
         let storage = BeerTasteTableStorage(connStr)
+        builder.Services
+            .AddRouting()
+            .AddOxpecker()
+            .AddMemoryCache()
+            .AddSingleton(storage)
+        |> ignore
+        let app = builder.Build()
         let cache = app.Services.GetRequiredService<IMemoryCache>()
         let dc = DataCache(storage, cache)
         let firebaseConfig = getFirebaseConfig config
