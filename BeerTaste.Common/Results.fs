@@ -113,10 +113,24 @@ module Results =
     let correlationBetweenTasters (tasters: Taster list) (scores: Score list) : TasterPairResult list =
         let tasterPairs = combineAllTasters tasters
 
+        // Pre-compute score arrays per taster once to avoid rescanning for every pair
+        let scoresByTaster =
+            tasters
+            |> List.map (fun t -> t.Name, getScoresForTaster t.Name scores)
+            |> Map.ofList
+
         tasterPairs
         |> List.map (fun (tasterName1, tasterName2) ->
-            let scores1 = getScoresForTaster tasterName1 scores
-            let scores2 = getScoresForTaster tasterName2 scores
+            let scores1 =
+                scoresByTaster
+                |> Map.tryFind tasterName1
+                |> Option.defaultValue [||]
+
+            let scores2 =
+                scoresByTaster
+                |> Map.tryFind tasterName2
+                |> Option.defaultValue [||]
+
             let correlation = Seq.pearson scores1 scores2
 
             {
@@ -163,12 +177,19 @@ module Results =
                 |> Option.map (fun birthYear -> t.Name, float (currentYear - birthYear)))
             |> Map.ofList
 
+        // Pre-group scores by beer ID to avoid an O(beers × scores) repeated scan
+        let scoresByBeer = scores |> List.groupBy _.BeerId |> Map.ofList
+
         beers
         |> List.map (fun beer ->
+            let beerScores =
+                scoresByBeer
+                |> Map.tryFind beer.Id
+                |> Option.defaultValue []
+
             // Get all scores for this beer along with the taster ages
             let scoreAgesPairs =
-                scores
-                |> List.filter (fun s -> s.BeerId = beer.Id)
+                beerScores
                 |> List.choose (fun s ->
                     match Map.tryFind s.TasterName tasterAges, s.ScoreValue with
                     | Some age, Some score -> Some(float score, age)
@@ -176,9 +197,9 @@ module Results =
 
             // Require at least 3 data points for meaningful correlation
             if scoreAgesPairs.Length >= 3 then
-                let beerScores = scoreAgesPairs |> List.map fst |> List.toArray
+                let beerScoresArr = scoreAgesPairs |> List.map fst |> List.toArray
                 let ages = scoreAgesPairs |> List.map snd |> List.toArray
-                let correlation = Seq.pearson beerScores ages
+                let correlation = Seq.pearson beerScoresArr ages
 
                 {
                     Name = $"{beer.Producer} - {beer.Name}"
