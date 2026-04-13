@@ -42,8 +42,11 @@ module Sessions =
         AuthScheme = entity.GetString("AuthScheme")
         Name = entity.GetString("Name")
         LastActiveAt =
-            entity.GetString("LastActiveAt")
-            |> DateTimeOffset.Parse
+            DateTimeOffset.ParseExact(
+                entity.GetString("LastActiveAt"),
+                "o",
+                System.Globalization.CultureInfo.InvariantCulture
+            )
     }
 
     let addSession (sessionsTable: TableClient) (session: Session) : Task =
@@ -56,7 +59,7 @@ module Sessions =
     let fetchSession (sessionsTable: TableClient) (sessionId: Guid) : Task<Session option> =
         task {
             try
-                let! response = sessionsTable.GetEntityAsync<TableEntity>(partitionKey sessionId, sessionId.ToString())
+                let! response = sessionsTable.GetEntityAsync<TableEntity>(sessionId.ToString(), sessionId.ToString())
 
                 return response.Value |> entityToSession |> Some
             with :? Azure.RequestFailedException as ex when ex.Status = 404 ->
@@ -66,7 +69,7 @@ module Sessions =
     let deleteSession (sessionsTable: TableClient) (sessionId: Guid) : Task =
         task {
             try
-                let! _ = sessionsTable.DeleteEntityAsync(partitionKey sessionId, sessionId.ToString())
+                let! _ = sessionsTable.DeleteEntityAsync(sessionId.ToString(), sessionId.ToString())
 
                 ()
             with :? Azure.RequestFailedException as ex when ex.Status = 404 ->
