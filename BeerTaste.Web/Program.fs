@@ -302,6 +302,7 @@ let main args =
         |> ignore
 
         let app = builder.Build()
+        app.Services.GetRequiredService<DataCache>() |> ignore
         let firebaseConfig = getFirebaseConfig config
         configureApp app firebaseConfig
         app.Run()
