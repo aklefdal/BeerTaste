@@ -29,15 +29,13 @@ Already done on this branch:
 
 ## Phase 1: Foundation — Server-Side Auth (builds on existing branch)
 
-### Task 1: Move BeerTasteTableStorage and DataCache into DI
+### Task 1: Register BeerTasteTableStorage in DI
 
-Pure refactor. Currently these are manually instantiated in `main` and threaded through as parameters. Moving them to DI is prerequisite for auth middleware and new services.
+Register `BeerTasteTableStorage` as a DI singleton so that auth middleware (Task 2) can resolve it. Keep `DataCache` threaded to handlers via partial application — that's idiomatic F# with explicit, type-safe dependencies. No need for the service locator pattern (`ctx.GetService<DataCache>()`) in handlers.
 
 **Modify `BeerTaste.Web/Program.fs`:**
 - Register `BeerTasteTableStorage` as singleton (from connection string config)
-- Register `DataCache` as singleton (depends on storage + IMemoryCache)
-- Remove `dc` / `storage` parameters from `endpoints` and `configureApp`
-- Each handler resolves `DataCache` via `ctx.GetService<DataCache>()`
+- Keep `DataCache` instantiated in `main` and passed to handlers as-is
 
 No user-visible changes.
 
@@ -47,10 +45,10 @@ Follow the HabitTeller pattern: Firebase ID tokens are exchanged for server-side
 
 **Add `FirebaseAdmin` NuGet package** to `BeerTaste.Web/BeerTaste.Web.fsproj`
 
-**Create `BeerTaste.Common/Users.fs`** (new file, add to `.fsproj` between `BeerTaste.fs` and `Scores.fs`):
-- `User` record: `AuthenticationScheme: string`, `AccountId: string` (Firebase UID), `UserId: Guid`, `Name: string`
-- Entity conversion: PartitionKey = AuthenticationScheme (e.g. `"Firebase"`), RowKey = AccountId
-- `addUser`, `fetchUser`, `getOrCreateUser`
+**~~Create `BeerTaste.Common/Users.fs`~~** ✅ Done
+- `User` record with `AuthenticationScheme`, `AccountId`, `UserId`, `Name`
+- Entity conversion (PartitionKey = AuthenticationScheme, RowKey = AccountId)
+- `addUser`, `fetchUser`, `getOrCreateUser` (with 409 conflict handling)
 
 **Create `BeerTaste.Common/Sessions.fs`** (new file, after Users.fs):
 - `Session` record: `SessionId: Guid`, `UserId: Guid`, `AccountId: string`, `AuthScheme: string`, `Name: string`, `LastActiveAt: DateTimeOffset`
@@ -59,7 +57,8 @@ Follow the HabitTeller pattern: Firebase ID tokens are exchanged for server-side
 - Session expiry: 90 days, update `LastActiveAt` only if >1 hour old
 
 **Modify `BeerTaste.Common/Storage.fs`:**
-- Add `UsersTableClient` and `SessionsTableClient` (tables: `"users"`, `"sessions"`)
+- ~~Add `UsersTableClient`~~ ✅ Done
+- Add `SessionsTableClient` (table: `"sessions"`)
 
 **Create `BeerTaste.Web/FirebaseAuth.fs`** (before Program.fs in compilation):
 - `FirebaseServerConfig` type: `ProjectId`, optional `ServiceAccountKeyPath`
