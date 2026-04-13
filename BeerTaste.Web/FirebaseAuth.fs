@@ -68,7 +68,8 @@ let verifyIdToken (idToken: string) : Task<Result<VerifiedToken, string>> =
                     Name = claim "name"
                     EmailVerified =
                         match decoded.Claims.TryGetValue("email_verified") with
-                        | true, value -> value :?> bool
+                        | true, (:? bool as b) -> b
+                        | true, value -> value.ToString() |> Boolean.TryParse |> snd
                         | false, _ -> false
                 }
         with :? FirebaseAuthException as ex ->
