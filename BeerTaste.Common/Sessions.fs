@@ -43,7 +43,9 @@ module Sessions =
         AccountId = entity.GetString("AccountId")
         AuthScheme = entity.GetString("AuthScheme")
         Name = entity.GetString("Name")
-        LastActiveAt = entity.GetString("LastActiveAt") |> DateTimeOffset.Parse
+        LastActiveAt =
+            entity.GetString("LastActiveAt")
+            |> DateTimeOffset.Parse
     }
 
     let addSession (sessionsTable: TableClient) (session: Session) : Task =

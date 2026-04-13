@@ -71,6 +71,6 @@ let verifyIdToken (idToken: string) : Task<Result<VerifiedToken, string>> =
                         | true, value -> value :?> bool
                         | false, _ -> false
                 }
-        with ex ->
+        with :? FirebaseAuthException as ex ->
             return Error $"Token verification failed: {ex.Message}"
     }
