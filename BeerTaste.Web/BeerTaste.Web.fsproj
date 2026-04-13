@@ -24,6 +24,8 @@
         <Compile Include="templates/TastersView.fs"/>
         <Compile Include="templates/ScoresView.fs"/>
         <Compile Include="templates/BeerTasteView.fs"/>
+        <Compile Include="FirebaseAuth.fs"/>
+        <Compile Include="AuthMiddleware.fs"/>
         <Compile Include="Program.fs"/>
         <Content Include="README.md" />
     </ItemGroup>
@@ -33,6 +35,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="FirebaseAdmin" Version="3.5.0" />
         <PackageReference Include="Oxpecker" Version="2.0.0" />
         <PackageReference Update="FSharp.Core" Version="10.1.201" />
     </ItemGroup>
