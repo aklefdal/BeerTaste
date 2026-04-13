@@ -208,9 +208,6 @@ let beerTasteView (dc: DataCache) (firebaseConfig: FirebaseConfig option) (beerT
 
 type SessionRequest = { idToken: string }
 
-[<Literal>]
-let SessionDays = 90.0
-
 let getAuthMe: EndpointHandler =
     fun ctx ->
         task {
@@ -281,7 +278,7 @@ let postAuthSession: EndpointHandler =
                             Secure = not isDevelopment,
                             SameSite = SameSiteMode.Strict,
                             Path = "/",
-                            Expires = now.AddDays(SessionDays)
+                            Expires = now.AddDays(SessionExpiryDays)
                         )
 
                     ctx.Response.Cookies.Append(SessionCookieName, sessionId.ToString(), cookieOptions)
