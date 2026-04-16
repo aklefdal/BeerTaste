@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-16T01:16:54Z",
-  "last_run_id": "24486735916",
+  "last_run": "2026-04-16T13:16:14Z",
+  "last_run_id": "24512310467",
   "comments_made": {
     "24": "2026-03-24T01:23:16Z"
   },
@@ -10,18 +10,18 @@
   },
   "open_prs": {},
   "pr_attempts": {
-    "improve-beer-std-dev-2026-04": "branch created, safeoutputs returned success 2026-04-08",
-    "eng-add-ci-tests-2026-04-16": "READY - branch repo-assist/eng-add-ci-tests-2026-04-16 committed locally; adds dotnet test step to CI + removes dead getBeerTastePartitionKey; 70 tests pass; awaiting safeoutputs",
-    "perf-array-vectors-2026-04-16": "READY - branch repo-assist/perf-array-vectors-2026-04-16 committed locally; converts beerAbv/beerAbvPrice/avgScoresByBeer to float array before inner taster loop; 70 tests pass; awaiting safeoutputs"
+    "improve-beer-std-dev-2026-04": "branch created, safeoutputs returned success 2026-04-08 — merged as #87",
+    "eng-add-ci-tests-2026-04-16": "READY - branch repo-assist/eng-add-ci-tests-2026-04-16; adds dotnet test step to CI; 70 tests pass; safeoutputs unavailable",
+    "improve-remove-dead-code-2026-04-16": "READY - branch repo-assist/improve-remove-dead-code-2026-04-16; removes dead getBeerTastePartitionKey; 70 tests pass; safeoutputs unavailable"
   },
   "monthly_activity_issue": 64,
-  "notes": "Run 2026-04-16T01: safeoutputs MCP BLOCKED BY POLICY (5th consecutive run). Two branches prepared. Open issues: #64 (monthly activity). Previous eng-add-ci-tests and improve-remove-dead-code branches from 2026-04-15 were discarded (sandbox reset); recreated as eng-add-ci-tests-2026-04-16 combining both; also prepared perf-array-vectors branch. 70 tests pass. Branches are locally committed but cannot be pushed without safeoutputs.",
+  "notes": "Run 2026-04-16T13: safeoutputs MCP unavailable (6th+ consecutive run). Two branches prepared locally. PRs #90 #91 #92 merged. DI refactor merged as #95/#96. Issue #89 still open. Branches exist only locally and will be lost on sandbox reset.",
   "backlog_cursor": {
     "issue_comment": "all issues addressed",
     "labelling": "all labelled"
   },
   "pending_work": {
-    "eng-add-ci-tests-2026-04-16": "Branch repo-assist/eng-add-ci-tests-2026-04-16: adds dotnet test step to CI + removes dead getBeerTastePartitionKey. Push and create PR when safeoutputs available.",
-    "perf-array-vectors-2026-04-16": "Branch repo-assist/perf-array-vectors-2026-04-16: converts reference vectors to float array in Results.fs (correlationToAverages/Abv/AbvPrice). Push and create PR when safeoutputs available."
+    "eng-add-ci-tests": "Add dotnet test step to .github/workflows/main_beertaste.yml after 'Build with dotnet' step. One-liner: dotnet test BeerTaste.Tests/BeerTaste.Tests.fsproj --configuration Release --no-build",
+    "improve-remove-dead-code": "Remove getBeerTastePartitionKey from BeerTaste.Common/BeerTaste.fs (lines ~39-42). Dead code duplicating getBeerTasteGuid, never called anywhere."
   }
 }
