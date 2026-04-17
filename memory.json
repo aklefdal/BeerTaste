@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-16T13:16:14Z",
-  "last_run_id": "24512310467",
+  "last_run": "2026-04-17T01:16:39Z",
+  "last_run_id": "24542619804",
   "comments_made": {
     "24": "2026-03-24T01:23:16Z"
   },
@@ -11,17 +11,19 @@
   "open_prs": {},
   "pr_attempts": {
     "improve-beer-std-dev-2026-04": "branch created, safeoutputs returned success 2026-04-08 — merged as #87",
-    "eng-add-ci-tests-2026-04-16": "READY - branch repo-assist/eng-add-ci-tests-2026-04-16; adds dotnet test step to CI; 70 tests pass; safeoutputs unavailable",
-    "improve-remove-dead-code-2026-04-16": "READY - branch repo-assist/improve-remove-dead-code-2026-04-16; removes dead getBeerTastePartitionKey; 70 tests pass; safeoutputs unavailable"
+    "perf-cache-computed-results-2026-04-17": "READY - branch repo-assist/perf-cache-computed-results-2026-04-17; caches computed Results (beerAverages, stdDevs, 5 correlations) in DataCache with 10-min TTL; 70 tests pass; safeoutputs unavailable",
+    "improve-remove-dead-code-2026-04-17": "READY - branch repo-assist/improve-remove-dead-code-2026-04-17; removes dead getBeerTastePartitionKey from BeerTaste.Common/BeerTaste.fs; 70 tests pass; safeoutputs unavailable",
+    "eng-add-ci-tests-2026-04-17": "READY - branch repo-assist/eng-add-ci-tests-2026-04-17; adds dotnet test step to CI after Build step; 70 tests pass; safeoutputs unavailable"
   },
   "monthly_activity_issue": 64,
-  "notes": "Run 2026-04-16T13: safeoutputs MCP unavailable (6th+ consecutive run). Two branches prepared locally. PRs #90 #91 #92 merged. DI refactor merged as #95/#96. Issue #89 still open. Branches exist only locally and will be lost on sandbox reset.",
+  "notes": "Run 2026-04-17T01: safeoutputs MCP unavailable (7th+ consecutive run). Three branches prepared locally but cannot be pushed. PRs #90 #91 #92 #95 #96 merged. Issue #89 still open (content unknown without gh CLI). Branches exist only locally and will be lost on sandbox reset.",
   "backlog_cursor": {
-    "issue_comment": "all issues addressed",
+    "issue_comment": "issue 24 commented; issue 89 unknown content (no gh access)",
     "labelling": "all labelled"
   },
   "pending_work": {
-    "eng-add-ci-tests": "Add dotnet test step to .github/workflows/main_beertaste.yml after 'Build with dotnet' step. One-liner: dotnet test BeerTaste.Tests/BeerTaste.Tests.fsproj --configuration Release --no-build",
-    "improve-remove-dead-code": "Remove getBeerTastePartitionKey from BeerTaste.Common/BeerTaste.fs (lines ~39-42). Dead code duplicating getBeerTasteGuid, never called anywhere."
+    "perf-cache-computed-results": "Extend DataCache in BeerTaste.Web/Program.fs with 7 new methods: FetchBeerAverages, FetchBeerStdDevs, FetchCorrelationToAverages, FetchCorrelationBetweenTasters, FetchCorrelationToAbv, FetchCorrelationToAbvPrice, FetchCorrelationToAge. Each uses getOrCreate with $\"results:<fnname>:<guid>\" key and calls FetchBeers/FetchTasters/FetchScores + Results.*. Update 7 endpoint handlers to use these methods instead of explicit fetch+compute.",
+    "improve-remove-dead-code": "Remove getBeerTastePartitionKey from BeerTaste.Common/BeerTaste.fs (5 lines including blank line). It is functionally identical to getBeerTasteGuid but never called anywhere.",
+    "eng-add-ci-tests": "Add 'Run tests' step to .github/workflows/main_beertaste.yml after 'Build with dotnet': name: Run tests, run: dotnet test BeerTaste.Tests/BeerTaste.Tests.fsproj --configuration Release --no-build"
   }
 }
