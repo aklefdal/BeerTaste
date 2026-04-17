@@ -36,11 +36,6 @@ module BeerTasteStorage =
         table.AddEntity(entity) |> ignore
         beerTasteGuid
 
-    let getBeerTastePartitionKey (table: TableClient) (shortName: string) : string option =
-        table.Query<TableEntity>(filter = $"RowKey eq '{shortName}'")
-        |> Seq.tryHead
-        |> Option.map _.PartitionKey
-
     let entityToBeerTaste (entity: TableEntity) : BeerTaste = {
         BeerTasteGuid = entity.PartitionKey
         ShortName = entity.RowKey
