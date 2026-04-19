@@ -1,31 +1,31 @@
 {
-  "last_run": "2026-04-17T13:14:59Z",
-  "last_run_id": "24566946521",
+  "last_run": "2026-04-19T01:16:46Z",
+  "last_run_id": "24617966012",
   "comments_made": {
     "24": "2026-03-24T01:23:16Z"
   },
-  "closed_issues_not_to_revisit": [
-    31,
-    89
-  ],
+  "closed_issues_not_to_revisit": [31, 89],
   "maintainer_decisions": {
-    "31": "closed as not_planned on 2026-04-07 \u2014 verifyTasters bug won't be fixed"
+    "31": "closed as not_planned on 2026-04-07 — verifyTasters bug won't be fixed"
   },
   "open_prs": {
-    "remove-dead-code-2026-04-17": "branch repo-assist/remove-dead-code-2026-04-17; removes getBeerTastePartitionKey dead code; 70 tests pass",
-    "eng-add-ci-tests-2026-04-17": "branch repo-assist/eng-add-ci-tests-2026-04-17; adds dotnet test step to CI; 70 tests pass"
+    "remove-dead-code-2026-04-17": "PR #99 — removes getBeerTastePartitionKey dead code; 70 tests pass",
+    "eng-security-updates-2026-04-19": "LOCAL BRANCH ONLY — safeoutputs MCP filtered this run; branch repo-assist/eng-security-updates-2026-04-19 needs push+PR"
   },
   "pr_attempts": {
     "improve-beer-std-dev-2026-04": "merged as #87",
-    "perf-cache-computed-results-2026-04-17": "deferred \u2014 caching already done for raw data; computed results recompute quickly",
-    "improve-remove-dead-code-2026-04-17": "SUBMITTED - branch repo-assist/remove-dead-code-2026-04-17; safeoutput queued this run",
-    "eng-add-ci-tests-2026-04-17": "SUBMITTED - branch repo-assist/eng-add-ci-tests-2026-04-17; safeoutput queued this run"
+    "perf-cache-computed-results-2026-04-17": "deferred",
+    "improve-remove-dead-code-2026-04-17": "SUBMITTED PR #99",
+    "eng-add-ci-tests-2026-04-17": "BLOCKED — workflow file permission; became issue #100",
+    "eng-security-updates-2026-04-19": "LOCAL BRANCH EXISTS — needs push+PR next run; fixes MailKit CVE GHSA-9j88-vvj5-vhgr + System.Security.Cryptography.Xml HIGH CVEs via EPPlus 8.5.3 + correlationBetweenTasters O(n) perf fix"
   },
   "monthly_activity_issue": 64,
-  "notes": "Run 2026-04-17T13: 2 PRs created (dead code removal + CI tests). Issue #98 is automated failure notice from prev run \u2014 suggest close. Issue #64 updated.",
+  "notes": "Run 2026-04-19T01: safeoutputs MCP filtered (same as run 24486735916). Branch repo-assist/eng-security-updates-2026-04-19 committed locally. NEXT RUN MUST: push branch + create PR + update issue #64. Issue #98 is old failure notice (expired). Issue #100 still needs manual CI PR.",
   "backlog_cursor": {
     "issue_comment": "all issues addressed",
     "labelling": "all labelled"
   },
-  "pending_work": {}
+  "pending_work": {
+    "eng-security-updates-2026-04-19": "push branch and create PR — 2 commits: chore/upgrade vulns + perf/correlationBetweenTasters; 70 tests pass"
+  }
 }
