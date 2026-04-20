@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-19T13:13:00Z",
-  "last_run_id": "24629917576",
+  "last_run": "2026-04-20T01:16:56Z",
+  "last_run_id": "24643943205",
   "comments_made": {
     "24": "2026-03-24T01:23:16Z"
   },
@@ -9,40 +9,47 @@
     "31": "closed as not_planned on 2026-04-07 — verifyTasters bug won't be fixed"
   },
   "open_prs": {
-    "remove-dead-code-2026-04-17": "PR #99 — removes getBeerTastePartitionKey dead code; 70 tests pass"
+    "remove-dead-code-2026-04-17": "PR #99 — removes getBeerTastePartitionKey dead code; 70 tests pass; OPEN"
   },
   "pr_attempts": {
     "improve-beer-std-dev-2026-04": "merged as #87",
     "perf-cache-computed-results-2026-04-17": "deferred",
-    "improve-remove-dead-code-2026-04-17": "SUBMITTED PR #99",
+    "improve-remove-dead-code-2026-04-17": "SUBMITTED PR #99 — still open",
     "eng-add-ci-tests-2026-04-17": "BLOCKED — workflow file permission; became issue #100",
-    "fix-datetime-utc-in-results-2026-04-19": "NEEDS PUSH — fix Results.correlationToAge using DateTime.UtcNow.Year (not Now); branch: repo-assist/fix-datetime-utc-in-results; 70 tests pass",
-    "improve-sessions-datetimeoffset-2026-04-19": "NEEDS PUSH — refactor Sessions.fs to use native DateTimeOffset storage instead of ISO 8601 string; branch: repo-assist/improve-sessions-datetimeoffset; 70 tests pass"
+    "fix-datetime-utc-in-results-2026-04-20": "NEEDS PUSH — fix Results.correlationToAge using DateTime.UtcNow.Year (not Now); commit da33b40; safeoutputs unavailable so could not create PR",
+    "improve-sessions-datetimeoffset": "DEFERRED — Sessions.fs DateTimeOffset native storage improvement; not yet implemented"
   },
   "pending_code_changes": {
     "fix-datetime-utc-in-results": {
       "file": "BeerTaste.Common/Results.fs",
-      "change": "line 211: DateTime.Now.Year -> DateTime.UtcNow.Year",
-      "reason": "server may not be in local timezone; UTC is consistent"
+      "change": "line 210: DateTime.Now.Year -> DateTime.UtcNow.Year",
+      "reason": "server may not be in local timezone; UTC is consistent",
+      "status": "committed to branch repo-assist/fix-datetime-utc-in-results but branch is local only — NEEDS PR when safeoutputs available"
     },
     "improve-sessions-datetimeoffset": {
       "file": "BeerTaste.Common/Sessions.fs",
       "changes": [
-        "sessionToEntity: entity.Add(\"LastActiveAt\", session.LastActiveAt.ToString(\"o\")) -> entity.Add(\"LastActiveAt\", session.LastActiveAt)",
-        "entityToSession: DateTimeOffset.ParseExact(entity.GetString(...)) -> entity.GetDateTimeOffset(\"LastActiveAt\") |> Option.ofNullable |> Option.defaultValue DateTimeOffset.MinValue",
+        "sessionToEntity line 35: entity.Add(\"LastActiveAt\", session.LastActiveAt.ToString(\"o\")) -> entity.Add(\"LastActiveAt\", session.LastActiveAt)",
+        "entityToSession lines 44-49: replace DateTimeOffset.ParseExact block with entity.GetDateTimeOffset(\"LastActiveAt\") |> Option.ofNullable |> Option.defaultValue DateTimeOffset.MinValue",
         "remove open System.Globalization (no longer needed)"
       ],
-      "reason": "native DateTimeOffset is safer and more idiomatic for Azure SDK"
+      "reason": "native DateTimeOffset is safer and more idiomatic for Azure SDK",
+      "status": "not yet implemented — IMPLEMENT NEXT RUN"
     }
   },
   "monthly_activity_issue": 64,
-  "notes": "Run 2026-04-19T13: safeoutputs MCP filtered AGAIN. Tasks 5+3 completed locally but cannot push/PR. Branches will be lost. NEXT RUN MUST: re-implement the two code changes above and create PRs. PR #99 (remove-dead-code) is still open and mergeable. Issue #98 is old failure notice. Issue #100 still needs manual CI PR.",
+  "safeoutputs_unavailable_runs": [
+    "24486735916",
+    "24629917576",
+    "24643943205"
+  ],
+  "notes": "Run 2026-04-20T01: safeoutputs MCP AGAIN unavailable (3rd consecutive run). fix-datetime-utc committed locally to branch repo-assist/fix-datetime-utc-in-results but cannot push. NEXT RUN MUST: (1) re-implement DateTime.UtcNow fix in Results.fs + push PR, (2) implement Sessions.fs DateTimeOffset native storage + push PR. PR #99 (remove-dead-code) is still open and mergeable. Monthly activity issue #64 needs update. Issue #98 is stale failure notice that should be closed.",
   "backlog_cursor": {
-    "issue_comment": "all issues addressed",
+    "issue_comment": "all non-RA issues addressed; #98 and #100 are RA-created",
     "labelling": "all labelled"
   },
   "pending_work": {
-    "fix-datetime-utc-in-results": "re-implement next run when safeoutputs available — simple 1-line change in Results.fs",
-    "improve-sessions-datetimeoffset": "re-implement next run when safeoutputs available — Sessions.fs serialization change"
+    "fix-datetime-utc-in-results": "re-implement next run — simple 1-line change in Results.fs line 210; commit to new branch and create PR",
+    "improve-sessions-datetimeoffset": "implement next run — Sessions.fs sessionToEntity/entityToSession native DateTimeOffset"
   }
 }
