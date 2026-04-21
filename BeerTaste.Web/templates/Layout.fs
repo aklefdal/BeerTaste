@@ -23,12 +23,27 @@ let firebaseScripts (firebaseConfig: FirebaseConfig option) (t: Translations) =
                     }};
                     firebase.initializeApp(firebaseConfig);
 
-                    firebase.auth().onAuthStateChanged(function(user) {{
+                    async function createServerSession(user) {{
+                        const idToken = await user.getIdToken();
+                        await fetch('/auth/session', {{
+                            method: 'POST',
+                            headers: {{ 'Content-Type': 'application/json' }},
+                            body: JSON.stringify({{ idToken: idToken }})
+                        }});
+                    }}
+
+                    async function deleteServerSession() {{
+                        await fetch('/auth/logout', {{ method: 'POST' }});
+                    }}
+
+                    firebase.auth().onAuthStateChanged(async function(user) {{
                         const loginWidget = document.getElementById('login-widget');
                         if (user) {{
+                            await createServerSession(user);
                             loginWidget.innerHTML = '<span class="user-name">' + (user.displayName || user.email) + '</span> <a href="#" id="logout-link">{t.Logout}</a>';
-                            document.getElementById('logout-link').addEventListener('click', function(e) {{
+                            document.getElementById('logout-link').addEventListener('click', async function(e) {{
                                 e.preventDefault();
+                                await deleteServerSession();
                                 firebase.auth().signOut();
                             }});
                         }} else {{
