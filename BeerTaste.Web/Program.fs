@@ -2,6 +2,7 @@
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Http
+open Microsoft.AspNetCore.ResponseCompression
 open Microsoft.Extensions.Caching.Memory
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Configuration
@@ -365,6 +366,7 @@ let errorHandler (ctx: HttpContext) (next: RequestDelegate) : Task =
 let configureApp (appBuilder: WebApplication) (dc: DataCache) firebaseConfig =
     appBuilder
         .Use(errorHandler)
+        .UseResponseCompression()
         .UseStaticFiles()
         .Use(Func<HttpContext, RequestDelegate, Task>(fun ctx next -> sessionAuthMiddleware next ctx))
         .UseRouting()
@@ -391,7 +393,15 @@ let main args =
     | Some connStr ->
         let storage = BeerTasteTableStorage(connStr)
 
-        builder.Services.AddRouting().AddOxpecker().AddMemoryCache().AddSingleton(storage)
+        builder.Services
+            .AddResponseCompression(fun opts ->
+                opts.EnableForHttps <- true
+                opts.Providers.Add<BrotliCompressionProvider>()
+                opts.Providers.Add<GzipCompressionProvider>())
+            .AddRouting()
+            .AddOxpecker()
+            .AddMemoryCache()
+            .AddSingleton(storage)
         |> ignore
 
         FirebaseAuth.initialize config
