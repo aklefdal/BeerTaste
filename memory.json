@@ -1,24 +1,31 @@
 {
-  "last_run": "2026-04-21T13:15:26Z",
-  "last_run_id": "24724390054",
+  "last_run": "2026-04-22T01:16:34Z",
+  "last_run_id": "24755002974",
   "comments_made": {
     "24": "2026-03-24T01:23:16Z"
   },
-  "closed_issues_not_to_revisit": [31, 89],
+  "closed_issues_not_to_revisit": [
+    31,
+    89
+  ],
   "maintainer_decisions": {
-    "31": "closed as not_planned on 2026-04-07 — verifyTasters bug won't be fixed"
+    "31": "closed as not_planned on 2026-04-07 \u2014 verifyTasters bug won't be fixed"
   },
   "open_prs": {
-    "remove-dead-code-2026-04-17": "PR #99 — removes getBeerTastePartitionKey dead code; 70 tests pass; OPEN",
-    "fix-datetime-utc-results-2026-04-21": "PR created this run — fixes DateTime.Now.Year to DateTime.UtcNow.Year in correlationToAge",
-    "wire-firebase-server-sessions-2026-04-21": "PR created this run — wires Firebase client auth to POST /auth/session and POST /auth/logout"
+    "remove-dead-code-2026-04-17": "PR #99 \u2014 removes getBeerTastePartitionKey dead code; OPEN",
+    "fix-datetime-utc-results-2026-04-21": "PR #101 \u2014 fixes DateTime.Now.Year to DateTime.UtcNow.Year in correlationToAge; OPEN",
+    "wire-firebase-server-sessions-2026-04-21": "PR #102 \u2014 wires Firebase client auth to POST /auth/session and POST /auth/logout; OPEN",
+    "eng-dep-updates-2026-04-22": "PR submitted this run \u2014 bundles dependency updates including MailKit security fix (CVE); OPEN",
+    "perf-response-compression-2026-04-22": "PR submitted this run \u2014 adds Brotli/GZip response compression to BeerTaste.Web; OPEN"
   },
   "pr_attempts": {
     "improve-beer-std-dev-2026-04": "merged as #87",
-    "eng-add-ci-tests-2026-04-17": "BLOCKED — workflow file permission; became issue #100",
-    "improve-remove-dead-code-2026-04-17": "SUBMITTED PR #99 — still open",
-    "fix-datetime-utc-in-results-2026-04-21": "SUBMITTED PR this run",
-    "wire-firebase-server-sessions-2026-04-21": "SUBMITTED PR this run"
+    "eng-add-ci-tests-2026-04-17": "BLOCKED \u2014 became issue #100",
+    "improve-remove-dead-code-2026-04-17": "SUBMITTED PR #99 \u2014 still open",
+    "fix-datetime-utc-in-results-2026-04-21": "SUBMITTED PR #101 \u2014 still open",
+    "wire-firebase-server-sessions-2026-04-21": "SUBMITTED PR #102 \u2014 still open",
+    "eng-dep-updates-2026-04-22": "SUBMITTED PR this run \u2014 MailKit CVE fix + FSharp.Core alignment + EPPlus/Spectre/Config/coverlet updates",
+    "perf-response-compression-2026-04-22": "SUBMITTED PR this run \u2014 Brotli/GZip response compression for BeerTaste.Web"
   },
   "monthly_activity_issue": 64,
   "safeoutputs_unavailable_runs": [
@@ -28,7 +35,7 @@
     "24668571809",
     "24698893695"
   ],
-  "notes": "Run 2026-04-21T13: safeoutputs MCP now WORKING via HTTP. Created 2 new PRs: fix-datetime-utc and wire-firebase-sessions. Updated monthly activity issue #64. PR #99 still open.",
+  "notes": "Run 2026-04-22: Created 2 PRs - dep bundle (MailKit security CVE fix, FSharp.Core alignment, EPPlus 8.5.3, Spectre 0.55.2, Config 10.0.7, coverlet 10.0.0) and response compression (Brotli+GZip for BeerTaste.Web). Monthly activity issue #64 updated. 5 open Repo Assist PRs.",
   "backlog_cursor": {
     "issue_comment": "all non-RA issues addressed",
     "labelling": "all labelled"
@@ -36,9 +43,9 @@
   "plan_progress": {
     "task_1_register_di": "DONE (merged #96)",
     "task_2_sessions_auth_middleware": "DONE (merged #96)",
-    "task_3_antiforgery": "TODO — needed before form-based POST endpoints",
+    "task_3_antiforgery": "TODO \u2014 needed before form-based POST endpoints",
     "task_4_wire_firebase_to_sessions": "DONE (PR submitted this run)",
-    "task_5_create_beer_tasting_web": "TODO — next after task 4 PR merged"
+    "task_5_create_beer_tasting_web": "TODO \u2014 next after task 4 PR merged"
   },
   "pending_work": {
     "task-3-antiforgery": "implement anti-forgery tokens for form POST endpoints",
