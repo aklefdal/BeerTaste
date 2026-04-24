@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-23T13:15:31Z",
-  "last_run_id": "24837307692",
+  "last_run": "2026-04-24T01:16:49Z",
+  "last_run_id": "24867176075",
   "comments_made": {
     "24": "2026-03-24T01:23:16Z"
   },
@@ -13,7 +13,8 @@
     "fix-datetime-utc-results-2026-04-21": "PR #101 — fixes DateTime.Now.Year to DateTime.UtcNow.Year in correlationToAge; OPEN",
     "wire-firebase-server-sessions-2026-04-21": "PR #102 — wires Firebase client auth to POST /auth/session and POST /auth/logout; OPEN",
     "eng-dep-updates-2026-04-22": "PR #103 — bundles dependency updates including MailKit security fix (CVE); OPEN",
-    "perf-response-compression-2026-04-22": "PR #104 — adds Brotli/GZip response compression to BeerTaste.Web; OPEN"
+    "perf-response-compression-2026-04-22": "PR #104 — adds Brotli/GZip response compression to BeerTaste.Web; OPEN",
+    "eng-ci-workflow-2026-04-24": "PR pending creation — adds CI workflow (.github/workflows/ci.yml); branch: repo-assist/eng-ci-workflow-2026-04-24; addresses issue #100"
   },
   "pr_attempts": {
     "improve-beer-std-dev-2026-04": "merged as #87",
@@ -23,21 +24,12 @@
     "wire-firebase-server-sessions-2026-04-21": "SUBMITTED PR #102 — still open",
     "eng-dep-updates-2026-04-22": "SUBMITTED PR #103 — MailKit CVE fix + FSharp.Core alignment + EPPlus/Spectre/Config/coverlet updates",
     "perf-response-compression-2026-04-22": "SUBMITTED PR #104 — Brotli/GZip response compression for BeerTaste.Web",
-    "test-email-module-2026-04-23": "COMMITTED (not pushed) — 18 Email module tests (EmailTests.fs); 70→88 tests; branch: repo-assist/test-email-module-2026-04-23",
-    "eng-ci-workflow-2026-04-23": "COMMITTED (not pushed) — adds .github/workflows/ci.yml; branch: repo-assist/eng-ci-workflow-2026-04-23; addresses issue #100"
+    "test-email-module-2026-04-23": "LOST (branch not persisted) — needs re-creation: 18 Email module tests (EmailTests.fs)",
+    "eng-ci-workflow-2026-04-24": "COMMITTED — branch repo-assist/eng-ci-workflow-2026-04-24; CI workflow file; PR creation attempted via safeoutputs"
   },
   "monthly_activity_issue": 64,
-  "safeoutputs_unavailable_runs": [
-    "24486735916",
-    "24629917576",
-    "24643943205",
-    "24668571809",
-    "24698893695",
-    "24780310098",
-    "24811270763",
-    "24837307692"
-  ],
-  "notes": "Run 2026-04-23 (13:15 UTC): Task 5 - created EmailTests.fs with 18 tests for Email.maskEmail, Email.isAdmin, Email.createBeerTasteResultsEmail (70→88 passing); branch repo-assist/test-email-module-2026-04-23 committed but not pushed. Task 4 - created .github/workflows/ci.yml CI workflow; branch repo-assist/eng-ci-workflow-2026-04-23 committed but not pushed. Safeoutputs unavailable AGAIN (8th consecutive run). Monthly activity issue #64 NOT updated. URGENT: These branches need pushing. Both branches are local only.",
+  "safeoutputs_unavailable_runs": [],
+  "notes": "Run 2026-04-24 (01:16 UTC): Task 4 - created CI workflow (.github/workflows/ci.yml) on branch repo-assist/eng-ci-workflow-2026-04-24; 70 tests pass; addresses issue #100. Task 2 - investigated issue #98 (safe-outputs failures, 12 consecutive, now resolved) and issue #100 (CI gap). Monthly activity issue #64 needs update next run — safeoutputs used for PR creation. Issue #98 has 12 bot comments about safe-output failures, now resolved. Email tests need re-creation (branch was lost). CRITICAL: MailKit 4.15.1 has moderate CVE (GHSA-9j88-vvj5-vhgr) — PR #103 should address this but may need checking.",
   "backlog_cursor": {
     "issue_comment": "all non-RA issues addressed",
     "labelling": "all labelled"
@@ -51,16 +43,16 @@
   },
   "pending_branches": [
     {
-      "branch": "repo-assist/test-email-module-2026-04-23",
-      "title": "[Repo Assist] test: add tests for Email module pure functions",
-      "files": ["BeerTaste.Tests/EmailTests.fs", "BeerTaste.Tests/BeerTaste.Tests.fsproj"],
-      "notes": "18 new tests, 70→88 total; all pass; fantomas formatted"
-    },
-    {
-      "branch": "repo-assist/eng-ci-workflow-2026-04-23",
-      "title": "[Repo Assist] ci: add CI workflow that runs tests and format checks on PRs",
+      "branch": "repo-assist/eng-ci-workflow-2026-04-24",
+      "title": "[Repo Assist] ci: add CI workflow for builds, formatting checks, and tests on PRs",
       "files": [".github/workflows/ci.yml"],
-      "notes": "Addresses issue #100 - no CI running tests on PRs"
+      "notes": "Addresses issue #100; 70 tests pass; formatted ok"
     }
+  ],
+  "future_work": [
+    "Re-create EmailTests.fs (18 tests for Email.maskEmail, Email.isAdmin, Email.createBeerTasteResultsEmail) — branch was lost",
+    "Update monthly activity issue #64 (was skipped this run due to single safeoutputs call constraint)",
+    "Anti-forgery tokens (Plan Task 3)",
+    "Create beer tasting web workflow (Plan Task 5)"
   ]
 }
