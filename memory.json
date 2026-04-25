@@ -1,39 +1,36 @@
 {
-  "last_run": "2026-04-24T13:15:22Z",
-  "last_run_id": "24891404910",
+  "last_run": "2026-04-25T01:16:23Z",
+  "last_run_id": "24919027236",
   "comments_made": {
     "24": "2026-03-24T01:23:16Z"
   },
-  "closed_issues_not_to_revisit": [
-    31,
-    89
-  ],
+  "closed_issues_not_to_revisit": [31, 89],
   "maintainer_decisions": {
-    "31": "closed as not_planned on 2026-04-07 \u2014 verifyTasters bug won't be fixed"
+    "31": "closed as not_planned on 2026-04-07 — verifyTasters bug won't be fixed"
   },
   "open_prs": {
-    "remove-dead-code-2026-04-17": "PR #99 \u2014 removes getBeerTastePartitionKey dead code; OPEN",
-    "fix-datetime-utc-results-2026-04-21": "PR #101 \u2014 fixes DateTime.Now.Year to DateTime.UtcNow.Year in correlationToAge; OPEN",
-    "wire-firebase-server-sessions-2026-04-21": "PR #102 \u2014 wires Firebase client auth to POST /auth/session and POST /auth/logout; OPEN",
-    "eng-dep-updates-2026-04-22": "PR #103 \u2014 bundles dependency updates including MailKit security fix (CVE); OPEN",
-    "perf-response-compression-2026-04-22": "PR #104 \u2014 adds Brotli/GZip response compression to BeerTaste.Web; OPEN",
-    "test-email-module-2026-04-24": "PR pending creation \u2014 adds 24 Email module tests (EmailTests.fs); branch repo-assist/test-email-module-2026-04-24"
+    "remove-dead-code-2026-04-17": "PR #99 — removes getBeerTastePartitionKey dead code; OPEN",
+    "fix-datetime-utc-results-2026-04-21": "PR #101 — fixes DateTime.Now.Year to DateTime.UtcNow.Year in correlationToAge; OPEN",
+    "wire-firebase-server-sessions-2026-04-21": "PR #102 — wires Firebase client auth to POST /auth/session and POST /auth/logout; OPEN",
+    "eng-dep-updates-2026-04-22": "PR #103 — bundles dependency updates including MailKit security fix (CVE); OPEN",
+    "perf-response-compression-2026-04-22": "PR #104 — adds Brotli/GZip response compression to BeerTaste.Web; OPEN",
+    "test-email-module-2026-04-25": "PR #NEW — adds 23 Email module tests; branch repo-assist/test-email-module-2026-04-25; all 93 tests pass"
   },
   "pr_attempts": {
     "improve-beer-std-dev-2026-04": "merged as #87",
-    "eng-add-ci-tests-2026-04-17": "BLOCKED \u2014 became issue #100",
-    "improve-remove-dead-code-2026-04-17": "SUBMITTED PR #99 \u2014 still open",
-    "fix-datetime-utc-in-results-2026-04-21": "SUBMITTED PR #101 \u2014 still open",
-    "wire-firebase-server-sessions-2026-04-21": "SUBMITTED PR #102 \u2014 still open",
-    "eng-dep-updates-2026-04-22": "SUBMITTED PR #103 \u2014 MailKit CVE fix + FSharp.Core alignment + EPPlus/Spectre/Config/coverlet updates",
-    "perf-response-compression-2026-04-22": "SUBMITTED PR #104 \u2014 Brotli/GZip response compression for BeerTaste.Web",
-    "test-email-module-2026-04-23": "LOST (branch not persisted) \u2014 needs re-creation: 18 Email module tests (EmailTests.fs)",
-    "eng-ci-workflow-2026-04-24": "COMMITTED \u2014 branch repo-assist/eng-ci-workflow-2026-04-24; CI workflow file; PR creation attempted via safeoutputs",
-    "test-email-module-2026-04-24": "COMMITTED \u2014 branch repo-assist/test-email-module-2026-04-24; 24 Email tests; 94 total pass; PR creation via safeoutputs"
+    "eng-add-ci-tests-2026-04-17": "BLOCKED — became issue #100",
+    "improve-remove-dead-code-2026-04-17": "SUBMITTED PR #99 — still open",
+    "fix-datetime-utc-in-results-2026-04-21": "SUBMITTED PR #101 — still open",
+    "wire-firebase-server-sessions-2026-04-21": "SUBMITTED PR #102 — still open",
+    "eng-dep-updates-2026-04-22": "SUBMITTED PR #103 — MailKit CVE fix + FSharp.Core alignment + EPPlus/Spectre/Config/coverlet updates",
+    "perf-response-compression-2026-04-22": "SUBMITTED PR #104 — Brotli/GZip response compression for BeerTaste.Web",
+    "test-email-module-2026-04-23": "LOST (branch not persisted)",
+    "eng-ci-workflow-2026-04-24": "BLOCKED (workflow file permission) — created as issue #105 instead; branch also lost",
+    "test-email-module-2026-04-25": "SUBMITTED via create_pull_request 2026-04-25 — 23 Email tests; 93 total pass"
   },
   "monthly_activity_issue": 64,
   "safeoutputs_unavailable_runs": [],
-  "notes": "Run 2026-04-24 (13:15 UTC): Task 9 \u2014 created 24 Email module tests (EmailTests.fs) on branch repo-assist/test-email-module-2026-04-24; all 94 tests pass. Task 1 \u2014 all issues already labelled per memory. Monthly activity issue #64 NOT updated this run (single safeoutputs constraint, PR creation prioritized). CI workflow branch was lost again \u2014 needs recreation.",
+  "notes": "Run 2026-04-25 (01:16 UTC): Task 6 — created email tests PR (23 tests for maskEmail, isAdmin, createBeerTasteResultsEmail). Task 2 — all open issues are Repo Assist issues, no human issues to comment on. MUST update monthly activity issue #64 on next run (deferred again due to single safeoutputs constraint). CI workflow branch lost and blocked by workflow permissions (issue #105 created as workaround). MailKit vulnerability (GHSA-9j88-vvj5-vhgr) still present — PR #103 addresses it.",
   "backlog_cursor": {
     "issue_comment": "all non-RA issues addressed",
     "labelling": "all labelled"
@@ -41,15 +38,15 @@
   "plan_progress": {
     "task_1_register_di": "DONE (merged #96)",
     "task_2_sessions_auth_middleware": "DONE (merged #96)",
-    "task_3_antiforgery": "TODO \u2014 needed before form-based POST endpoints",
+    "task_3_antiforgery": "TODO — needed before form-based POST endpoints",
     "task_4_wire_firebase_to_sessions": "DONE (PR #102 submitted)",
-    "task_5_create_beer_tasting_web": "TODO \u2014 next after task 4 PR merged"
+    "task_5_create_beer_tasting_web": "TODO — next after task 4 PR merged"
   },
   "pending_branches": [],
   "future_work": [
-    "Re-create CI workflow (.github/workflows/ci.yml) \u2014 branch was lost again; addresses issue #100",
+    "UPDATE MONTHLY ACTIVITY ISSUE #64 — PRIORITY NEXT RUN (deferred 3+ times)",
+    "Re-create CI workflow (.github/workflows/ci.yml) — blocked by workflow permissions; issue #105 tracks this",
     "Anti-forgery tokens (Plan Task 3)",
-    "Create beer tasting web workflow (Plan Task 5)",
-    "Update monthly activity issue #64 next run (could not do this run due to single safeoutputs constraint)"
+    "Create beer tasting web workflow (Plan Task 5)"
   ]
 }
