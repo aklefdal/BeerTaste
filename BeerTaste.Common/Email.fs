@@ -85,16 +85,31 @@ module Email =
         (messages: EmailMessage list)
         : Task<(EmailMessage * Result<unit, string>) list> =
         task {
-            let! results =
-                messages
-                |> List.map (fun message ->
-                    task {
-                        let! result = sendEmail config message
-                        return (message, result)
-                    })
-                |> Task.WhenAll
+            use client = new SmtpClient()
+            do! client.ConnectAsync(config.SmtpServer, config.SmtpPort, SecureSocketOptions.Auto)
+            do! client.AuthenticateAsync(config.SmtpUsername, config.SmtpPassword)
 
-            return results |> Array.toList
+            let results = System.Collections.Generic.List()
+
+            for message in messages do
+                let! result =
+                    task {
+                        try
+                            let mimeMessage = new MimeMessage()
+                            mimeMessage.From.Add(new MailboxAddress(config.FromName, config.FromEmail))
+                            mimeMessage.To.Add(new MailboxAddress(message.ToName, message.To))
+                            mimeMessage.Subject <- message.Subject
+                            mimeMessage.Body <- new TextPart("plain", Text = message.Body)
+                            let! _ = client.SendAsync(mimeMessage)
+                            return Ok()
+                        with ex ->
+                            return Error $"Failed to send email to {message.To |> maskEmail}: {ex.Message}"
+                    }
+
+                results.Add((message, result))
+
+            do! client.DisconnectAsync(true)
+            return results |> Seq.toList
         }
 
     let createBeerTasteResultsEmail
@@ -110,16 +125,9 @@ module Email =
                 ToName = taster.Name
                 Subject = $"Beer Tasting Results: {beerTasteName}"
                 Body =
-                    $"""Hi {taster.Name},
-
-                    The results for the beer tasting event "{beerTasteName}" are now available!
-
-                    You can view the results at:
-                    {resultsUrl}
-
-                    Thank you for participating!
-
-                    Best regards,
-                    BeerTaste System
-                    """
+                    $"Hi {taster.Name},\n\n"
+                    + $"The results for the beer tasting event \"{beerTasteName}\" are now available!\n\n"
+                    + $"You can view the results at:\n{resultsUrl}\n\n"
+                    + "Thank you for participating!\n\n"
+                    + "Best regards,\nBeerTaste System"
             }
