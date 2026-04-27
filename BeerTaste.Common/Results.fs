@@ -114,6 +114,19 @@ module Results =
             : BeerResultWithAverage))
         |> List.sortByDescending _.Value
 
+    // Compute Pearson correlation between each taster's scores and a fixed reference vector.
+    // Both the taster score arrays and the reference vector must be aligned by beer ID (sorted ascending).
+    let private computeTasterCorrelations
+        (scoresByTaster: Map<string, Score list>)
+        (tasters: Taster list)
+        (referenceVector: seq<float>)
+        : TasterResult list =
+        tasters
+        |> List.map (fun t ->
+            let tasterScores = lookupTasterScores scoresByTaster t.Name
+            let correlation = Seq.pearson tasterScores referenceVector
+            ({ Name = t.Name; Value = correlation }: TasterResult))
+
     let correlationToAverages (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
         // Pre-group scores by beer and taster to avoid repeated full-list scans
         let scoresByBeer = scores |> List.groupBy _.BeerId |> Map.ofList
@@ -126,12 +139,7 @@ module Results =
                 lookupBeerScores scoresByBeer b.Id
                 |> averageOrZero)
 
-        tasters
-        |> List.map (fun t ->
-            let tasterScores = lookupTasterScores scoresByTaster t.Name
-
-            let correlation = Seq.pearson tasterScores avgScoresByBeer
-            ({ Name = t.Name; Value = correlation }: TasterResult))
+        computeTasterCorrelations scoresByTaster tasters avgScoresByBeer
         |> List.sortBy _.Value
 
     // Generate all unique taster pairs, always with the alphabetically smaller name first
@@ -178,14 +186,9 @@ module Results =
     // Correlation to ABV (fondest of strong beers)
     let correlationToAbv (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
         let beerAbv = beers |> List.sortBy _.Id |> List.map _.ABV
-        // Pre-group scores by taster to avoid a repeated full-list scan per taster
         let scoresByTaster = scores |> List.groupBy _.TasterName |> Map.ofList
 
-        tasters
-        |> List.map (fun t ->
-            let tasterScores = lookupTasterScores scoresByTaster t.Name
-            let correlation = Seq.pearson tasterScores beerAbv
-            ({ Name = t.Name; Value = correlation }: TasterResult))
+        computeTasterCorrelations scoresByTaster tasters beerAbv
         |> List.sortByDescending _.Value
 
     // Correlation to price per ABV (fondest of inexpensive alcohol)
@@ -195,14 +198,9 @@ module Results =
             |> List.sortBy _.Id
             |> List.map _.PricePerAbv
 
-        // Pre-group scores by taster to avoid a repeated full-list scan per taster
         let scoresByTaster = scores |> List.groupBy _.TasterName |> Map.ofList
 
-        tasters
-        |> List.map (fun t ->
-            let tasterScores = lookupTasterScores scoresByTaster t.Name
-            let correlation = Seq.pearson tasterScores beerAbvPrice
-            ({ Name = t.Name; Value = correlation }: TasterResult))
+        computeTasterCorrelations scoresByTaster tasters beerAbvPrice
         |> List.sortByDescending _.Value
 
     // Correlation to taster age (beers preferred by older tasters)
