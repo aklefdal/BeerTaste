@@ -1,7 +1,10 @@
 {
-  "last_run": "2026-04-27T13:16:38Z",
-  "last_run_id": "24997221266",
-  "comments_made": {"24": "2026-03-24T01:23:16Z"},
+  "last_run": "2026-04-28T13:20:13Z",
+  "last_run_id": "25055195284",
+  "comments_made": {
+    "24": "2026-03-24T01:23:16Z",
+    "98": "2026-04-28T13:20:13Z"
+  },
   "closed_issues_not_to_revisit": [31, 89],
   "open_prs": {
     "99": "refactor: remove getBeerTastePartitionKey dead code",
@@ -10,13 +13,13 @@
     "103": "eng: bundle dep updates (MailKit CVE GHSA-9j88-vvj5-vhgr)",
     "104": "perf: Brotli/GZip compression for Web",
     "106": "perf: SMTP reuse + email body fix + 16 Email tests",
-    "new-task5": "refactor: extract computeTasterCorrelations helper (branch: repo-assist/improve-extract-taster-correlation-2026-04-27)",
-    "new-task8": "perf: pre-grouped map in correlationBetweenTasters (branch: repo-assist/perf-fix-correlation-between-tasters-2026-04-27)"
+    "107": "refactor: extract computeTasterCorrelations helper",
+    "108": "perf: pre-grouped map in correlationBetweenTasters"
   },
   "monthly_activity_issue": 64,
-  "notes": "Run 2026-04-27 (2nd): safeoutputs accessible via HTTP at http://host.docker.internal:80/mcp/safeoutputs. Created Task5 PR (coding improvement: extract computeTasterCorrelations) and Task8 PR (perf: pre-grouped map in correlationBetweenTasters). All 70 tests pass.",
+  "notes": "Run 2026-04-28: All 8 open PRs conflict-free. Commented on #98 (agent recovery). Updated monthly summary #64 with all 8 PRs listed. Issues #100 and #105 are CI workflow issues blocked by permissions.",
   "backlog_cursor": {
-    "issue_comment": "all non-RA issues addressed",
+    "issue_comment": "all non-RA issues addressed (#98 done)",
     "labelling": "all labelled"
   },
   "plan_progress": {
@@ -29,9 +32,10 @@
   "future_work": [
     "Anti-forgery tokens (Plan Task 3)",
     "Create beer tasting web workflow (Plan Task 5) — after PR #102 merged",
-    "CI workflow (.github/workflows/ci.yml) — blocked by workflow permissions; issue #100"
+    "CI workflow (.github/workflows/ci.yml) — blocked by workflow permissions; issues #100, #105"
   ],
   "safeoutputs_http_url": "http://host.docker.internal:80/mcp/safeoutputs",
   "github_mcp_http_url": "http://host.docker.internal:80/mcp/github",
-  "mcp_config_path": "/home/runner/.copilot/mcp-config.json"
+  "mcp_config_path": "/home/runner/.copilot/mcp-config.json",
+  "mcp_session_note": "MCP requires session ID header (Mcp-Session-Id) from initialize response to work across separate HTTP calls"
 }
