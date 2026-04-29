@@ -119,12 +119,14 @@ module Results =
         let scoresByBeer = scores |> List.groupBy _.BeerId |> Map.ofList
         let scoresByTaster = scores |> List.groupBy _.TasterName |> Map.ofList
 
+        // Convert to array once so Seq.pearson gets contiguous memory for every taster call
         let avgScoresByBeer =
             beers
             |> List.sortBy _.Id
             |> List.map (fun b ->
                 lookupBeerScores scoresByBeer b.Id
                 |> averageOrZero)
+            |> List.toArray
 
         tasters
         |> List.map (fun t ->
@@ -177,7 +179,12 @@ module Results =
 
     // Correlation to ABV (fondest of strong beers)
     let correlationToAbv (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
-        let beerAbv = beers |> List.sortBy _.Id |> List.map _.ABV
+        // Convert to array once so Seq.pearson gets contiguous memory for every taster call
+        let beerAbv =
+            beers
+            |> List.sortBy _.Id
+            |> List.map _.ABV
+            |> List.toArray
         // Pre-group scores by taster to avoid a repeated full-list scan per taster
         let scoresByTaster = scores |> List.groupBy _.TasterName |> Map.ofList
 
@@ -190,10 +197,12 @@ module Results =
 
     // Correlation to price per ABV (fondest of inexpensive alcohol)
     let correlationToAbvPrice (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
+        // Convert to array once so Seq.pearson gets contiguous memory for every taster call
         let beerAbvPrice =
             beers
             |> List.sortBy _.Id
             |> List.map _.PricePerAbv
+            |> List.toArray
 
         // Pre-group scores by taster to avoid a repeated full-list scan per taster
         let scoresByTaster = scores |> List.groupBy _.TasterName |> Map.ofList
