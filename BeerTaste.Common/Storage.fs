@@ -5,34 +5,31 @@ open Azure.Data.Tables
 
 /// <summary>
 /// Manages Azure Table Storage clients for BeerTaste application.
-/// Creates and provides access to four tables: beertaste, beers, tasters, and scores.
-/// All tables are created automatically if they don't exist.
+/// Creates and provides access to six tables: beertaste, beers, tasters, scores, users, sessions.
+/// All tables are initialised concurrently to reduce startup latency.
 /// </summary>
 type BeerTasteTableStorage(connectionString: string) =
     let service = TableServiceClient(connectionString)
-    let beerTasteTableName = "beertaste"
-    let beerTasteTableClient = service.GetTableClient(beerTasteTableName)
-    do beerTasteTableClient.CreateIfNotExists() |> ignore
+    let beerTasteTableClient = service.GetTableClient("beertaste")
+    let beersTableClient = service.GetTableClient("beers")
+    let tastersTableClient = service.GetTableClient("tasters")
+    let scoresTableClient = service.GetTableClient("scores")
+    let usersTableClient = service.GetTableClient("users")
+    let sessionsTableClient = service.GetTableClient("sessions")
 
-    let beersTableName = "beers"
-    let beersTableClient = service.GetTableClient(beersTableName)
-    do beersTableClient.CreateIfNotExists() |> ignore
-
-    let tastersTableName = "tasters"
-    let tastersTableClient = service.GetTableClient(tastersTableName)
-    do tastersTableClient.CreateIfNotExists() |> ignore
-
-    let scoresTableName = "scores"
-    let scoresTableClient = service.GetTableClient(scoresTableName)
-    do scoresTableClient.CreateIfNotExists() |> ignore
-
-    let usersTableName = "users"
-    let usersTableClient = service.GetTableClient(usersTableName)
-    do usersTableClient.CreateIfNotExists() |> ignore
-
-    let sessionsTableName = "sessions"
-    let sessionsTableClient = service.GetTableClient(sessionsTableName)
-    do sessionsTableClient.CreateIfNotExists() |> ignore
+    // Run all six CreateIfNotExists calls concurrently instead of sequentially.
+    // With ~50 ms per Azure round-trip this cuts startup overhead by ~5×.
+    do
+        [|
+            beerTasteTableClient.CreateIfNotExistsAsync() :> Task
+            beersTableClient.CreateIfNotExistsAsync() :> Task
+            tastersTableClient.CreateIfNotExistsAsync() :> Task
+            scoresTableClient.CreateIfNotExistsAsync() :> Task
+            usersTableClient.CreateIfNotExistsAsync() :> Task
+            sessionsTableClient.CreateIfNotExistsAsync() :> Task
+        |]
+        |> Task.WhenAll
+        |> fun t -> t.GetAwaiter().GetResult()
 
     member this.BeerTasteTableClient = beerTasteTableClient
     member this.BeersTableClient = beersTableClient
