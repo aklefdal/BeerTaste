@@ -1,6 +1,6 @@
 {
-  "last_run": "2026-04-30T13:18:01Z",
-  "last_run_id": "25167503915",
+  "last_run": "2026-05-01T01:25:51Z",
+  "last_run_id": "25197772145",
   "comments_made": {"24": "2026-03-24", "98": "2026-04-28"},
   "closed_issues_not_to_revisit": [31, 89],
   "open_prs": {
@@ -12,9 +12,13 @@
     "106": "perf: SMTP reuse + email body fix",
     "107": "refactor: computeTasterCorrelations",
     "108": "perf: pre-grouped map",
-    "109": "perf: float array reference vectors"
+    "109": "perf: float array reference vectors",
+    "110": "perf: parallelise Azure table CreateIfNotExists calls at startup",
+    "111": "eng: add test step and NuGet cache to CI workflow"
   },
   "monthly_activity_issue": 64,
+  "monthly_activity_month": "April 2026",
+  "need_new_monthly_issue": true,
   "backlog_cursor": {"issue_comment": "all done", "labelling": "all labelled"},
   "plan_progress": {
     "task_1_2_auth": "DONE (merged #96)",
@@ -24,8 +28,7 @@
   },
   "future_work": [
     "Anti-forgery tokens (Plan Task 3)",
-    "Create beer tasting web workflow (Plan Task 5)",
-    "CI workflow - blocked by permissions (#100, #105)"
+    "Create beer tasting web workflow (Plan Task 5)"
   ],
-  "notes": "CRLF line endings in PRs are correct (editorconfig=crlf). All 9 PRs have no conflicts with main and build cleanly (70/70 tests pass). PR #103 fixes MailKit CVE. PR #102 (firebase) builds cleanly. Monthly activity issue #64 updated this run."
+  "notes": "All 11 PRs (#99-#111) have no conflicts with main and build cleanly (70/70 tests pass). PR #103 fixes MailKit CVE (4.15.1→4.16.0). PR #110 parallelises Azure table init (~5x startup speedup). PR #111 adds dotnet test + NuGet cache to CI. Monthly activity issue #64 updated this run (April 2026). Need to create new May 2026 monthly issue next run - current issue #64 is still April."
 }
