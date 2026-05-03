@@ -391,7 +391,7 @@ let main args =
     | Some connStr ->
         let storage = BeerTasteTableStorage(connStr)
 
-        builder.Services.AddRouting().AddOxpecker().AddMemoryCache().AddSingleton(storage)
+        builder.Services.AddRouting().AddOxpecker().AddMemoryCache().AddAntiforgery().AddSingleton(storage)
         |> ignore
 
         FirebaseAuth.initialize config
