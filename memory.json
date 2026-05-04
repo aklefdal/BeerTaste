@@ -1,18 +1,19 @@
 {
-  "last_run": "2026-05-03T13:14Z",
+  "last_run": "2026-05-04T01:22Z",
   "comments": {
     "24": "2026-03-24",
     "98": "2026-04-28"
   },
   "closed": [31, 89],
-  "open_prs": [99, 101, 102, 103, 104, 106, 107, 108, 109, 110, 112, 115],
+  "open_prs": [99, 101, 102, 103, 104, 106, 107, 108, 109, 110, 112, 115, 116],
   "fix_submitted": [
     "ci-test-step-2026-05-02",
     "session-cookie-2026-05-02",
-    "antiforgery-2026-05-03"
+    "antiforgery-2026-05-03",
+    "create-beertaste-web-2026-05-04"
   ],
   "monthly_issue": "113",
   "monthly": "May 2026",
   "todos": [],
-  "notes": "Issues 98,100,105,111,114 to close. PR created for antiforgery infra (PLAN Task 3). Next: Task 4 (wire Firebase JS to sessions) or Task 5 (Create Beer Tasting web form). New PR not yet numbered - will appear in next run."
+  "notes": "Task 5 (Create BeerTasting web form) implemented on branch repo-assist/feat-create-beertaste-web-2026-05-04-731a957 but NOT pushed due to missing safeoutputs MCP tools. PR#116 is antiforgery. Issues 98,100,105,111,114 to close. Next run: push Task 5 branch and create PR, then implement Task 6 (admin beer management) or Task 4 wiring for Firebase. Duplicate CI issues: #100,#111 need comments pointing to #114."
 }
