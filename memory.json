@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-05-04T13:17Z",
+  "last_run": "2026-05-05T01:25Z",
   "comments": {
     "24": "2026-03-24",
     "98": "2026-04-28"
@@ -10,10 +10,11 @@
     "ci-test-step-2026-05-02",
     "session-cookie-2026-05-02",
     "antiforgery-2026-05-03",
-    "create-beertaste-web-2026-05-04"
+    "create-beertaste-web-2026-05-04",
+    "entity-roundtrip-tests-2026-05-05"
   ],
   "monthly_issue": "113",
   "monthly": "May 2026",
   "todos": [],
-  "notes": "Task 5 (Create BeerTasting web form) implemented on branch repo-assist/feat-create-beertaste-web-2026-05-04 (local commit ae14548) but NOT pushed - safeoutputs MCP tools unavailable (no GITHUB_TOKEN). PR#116 antiforgery is superseded by Task5 branch. Issues 98,100,105,111,114 need closing. Next run: push Task 5 branch and create PR, then implement Task 4 (wire Firebase client JS to server sessions in Layout.fs)."
+  "notes": "safeoutputs MCP server blocked by policy again. Entity round-trip tests (14 new tests) committed to local branch repo-assist/test-entity-roundtrips-2026-05-05 at commit 41385a5 but NOT pushed. Next run: needs to push this branch and create PR. PR titles: 99=remove dead code, 101=fix datetime UTC, 102=wire firebase, 103=eng dep updates, 104=perf response compression, 106=perf smtp reuse, 107=refactor taster correlation, 108=perf correlation between tasters, 109=perf array ref vectors, 110=improve maskEmail tests, 112=perf parallel table init, 115=fix session cookie refresh, 116=antiforgery infra. Issues 98,100,105,111,114 need closing per maintainer. Monthly issue is #113."
 }
