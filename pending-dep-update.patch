@@ -1,0 +1,89 @@
+From 40a1d10b7a3244a1024cd7dbfb30dce0add6c32e Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]" <github-actions[bot]@users.noreply.github.com>
+Date: Tue, 5 May 2026 13:33:14 +0000
+Subject: [PATCH] chore: update dependencies to fix security vulnerabilities
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- MailKit 4.15.1 → 4.16.0 (fixes GHSA-9j88-vvj5-vhgr, moderate severity)
+- EPPlus 8.5.1 → 8.5.4 (fixes transitive System.Security.Cryptography.Xml
+  high severity CVEs: GHSA-37gx-xxp4-5rgx, GHSA-w3x6-4m5h-cxqf)
+- Spectre.Console 0.55.0 → 0.55.2 (patch update)
+- Oxpecker 2.0.0 → 2.0.1 (patch update)
+- Microsoft.Extensions.Configuration* 10.0.5 → 10.0.7 (required by EPPlus 8.5.4)
+- Microsoft.NET.Test.Sdk 18.4.0 → 18.5.1 (minor update)
+
+All 70 tests pass with zero build warnings.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+---
+ BeerTaste.Common/BeerTaste.Common.fsproj   |  2 +-
+ BeerTaste.Console/BeerTaste.Console.fsproj | 10 +++++-----
+ BeerTaste.Tests/BeerTaste.Tests.fsproj     |  2 +-
+ BeerTaste.Web/BeerTaste.Web.fsproj         |  2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/BeerTaste.Common/BeerTaste.Common.fsproj b/BeerTaste.Common/BeerTaste.Common.fsproj
+index 132f729..80e7fc3 100644
+--- a/BeerTaste.Common/BeerTaste.Common.fsproj
++++ b/BeerTaste.Common/BeerTaste.Common.fsproj
+@@ -20,7 +20,7 @@
+   <ItemGroup>
+     <PackageReference Include="Azure.Data.Tables" Version="12.11.0" />
+     <PackageReference Include="FSharp.Stats" Version="0.6.0" />
+-    <PackageReference Include="MailKit" Version="4.15.1" />
++    <PackageReference Include="MailKit" Version="4.16.0" />
+   </ItemGroup>
+ 
+ </Project>
+diff --git a/BeerTaste.Console/BeerTaste.Console.fsproj b/BeerTaste.Console/BeerTaste.Console.fsproj
+index f1c0fe3..9bd7cf3 100644
+--- a/BeerTaste.Console/BeerTaste.Console.fsproj
++++ b/BeerTaste.Console/BeerTaste.Console.fsproj
+@@ -28,11 +28,11 @@
+ 
+   <ItemGroup>
+     <PackageReference Include="FsToolkit.ErrorHandling" Version="5.2.0" />
+-    <PackageReference Include="Spectre.Console" Version="0.55.0" />
+-    <PackageReference Include="EPPlus" Version="8.5.1" />
+-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5" />
+-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.5" />
+-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.5" />
++    <PackageReference Include="Spectre.Console" Version="0.55.2" />
++    <PackageReference Include="EPPlus" Version="8.5.4" />
++    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.7" />
++    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.7" />
++    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.7" />
+     <PackageReference Update="FSharp.Core" Version="10.1.201" />
+   </ItemGroup>
+ 
+diff --git a/BeerTaste.Tests/BeerTaste.Tests.fsproj b/BeerTaste.Tests/BeerTaste.Tests.fsproj
+index 54c7d88..cc7be6f 100644
+--- a/BeerTaste.Tests/BeerTaste.Tests.fsproj
++++ b/BeerTaste.Tests/BeerTaste.Tests.fsproj
+@@ -24,7 +24,7 @@
+       <PrivateAssets>all</PrivateAssets>
+       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+     </PackageReference>
+-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
++    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
+     <PackageReference Include="xunit" Version="2.9.3" />
+     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+       <PrivateAssets>all</PrivateAssets>
+diff --git a/BeerTaste.Web/BeerTaste.Web.fsproj b/BeerTaste.Web/BeerTaste.Web.fsproj
+index 4405242..d6c365c 100644
+--- a/BeerTaste.Web/BeerTaste.Web.fsproj
++++ b/BeerTaste.Web/BeerTaste.Web.fsproj
+@@ -36,7 +36,7 @@
+ 
+     <ItemGroup>
+         <PackageReference Include="FirebaseAdmin" Version="3.5.0" />
+-        <PackageReference Include="Oxpecker" Version="2.0.0" />
++        <PackageReference Include="Oxpecker" Version="2.0.1" />
+         <PackageReference Update="FSharp.Core" Version="10.1.201" />
+     </ItemGroup>
+ 
+-- 
+2.53.0
+
