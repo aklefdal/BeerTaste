@@ -1,28 +1,11 @@
 {
-  "last_run": "2026-05-07T01:27Z",
+  "last_run": "2026-05-07T13:30Z",
   "comments": {
     "24": "2026-03-24",
     "98": "2026-04-28"
   },
-  "closed": [
-    31,
-    89
-  ],
-  "open_prs": [
-    99,
-    101,
-    102,
-    103,
-    104,
-    106,
-    107,
-    108,
-    109,
-    110,
-    112,
-    115,
-    116
-  ],
+  "closed": [31, 89],
+  "open_prs": [99, 101, 102, 103, 104, 106, 107, 108, 109, 110, 112, 115, 116],
   "fix_submitted": [
     "ci-test-step-2026-05-02",
     "session-cookie-2026-05-02",
@@ -38,24 +21,12 @@
     {
       "branch": "repo-assist/eng-security-dep-updates-2026-05-07",
       "patch_file": "pending-dep-update.patch",
-      "description": "Security dep updates: MailKit 4.16.0, EPPlus 8.5.4, Spectre.Console 0.55.2, Oxpecker 2.0.1, Extensions.Config 10.0.7, Test.Sdk 18.5.1. Supersedes PR #103. All 70 tests pass.",
+      "description": "Security dep updates rebased on main@731a957: MailKit 4.16.0, EPPlus 8.5.4, Spectre.Console 0.55.2, Oxpecker 2.0.1, Extensions.Config 10.0.7, Test.Sdk 18.5.1. Supersedes PR #103. All 70 tests pass.",
       "pr_title": "[Repo Assist] eng: update dependencies — fix all security vulnerabilities",
-      "pr_body_key": "dep-updates",
+      "pr_body": "Updates all outdated/vulnerable deps. Supersedes PR #103.\n\n| Package | Before | After | Reason |\n|---------|--------|-------|--------|\n| MailKit | 4.15.1 | 4.16.0 | GHSA-9j88-vvj5-vhgr (moderate) |\n| EPPlus | 8.5.1 | 8.5.4 | GHSA-37gx-xxp4-5rgx, GHSA-w3x6-4m5h-cxqf (high) |\n| Spectre.Console | 0.55.0 | 0.55.2 | patch |\n| Oxpecker | 2.0.0 | 2.0.1 | patch |\n| M.E.Config* | 10.0.5 | 10.0.7 | patch |\n| Test.Sdk | 18.4.0 | 18.5.1 | minor |\n\n✅ Build: 0 warnings — ✅ Tests: 70/70",
       "created": "2026-05-07",
       "supersedes": 103
-    },
-    {
-      "branch": "repo-assist/improve-email-body-indentation-2026-05-07",
-      "patch_file": "pending-email-fix.patch",
-      "description": "Fix email body indentation bug: triple-quoted string had 20 spaces prefix on every line. Replace with list joined by CRLF. All 70 tests pass.",
-      "pr_title": "[Repo Assist] fix: remove spurious indentation from email body template",
-      "pr_body_key": "email-fix",
-      "created": "2026-05-07"
     }
   ],
-  "pr_bodies": {
-    "dep-updates": "🤖 *This is an automated pull request from Repo Assist.*\n\n## Summary\n\nUpdates all outdated and vulnerable dependencies. This supersedes PR #103 (rebased on current `main`).\n\n| Package | Project | Before | After | Reason |\n|---------|---------|--------|-------|--------|\n| MailKit | Common | 4.15.1 | **4.16.0** | Fixes GHSA-9j88-vvj5-vhgr (moderate severity) |\n| EPPlus | Console | 8.5.1 | **8.5.4** | Fixes high-severity CVEs in System.Security.Cryptography.Xml |\n| Spectre.Console | Console | 0.55.0 | **0.55.2** | Patch |\n| Oxpecker | Web | 2.0.0 | **2.0.1** | Patch |\n| Microsoft.Extensions.Configuration* | Console | 10.0.5 | **10.0.7** | Patch |\n| Microsoft.NET.Test.Sdk | Tests | 18.4.0 | **18.5.1** | Minor |\n\n✅ Build: succeeded, 0 warnings — ✅ Tests: 70/70 passed",
-    "email-fix": "🤖 *This is an automated pull request from Repo Assist.*\n\n## Problem\n\n`createBeerTasteResultsEmail` used a triple-quoted F# string for the body. F# triple-quoted strings preserve literal whitespace, so every line after the first carried ~20 spaces of source indentation. Outgoing emails looked like:\n\n```\nHi Alice,\n\n                    The results for the beer tasting event \"...\" are now available!\n```\n\n## Fix\n\nReplace with a string list joined by `\\r\\n` (RFC 2822 line endings). Each line is an explicit literal with correct indentation.\n\n✅ Build: succeeded, 0 warnings — ✅ Tests: 70/70 passed"
-  },
-  "notes": "safeoutputs MCP tools still unavailable (2026-05-07 run). Two patches saved: pending-dep-update.patch (dep updates, supersedes #103) and pending-email-fix.patch (email body fix). Next run: apply patches, push branches, create PRs. PR titles: 99=remove dead code, 101=fix datetime UTC, 102=wire firebase, 103=eng dep updates (superseded by new branch), 104=perf compression, 106=perf smtp, 107=refactor correlation, 108=perf corr map, 109=perf arrays, 110=maskEmail tests, 112=parallel table init, 115=session cookie, 116=antiforgery. Issues 98,100,105,111,114 may need closing. Monthly issue #113."
+  "notes": "safeoutputs MCP tools still unavailable. email-body-indentation patch dropped (PR#106 already covers it). dep-update patch rebased on main@731a957. Next run: apply pending-dep-update.patch and push+PR. PRs: 99=dead code, 101=datetime UTC, 102=firebase, 103=dep-updates(superseded), 104=compression, 106=smtp+email-indent, 107=refactor corr, 108=perf corr map, 109=perf arrays, 110=parallel init, 112=maskEmail tests, 115=session cookie, 116=antiforgery. Issues 98,100,105,111,114 need attention. Monthly #113."
 }

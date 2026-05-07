@@ -1,6 +1,6 @@
-From 40a1d10b7a3244a1024cd7dbfb30dce0add6c32e Mon Sep 17 00:00:00 2001
+From 25c0c3ccd51a430edd8f9c864574f9eca78d2306 Mon Sep 17 00:00:00 2001
 From: "github-actions[bot]" <github-actions[bot]@users.noreply.github.com>
-Date: Tue, 5 May 2026 13:33:14 +0000
+Date: Thu, 7 May 2026 13:24:17 +0000
 Subject: [PATCH] chore: update dependencies to fix security vulnerabilities
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
