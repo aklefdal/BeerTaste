@@ -1,0 +1,61 @@
+From ae6afa3776141ce146c8d10b980a65e8902e7c36 Mon Sep 17 00:00:00 2001
+From: "github-actions[bot]" <github-actions[bot]@users.noreply.github.com>
+Date: Thu, 7 May 2026 01:27:42 +0000
+Subject: [PATCH] fix: remove spurious indentation from email body template
+
+The triple-quoted string in createBeerTasteResultsEmail had 20 spaces
+of leading indentation on every line after the first, causing outgoing
+emails to look like:
+
+  Hi Alice,
+
+                      The results for the beer tasting event ...
+
+Replace with a list-of-lines joined by CRLF (RFC 2822-compliant line
+endings for plain-text email).
+
+All 70 tests pass.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+---
+ BeerTaste.Common/Email.fs | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
+
+diff --git a/BeerTaste.Common/Email.fs b/BeerTaste.Common/Email.fs
+index 42f2cc1..4696306 100644
+--- a/BeerTaste.Common/Email.fs
++++ b/BeerTaste.Common/Email.fs
+@@ -110,16 +110,18 @@ module Email =
+                 ToName = taster.Name
+                 Subject = $"Beer Tasting Results: {beerTasteName}"
+                 Body =
+-                    $"""Hi {taster.Name},
+-
+-                    The results for the beer tasting event "{beerTasteName}" are now available!
+-
+-                    You can view the results at:
+-                    {resultsUrl}
+-
+-                    Thank you for participating!
+-
+-                    Best regards,
+-                    BeerTaste System
+-                    """
++                    [
++                        $"Hi {taster.Name},"
++                        ""
++                        $"The results for the beer tasting event \"{beerTasteName}\" are now available!"
++                        ""
++                        "You can view the results at:"
++                        resultsUrl
++                        ""
++                        "Thank you for participating!"
++                        ""
++                        "Best regards,"
++                        "BeerTaste System"
++                    ]
++                    |> String.concat "\r\n"
+             }
+-- 
+2.53.0
+
