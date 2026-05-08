@@ -1,5 +1,5 @@
 {
-  "last_run": "2026-05-08T01:40Z",
+  "last_run": "2026-05-08T13:30Z",
   "comments": {
     "24": "2026-03-24",
     "98": "2026-04-28"
@@ -28,11 +28,16 @@
     "session-cookie-2026-05-02",
     "antiforgery-2026-05-03",
     "security-dep-updates-2026-05-08",
-    "ci-add-test-step-2026-05-08"
+    "ci-add-test-step-2026-05-08",
+    "security-dep-updates-v2-2026-05-08",
+    "users-tests-2026-05-08"
   ],
   "monthly_issue": "113",
   "monthly": "May 2026",
   "todos": [],
-  "pending_branches": [],
-  "notes": "PRs submitted this run: eng-security-dep-updates-2026-05-08 (supersedes #103) and fix-ci-add-test-step-2026-05-08 (closes #100 #105 #111 #114). safeoutputs written directly to /tmp/gh-aw/safeoutputs.jsonl with patches. Monthly issue #113 updated. PRs pending review: 99=dead code, 101=datetime UTC, 102=firebase, 103=dep-updates(superseded), 104=compression, 106=smtp+email-indent, 107=refactor corr, 108=perf corr map, 109=perf arrays, 110=parallel init, 112=maskEmail tests, 115=session cookie, 116=antiforgery. Issues 98 should be closed (old failure). Monthly #113 updated."
+  "pending_branches": [
+    "repo-assist/eng-security-dep-updates-2026-05-08",
+    "repo-assist/improve-users-tests-and-robustness-2026-05-08"
+  ],
+  "notes": "This run (2026-05-08 13:30Z): Task 6 - created security dep updates branch (MailKit 4.16, EPPlus 8.5.4, Spectre 0.55.2, Oxpecker 2.0.1, MSConfig 10.0.7, TestSdk 18.5.1); Task 5 - added UsersTests.fs (7 tests) + fixed Option.Value crash in getOrCreateUser. Branches committed locally but safeoutputs MCP server was filtered (registry 401) so PRs could not be created. Safeoutput JSON files written to /tmp/gh-aw/safeoutputs/ - PRs #117, #118 expected to be created if workflow processes them. PR #103 should be closed once #117 is merged. open_prs list still shows old PRs; new ones (117, 118) pending. All 77 tests pass after Users tests added."
 }
