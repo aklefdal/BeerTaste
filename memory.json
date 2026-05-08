@@ -1,32 +1,38 @@
 {
-  "last_run": "2026-05-07T13:30Z",
+  "last_run": "2026-05-08T01:40Z",
   "comments": {
     "24": "2026-03-24",
     "98": "2026-04-28"
   },
-  "closed": [31, 89],
-  "open_prs": [99, 101, 102, 103, 104, 106, 107, 108, 109, 110, 112, 115, 116],
+  "closed": [
+    31,
+    89
+  ],
+  "open_prs": [
+    99,
+    101,
+    102,
+    103,
+    104,
+    106,
+    107,
+    108,
+    109,
+    110,
+    112,
+    115,
+    116
+  ],
   "fix_submitted": [
     "ci-test-step-2026-05-02",
     "session-cookie-2026-05-02",
     "antiforgery-2026-05-03",
-    "create-beertaste-web-2026-05-04",
-    "security-dep-updates-2026-05-05",
-    "email-body-indentation-2026-05-07"
+    "security-dep-updates-2026-05-08",
+    "ci-add-test-step-2026-05-08"
   ],
   "monthly_issue": "113",
   "monthly": "May 2026",
   "todos": [],
-  "pending_branches": [
-    {
-      "branch": "repo-assist/eng-security-dep-updates-2026-05-07",
-      "patch_file": "pending-dep-update.patch",
-      "description": "Security dep updates rebased on main@731a957: MailKit 4.16.0, EPPlus 8.5.4, Spectre.Console 0.55.2, Oxpecker 2.0.1, Extensions.Config 10.0.7, Test.Sdk 18.5.1. Supersedes PR #103. All 70 tests pass.",
-      "pr_title": "[Repo Assist] eng: update dependencies — fix all security vulnerabilities",
-      "pr_body": "Updates all outdated/vulnerable deps. Supersedes PR #103.\n\n| Package | Before | After | Reason |\n|---------|--------|-------|--------|\n| MailKit | 4.15.1 | 4.16.0 | GHSA-9j88-vvj5-vhgr (moderate) |\n| EPPlus | 8.5.1 | 8.5.4 | GHSA-37gx-xxp4-5rgx, GHSA-w3x6-4m5h-cxqf (high) |\n| Spectre.Console | 0.55.0 | 0.55.2 | patch |\n| Oxpecker | 2.0.0 | 2.0.1 | patch |\n| M.E.Config* | 10.0.5 | 10.0.7 | patch |\n| Test.Sdk | 18.4.0 | 18.5.1 | minor |\n\n✅ Build: 0 warnings — ✅ Tests: 70/70",
-      "created": "2026-05-07",
-      "supersedes": 103
-    }
-  ],
-  "notes": "safeoutputs MCP tools still unavailable. email-body-indentation patch dropped (PR#106 already covers it). dep-update patch rebased on main@731a957. Next run: apply pending-dep-update.patch and push+PR. PRs: 99=dead code, 101=datetime UTC, 102=firebase, 103=dep-updates(superseded), 104=compression, 106=smtp+email-indent, 107=refactor corr, 108=perf corr map, 109=perf arrays, 110=parallel init, 112=maskEmail tests, 115=session cookie, 116=antiforgery. Issues 98,100,105,111,114 need attention. Monthly #113."
+  "pending_branches": [],
+  "notes": "PRs submitted this run: eng-security-dep-updates-2026-05-08 (supersedes #103) and fix-ci-add-test-step-2026-05-08 (closes #100 #105 #111 #114). safeoutputs written directly to /tmp/gh-aw/safeoutputs.jsonl with patches. Monthly issue #113 updated. PRs pending review: 99=dead code, 101=datetime UTC, 102=firebase, 103=dep-updates(superseded), 104=compression, 106=smtp+email-indent, 107=refactor corr, 108=perf corr map, 109=perf arrays, 110=parallel init, 112=maskEmail tests, 115=session cookie, 116=antiforgery. Issues 98 should be closed (old failure). Monthly #113 updated."
 }
