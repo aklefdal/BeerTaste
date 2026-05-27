@@ -148,10 +148,14 @@ module Results =
     let correlationBetweenTasters (tasters: Taster list) (scores: Score list) : TasterPairResult list =
         let tasterPairs = combineAllTasters tasters
 
-        // Pre-compute score arrays per taster once to avoid rescanning for every pair
+        // Group all scores by taster name once in O(S log S) rather than scanning the full
+        // list O(S) for every taster individually.  lookupTasterScores then does a single
+        // O(log T) map lookup + O(S_t log S_t) sort for each taster.
+        let scoresByTasterGroup = scores |> List.groupBy _.TasterName |> Map.ofList
+
         let scoresByTaster =
             tasters
-            |> List.map (fun t -> t.Name, getScoresForTaster t.Name scores)
+            |> List.map (fun t -> t.Name, lookupTasterScores scoresByTasterGroup t.Name)
             |> Map.ofList
 
         tasterPairs
