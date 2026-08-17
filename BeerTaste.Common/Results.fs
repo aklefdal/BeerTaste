@@ -207,7 +207,7 @@ module Results =
 
     // Correlation to taster age (beers preferred by older tasters)
     let correlationToAge (beers: Beer list) (tasters: Taster list) (scores: Score list) : BeerResult list =
-        let currentYear = System.DateTime.Now.Year
+        let currentYear = System.DateTime.UtcNow.Year
 
         // Create a map of taster names to their ages
         let tasterAges =
