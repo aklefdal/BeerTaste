@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Workflow
+
+**NEVER commit.** Leave all changes in the working tree — the user commits and pushes themselves. This applies even when the work is finished, verified, and formatted, and even when working on a PR branch. Do not run `git commit`, `git push`, `git merge`, or create commits in any other way (including `gh pr create`) unless explicitly asked to in that message.
+
 ## Project Overview
 
 BeerTaste is an F# data analysis system for organizing and analyzing beer tasting events. It processes beer ratings from multiple tasters and generates statistical insights including best-rated beers, most controversial beers, taster similarity analysis, and preference correlations with ABV and price.

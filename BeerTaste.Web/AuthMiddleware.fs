@@ -30,6 +30,19 @@ let getCurrentUser (ctx: HttpContext) : User option =
     | true, (:? User as user) -> Some user
     | _ -> None
 
+let sessionCookieOptions (isDevelopment: bool) (now: DateTimeOffset) =
+    CookieOptions(
+        HttpOnly = true,
+        Secure = not isDevelopment,
+        SameSite = SameSiteMode.Strict,
+        Path = "/",
+        Expires = now.AddDays(SessionExpiryDays)
+    )
+
+let appendSessionCookie (ctx: HttpContext) (sessionId: Guid) (now: DateTimeOffset) =
+    let isDevelopment = ctx.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
+    ctx.Response.Cookies.Append(SessionCookieName, sessionId.ToString(), sessionCookieOptions isDevelopment now)
+
 let sessionAuthMiddleware (next: RequestDelegate) (ctx: HttpContext) : Task =
     task {
         let storage = ctx.RequestServices.GetRequiredService<BeerTasteTableStorage>()
@@ -37,25 +50,13 @@ let sessionAuthMiddleware (next: RequestDelegate) (ctx: HttpContext) : Task =
         match extractSessionCookieId ctx with
         | Some sessionId ->
             match! authenticateSession storage.SessionsTableClient sessionId with
-            | Some user ->
-                ctx.Items[CurrentUserKey] <- user
-                // Refresh the cookie expiry so active users are never logged out.
-                // The cookie is set to expire 90 days from login but is never renewed,
-                // so users who are active for more than 90 days get a stale cookie.
-                // Refreshing it on every authenticated request makes the expiry sliding.
-                let isDevelopment = ctx.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
+            | Some authenticated ->
+                ctx.Items[CurrentUserKey] <- authenticated.User
 
-                ctx.Response.Cookies.Append(
-                    SessionCookieName,
-                    sessionId.ToString(),
-                    CookieOptions(
-                        HttpOnly = true,
-                        Secure = not isDevelopment,
-                        SameSite = SameSiteMode.Strict,
-                        Path = "/",
-                        Expires = DateTimeOffset.UtcNow.AddDays(SessionExpiryDays)
-                    )
-                )
+                // Make the expiry sliding so active users are never logged out, throttled to the
+                // same rate as the LastActiveAt write to avoid a Set-Cookie on every response.
+                if authenticated.LastActiveUpdated then
+                    appendSessionCookie ctx sessionId DateTimeOffset.UtcNow
             | None -> ()
         | None -> ()
 
