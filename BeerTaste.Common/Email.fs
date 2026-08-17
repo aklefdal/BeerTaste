@@ -1,5 +1,6 @@
 namespace BeerTaste.Common
 
+open System.Collections.Generic
 open System.Threading.Tasks
 open MailKit.Net.Smtp
 open MailKit.Security
@@ -54,8 +55,8 @@ module Email =
 
                 // Create the email message
                 let mimeMessage = new MimeMessage()
-                mimeMessage.From.Add(new MailboxAddress(config.FromName, config.FromEmail))
-                mimeMessage.To.Add(new MailboxAddress(message.ToName, message.To))
+                mimeMessage.From.Add(MailboxAddress(config.FromName, config.FromEmail))
+                mimeMessage.To.Add(MailboxAddress(message.ToName, message.To))
                 mimeMessage.Subject <- message.Subject
 
                 mimeMessage.Body <- new TextPart("plain", Text = message.Body)
@@ -89,15 +90,15 @@ module Email =
             do! client.ConnectAsync(config.SmtpServer, config.SmtpPort, SecureSocketOptions.Auto)
             do! client.AuthenticateAsync(config.SmtpUsername, config.SmtpPassword)
 
-            let results = System.Collections.Generic.List()
+            let results = List()
 
             for message in messages do
                 let! result =
                     task {
                         try
                             let mimeMessage = new MimeMessage()
-                            mimeMessage.From.Add(new MailboxAddress(config.FromName, config.FromEmail))
-                            mimeMessage.To.Add(new MailboxAddress(message.ToName, message.To))
+                            mimeMessage.From.Add(MailboxAddress(config.FromName, config.FromEmail))
+                            mimeMessage.To.Add(MailboxAddress(message.ToName, message.To))
                             mimeMessage.Subject <- message.Subject
                             mimeMessage.Body <- new TextPart("plain", Text = message.Body)
                             let! _ = client.SendAsync(mimeMessage)
