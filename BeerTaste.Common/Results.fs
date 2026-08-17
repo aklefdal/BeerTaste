@@ -75,7 +75,6 @@ module Results =
         getScoresForBeer scores beerId |> averageOrZero
 
     let beerAverages (beers: Beer list) (scores: Score list) : BeerResult list =
-        // Pre-group scores by beer ID to avoid a repeated full-list scan per beer
         let scoresByBeer = scores |> List.groupBy _.BeerId |> Map.ofList
 
         beers
@@ -93,7 +92,6 @@ module Results =
 
     // Most controversial beers by standard deviation
     let beerStandardDeviations (beers: Beer list) (scores: Score list) : BeerResultWithAverage list =
-        // Pre-group scores by beer ID to avoid a repeated full-list scan per beer
         let scoresByBeer = scores |> List.groupBy _.BeerId |> Map.ofList
 
         beers
@@ -115,7 +113,6 @@ module Results =
         |> List.sortByDescending _.Value
 
     let correlationToAverages (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
-        // Pre-group scores by beer and taster to avoid repeated full-list scans
         let scoresByBeer = scores |> List.groupBy _.BeerId |> Map.ofList
         let scoresByTaster = scores |> List.groupBy _.TasterName |> Map.ofList
 
@@ -125,6 +122,7 @@ module Results =
             |> List.map (fun b ->
                 lookupBeerScores scoresByBeer b.Id
                 |> averageOrZero)
+            |> List.toArray
 
         tasters
         |> List.map (fun t ->
@@ -148,7 +146,6 @@ module Results =
     let correlationBetweenTasters (tasters: Taster list) (scores: Score list) : TasterPairResult list =
         let tasterPairs = combineAllTasters tasters
 
-        // Pre-compute score arrays per taster once to avoid rescanning for every pair
         let scoresByTaster =
             tasters
             |> List.map (fun t -> t.Name, getScoresForTaster t.Name scores)
@@ -177,8 +174,12 @@ module Results =
 
     // Correlation to ABV (fondest of strong beers)
     let correlationToAbv (beers: Beer list) (tasters: Taster list) (scores: Score list) : TasterResult list =
-        let beerAbv = beers |> List.sortBy _.Id |> List.map _.ABV
-        // Pre-group scores by taster to avoid a repeated full-list scan per taster
+        let beerAbv =
+            beers
+            |> List.sortBy _.Id
+            |> List.map _.ABV
+            |> List.toArray
+
         let scoresByTaster = scores |> List.groupBy _.TasterName |> Map.ofList
 
         tasters
@@ -194,8 +195,8 @@ module Results =
             beers
             |> List.sortBy _.Id
             |> List.map _.PricePerAbv
+            |> List.toArray
 
-        // Pre-group scores by taster to avoid a repeated full-list scan per taster
         let scoresByTaster = scores |> List.groupBy _.TasterName |> Map.ofList
 
         tasters
@@ -209,7 +210,6 @@ module Results =
     let correlationToAge (beers: Beer list) (tasters: Taster list) (scores: Score list) : BeerResult list =
         let currentYear = System.DateTime.UtcNow.Year
 
-        // Create a map of taster names to their ages
         let tasterAges =
             tasters
             |> List.choose (fun t ->
@@ -217,7 +217,6 @@ module Results =
                 |> Option.map (fun birthYear -> t.Name, float (currentYear - birthYear)))
             |> Map.ofList
 
-        // Pre-group scores by beer ID to avoid an O(beers × scores) repeated scan
         let scoresByBeer = scores |> List.groupBy _.BeerId |> Map.ofList
 
         beers
