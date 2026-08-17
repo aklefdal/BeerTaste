@@ -26,6 +26,7 @@
         <Compile Include="templates/BeerTasteView.fs"/>
         <Compile Include="FirebaseAuth.fs"/>
         <Compile Include="AuthMiddleware.fs"/>
+        <Compile Include="FormHelpers.fs"/>
         <Compile Include="Program.fs"/>
         <Content Include="README.md" />
     </ItemGroup>

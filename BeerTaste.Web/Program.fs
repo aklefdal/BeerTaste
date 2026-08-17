@@ -391,6 +391,7 @@ let main args =
             .AddRouting()
             .AddOxpecker()
             .AddMemoryCache()
+            .AddAntiforgery()
             .AddSingleton(storage)
         |> ignore
 
