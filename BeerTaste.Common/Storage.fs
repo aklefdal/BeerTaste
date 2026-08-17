@@ -6,7 +6,7 @@ open Azure.Data.Tables
 /// <summary>
 /// Manages Azure Table Storage clients for BeerTaste application.
 /// Creates and provides access to six tables: beertaste, beers, tasters, scores, users, sessions.
-/// All tables are initialised concurrently to reduce startup latency.
+/// All tables are initialized concurrently to reduce startup latency.
 /// </summary>
 type BeerTasteTableStorage(connectionString: string) =
     let service = TableServiceClient(connectionString)
@@ -19,6 +19,7 @@ type BeerTasteTableStorage(connectionString: string) =
 
     // Run all six CreateIfNotExists calls concurrently instead of sequentially.
     // With ~50 ms per Azure round-trip this cuts startup overhead by ~5×.
+    // Cannot use do! in constructor, so we use Task.WhenAll and GetAwaiter().GetResult()
     do
         [|
             beerTasteTableClient.CreateIfNotExistsAsync() :> Task
@@ -29,7 +30,7 @@ type BeerTasteTableStorage(connectionString: string) =
             sessionsTableClient.CreateIfNotExistsAsync() :> Task
         |]
         |> Task.WhenAll
-        |> fun t -> t.GetAwaiter().GetResult()
+        |> _.GetAwaiter().GetResult()
 
     member this.BeerTasteTableClient = beerTasteTableClient
     member this.BeersTableClient = beersTableClient
