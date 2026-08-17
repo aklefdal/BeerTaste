@@ -32,8 +32,8 @@ module MaskEmailTests =
 
     [<Fact>]
     let ``maskEmail returns original string when no at-sign present`` () =
-        let result = Email.maskEmail "notanemail"
-        Assert.Equal("notanemail", result)
+        let result = Email.maskEmail "notAnEmail"
+        Assert.Equal("notAnEmail", result)
 
     [<Fact>]
     let ``maskEmail handles multiple at-signs by returning original`` () =
