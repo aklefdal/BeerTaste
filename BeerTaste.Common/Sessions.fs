@@ -13,6 +13,10 @@ type Session = {
     LastActiveAt: DateTimeOffset
 }
 
+/// Result of authenticating a session cookie. LastActiveUpdated tells the caller that the
+/// throttled LastActiveAt write happened, so the session cookie can be refreshed at the same rate.
+type AuthenticatedSession = { User: User; LastActiveUpdated: bool }
+
 module Sessions =
     [<Literal>]
     let SessionExpiryDays = 90.0
@@ -76,7 +80,7 @@ module Sessions =
                 ()
         }
 
-    let authenticateSession (sessionsTable: TableClient) (sessionId: Guid) : Task<User option> =
+    let authenticateSession (sessionsTable: TableClient) (sessionId: Guid) : Task<AuthenticatedSession option> =
         task {
             match! fetchSession sessionsTable sessionId with
             | None -> return None
@@ -87,14 +91,19 @@ module Sessions =
                     do! deleteSession sessionsTable sessionId
                     return None
                 else
-                    if shouldUpdateLastActive now session then
+                    let updateLastActive = shouldUpdateLastActive now session
+
+                    if updateLastActive then
                         do! addSession sessionsTable { session with LastActiveAt = now }
 
                     return
                         Some {
-                            UserId = session.UserId
-                            AccountId = session.AccountId
-                            AuthenticationScheme = session.AuthScheme
-                            Name = session.Name
+                            User = {
+                                UserId = session.UserId
+                                AccountId = session.AccountId
+                                AuthenticationScheme = session.AuthScheme
+                                Name = session.Name
+                            }
+                            LastActiveUpdated = updateLastActive
                         }
         }

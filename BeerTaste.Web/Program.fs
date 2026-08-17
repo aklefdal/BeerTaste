@@ -251,7 +251,6 @@ let postAuthSession: EndpointHandler =
                     return! ctx.WriteJsonChunked({| error = msg |})
                 | Ok verifiedToken ->
                     let storage = ctx.RequestServices.GetRequiredService<BeerTasteTableStorage>()
-                    let isDevelopment = ctx.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
 
                     let name =
                         verifiedToken.Name
@@ -273,16 +272,7 @@ let postAuthSession: EndpointHandler =
 
                     do! addSession storage.SessionsTableClient session
 
-                    let cookieOptions =
-                        CookieOptions(
-                            HttpOnly = true,
-                            Secure = not isDevelopment,
-                            SameSite = SameSiteMode.Strict,
-                            Path = "/",
-                            Expires = now.AddDays(SessionExpiryDays)
-                        )
-
-                    ctx.Response.Cookies.Append(SessionCookieName, sessionId.ToString(), cookieOptions)
+                    appendSessionCookie ctx sessionId now
                     return! ctx.WriteJsonChunked({| success = true |})
         }
 
@@ -401,6 +391,7 @@ let main args =
             .AddRouting()
             .AddOxpecker()
             .AddMemoryCache()
+            .AddAntiforgery()
             .AddSingleton(storage)
         |> ignore
 
