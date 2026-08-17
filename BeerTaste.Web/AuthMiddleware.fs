@@ -4,6 +4,7 @@ open System
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.DependencyInjection
+open Microsoft.Extensions.Hosting
 open BeerTaste.Common
 open BeerTaste.Common.Sessions
 
@@ -29,6 +30,19 @@ let getCurrentUser (ctx: HttpContext) : User option =
     | true, (:? User as user) -> Some user
     | _ -> None
 
+let sessionCookieOptions (isDevelopment: bool) (now: DateTimeOffset) =
+    CookieOptions(
+        HttpOnly = true,
+        Secure = not isDevelopment,
+        SameSite = SameSiteMode.Strict,
+        Path = "/",
+        Expires = now.AddDays(SessionExpiryDays)
+    )
+
+let appendSessionCookie (ctx: HttpContext) (sessionId: Guid) (now: DateTimeOffset) =
+    let isDevelopment = ctx.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment()
+    ctx.Response.Cookies.Append(SessionCookieName, sessionId.ToString(), sessionCookieOptions isDevelopment now)
+
 let sessionAuthMiddleware (next: RequestDelegate) (ctx: HttpContext) : Task =
     task {
         let storage = ctx.RequestServices.GetRequiredService<BeerTasteTableStorage>()
@@ -36,7 +50,13 @@ let sessionAuthMiddleware (next: RequestDelegate) (ctx: HttpContext) : Task =
         match extractSessionCookieId ctx with
         | Some sessionId ->
             match! authenticateSession storage.SessionsTableClient sessionId with
-            | Some user -> ctx.Items[CurrentUserKey] <- user
+            | Some authenticated ->
+                ctx.Items[CurrentUserKey] <- authenticated.User
+
+                // Make the expiry sliding so active users are never logged out, throttled to the
+                // same rate as the LastActiveAt write to avoid a Set-Cookie on every response.
+                if authenticated.LastActiveUpdated then
+                    appendSessionCookie ctx sessionId DateTimeOffset.UtcNow
             | None -> ()
         | None -> ()
 
