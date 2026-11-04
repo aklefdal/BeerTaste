@@ -360,6 +360,7 @@ let configureApp (appBuilder: WebApplication) (dc: DataCache) firebaseConfig =
         .UseStaticFiles()
         .Use(Func<HttpContext, RequestDelegate, Task>(fun ctx next -> sessionAuthMiddleware next ctx))
         .UseRouting()
+        .UseAntiforgery()
         .UseOxpecker(endpoints dc firebaseConfig)
     |> ignore
 
